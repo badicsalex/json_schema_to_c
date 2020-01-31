@@ -7,6 +7,11 @@ Only a very small subset of JSON schema features are usable currently.
 
 The JSON tokenizer used is [JSMN](https://github.com/zserge/jsmn). It works great.
 
+Usage
+-----
+
+For now, please see the example directory, and run `make run`
+
 Licence
 -------
 
