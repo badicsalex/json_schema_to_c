@@ -1,17 +1,29 @@
 #!/usr/bin/env python3
 import json
 import argparse
+from abc import ABC, abstractmethod
+from collections import namedtuple
 
 INDENT = '    '
 
+
 def parse_args():
-    parser = argparse.ArgumentParser(description="Create a JSON parser in C based on a json schema")
+    parser = argparse.ArgumentParser(
+        description="Create a JSON parser in C based on a json schema")
     parser.add_argument("schema_file", type=argparse.FileType('r'))
     parser.add_argument("c_file", type=argparse.FileType('w'))
     parser.add_argument("h_file", type=argparse.FileType('w'))
     return parser.parse_args()
 
-class StringGenerator:
+
+class Generator(ABC):
+    @classmethod
+    @abstractmethod
+    def generate_type_declaration(cls, schema, name, out_file, indent):
+        pass
+
+
+class StringGenerator(Generator):
     @classmethod
     def generate_type_declaration(cls, schema, name, out_file, indent):
         if "maxLength" not in schema:
@@ -19,31 +31,37 @@ class StringGenerator:
         out_file.write(indent)
         out_file.write("char {}[{}];\n".format(name, schema["maxLength"] + 1))
 
-class NumberGenerator:
+
+class NumberGenerator(Generator):
     @classmethod
     def generate_type_declaration(cls, schema, name, out_file, indent):
         out_file.write(indent)
         out_file.write("int64_t {};\n".format(name))
 
-class BoolGenerator:
+
+class BoolGenerator(Generator):
     @classmethod
     def generate_type_declaration(cls, schema, name, out_file, indent):
         out_file.write(indent)
         out_file.write("bool {};\n".format(name))
 
-class ObjectGenerator:
+
+class ObjectGenerator(Generator):
     @classmethod
     def generate_type_declaration(cls, schema, name, out_file, indent):
         if "additionalProperties" not in schema or schema["additionalProperties"] != False:
-            raise ValueError("Object types must have additionalProperties set to false")
+            raise ValueError(
+                "Object types must have additionalProperties set to false")
         out_file.write(indent)
         out_file.write("struct {\n")
         for prop_name, prop_schema in schema["properties"].items():
-            generate_type_declaration(prop_schema, prop_name, out_file, indent + INDENT)
+            generate_type_declaration(
+                prop_schema, prop_name, out_file, indent + INDENT)
         out_file.write(indent)
         out_file.write("}} {};\n".format(name))
 
-class ArrayGenerator:
+
+class ArrayGenerator(Generator):
     @classmethod
     def generate_type_declaration(cls, schema, name, out_file, indent):
         if "maxItems" not in schema:
@@ -52,7 +70,8 @@ class ArrayGenerator:
         out_file.write("struct {\n")
         out_file.write(indent + INDENT)
         out_file.write("uint64_t n;\n")
-        generate_type_declaration(schema["items"], "items[{}]".format(schema["maxItems"]), out_file, indent + INDENT)
+        generate_type_declaration(schema["items"], "items[{}]".format(
+            schema["maxItems"]), out_file, indent + INDENT)
         out_file.write(indent)
         out_file.write("}} {};\n".format(name))
 
@@ -65,8 +84,10 @@ generators = {
     "array": ArrayGenerator,
 }
 
-def generate_type_declaration(schema, name, out_file, indent = ''):
-    generators[schema["type"]].generate_type_declaration(schema, name, out_file, indent)
+
+def generate_type_declaration(schema, name, out_file, indent=''):
+    generators[schema["type"]].generate_type_declaration(
+        schema, name, out_file, indent)
 
 
 def main(args):
@@ -74,7 +95,8 @@ def main(args):
     args.h_file.write("#include <stdint.h>\n")
     args.h_file.write("#include <stdbool.h>\n\n")
     args.h_file.write("typedef ")
-    generate_type_declaration(schema, "root", args.h_file)
+    generate_type_declaration(schema, "root_t", args.h_file)
+
 
 if __name__ == "__main__":
     main(parse_args())
