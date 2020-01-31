@@ -4,8 +4,6 @@ import argparse
 from abc import ABC, abstractmethod
 from collections import namedtuple
 
-INDENT = '    '
-
 
 def parse_args():
     parser = argparse.ArgumentParser(
@@ -19,61 +17,60 @@ def parse_args():
 class Generator(ABC):
     @classmethod
     @abstractmethod
-    def generate_type_declaration(cls, schema, name, out_file, indent):
+    def generate_type_declaration(cls, schema, name, out_file):
         pass
 
 
 class StringGenerator(Generator):
     @classmethod
-    def generate_type_declaration(cls, schema, name, out_file, indent):
+    def generate_type_declaration(cls, schema, name, out_file):
         if "maxLength" not in schema:
             raise ValueError("Strings must have maxLength")
-        out_file.write(indent)
-        out_file.write("char {}[{}];\n".format(name, schema["maxLength"] + 1))
+        out_file.write("typedef char {}_t[{}];\n\n".format(
+            name, schema["maxLength"] + 1))
 
 
 class NumberGenerator(Generator):
     @classmethod
-    def generate_type_declaration(cls, schema, name, out_file, indent):
-        out_file.write(indent)
-        out_file.write("int64_t {};\n".format(name))
+    def generate_type_declaration(cls, schema, name, out_file):
+        out_file.write("typedef int64_t {}_t;\n\n".format(name))
 
 
 class BoolGenerator(Generator):
     @classmethod
-    def generate_type_declaration(cls, schema, name, out_file, indent):
-        out_file.write(indent)
-        out_file.write("bool {};\n".format(name))
+    def generate_type_declaration(cls, schema, name, out_file):
+        out_file.write("typedef bool {}_t;\n\n".format(name))
 
 
 class ObjectGenerator(Generator):
     @classmethod
-    def generate_type_declaration(cls, schema, name, out_file, indent):
+    def generate_type_declaration(cls, schema, name, out_file):
         if "additionalProperties" not in schema or schema["additionalProperties"] != False:
             raise ValueError(
                 "Object types must have additionalProperties set to false")
-        out_file.write(indent)
-        out_file.write("struct {\n")
         for prop_name, prop_schema in schema["properties"].items():
             generate_type_declaration(
-                prop_schema, prop_name, out_file, indent + INDENT)
-        out_file.write(indent)
-        out_file.write("}} {};\n".format(name))
+                prop_schema, "{}_{}".format(name, prop_name), out_file)
+
+        out_file.write("typedef struct {}_s ".format(name) + "{\n")
+        for prop_name in schema["properties"]:
+            out_file.write("    {n}_{p}_t {p};\n".format(n=name, p=prop_name))
+        out_file.write("}} {}_t;\n\n".format(name))
 
 
 class ArrayGenerator(Generator):
     @classmethod
-    def generate_type_declaration(cls, schema, name, out_file, indent):
+    def generate_type_declaration(cls, schema, name, out_file):
         if "maxItems" not in schema:
             raise ValueError("Arrays must have maxItems")
-        out_file.write(indent)
-        out_file.write("struct {\n")
-        out_file.write(indent + INDENT)
-        out_file.write("uint64_t n;\n")
-        generate_type_declaration(schema["items"], "items[{}]".format(
-            schema["maxItems"]), out_file, indent + INDENT)
-        out_file.write(indent)
-        out_file.write("}} {};\n".format(name))
+        generate_type_declaration(
+            schema["items"], "{}_item".format(name), out_file)
+
+        out_file.write("typedef struct {}_s ".format(name) + "{\n")
+        out_file.write("    uint64_t n;\n")
+        out_file.write("    {}_item_t items[{}];\n".format(
+            name, schema["maxItems"]))
+        out_file.write("}} {}_t;\n\n".format(name))
 
 
 generators = {
@@ -85,17 +82,16 @@ generators = {
 }
 
 
-def generate_type_declaration(schema, name, out_file, indent=''):
+def generate_type_declaration(schema, name, out_file=''):
     generators[schema["type"]].generate_type_declaration(
-        schema, name, out_file, indent)
+        schema, name, out_file)
 
 
 def main(args):
     schema = json.load(args.schema_file)
     args.h_file.write("#include <stdint.h>\n")
     args.h_file.write("#include <stdbool.h>\n\n")
-    args.h_file.write("typedef ")
-    generate_type_declaration(schema, "root_t", args.h_file)
+    generate_type_declaration(schema, "root", args.h_file)
 
 
 if __name__ == "__main__":
