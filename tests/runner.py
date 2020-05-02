@@ -53,22 +53,22 @@ def get_all_tests():
     return dirnames
 
 
-def run_test(test_name, tmpdir):
+def run_test(test_name):
     test_dir = os.path.join(DIR_OF_THIS_FILE, test_name)
     schema_file_name = os.path.join(test_dir, 'schema.json')
     test_c_file_name = os.path.join(test_dir, 'test.c')
     subprocess.run(
         JSON_SCHEMA_TO_C + [schema_file_name, 'parser.c', 'parser.h'],
         check=True,
-        cwd=tmpdir,
+        cwd=test_dir,
     )
     subprocess.run(
-        CC + [test_c_file_name, 'parser.c', '-o', 'test'],
+        CC + [test_c_file_name, 'parser.c', '-o', 'test.compiled'],
         check=True,
-        cwd=tmpdir,
+        cwd=test_dir,
     )
     result = subprocess.run(
-        [os.path.join(tmpdir, 'test')],
+        [os.path.join(test_dir, 'test.compiled')],
         check=True,
         stdout=subprocess.PIPE,
         encoding='utf-8',
@@ -80,8 +80,7 @@ def run_test_set(tests):
     for test in sorted(tests):
         try:
             print("== Running {} ==".format(test))
-            with tempfile.TemporaryDirectory() as tmpdir:
-                run_test(test, tmpdir)
+            run_test(test)
             print("OK.")
             tests_successful = tests_successful + 1
         except Exception:
