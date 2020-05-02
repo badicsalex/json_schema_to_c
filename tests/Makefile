@@ -5,10 +5,9 @@
 CFLAGS= \
 	-Wall \
 	-Werror \
-	-I ../jsmn \
 
 ALL_TESTS =  $(patsubst %.c,%.run,$(filter-out %.parser.c, $(wildcard */*.c)))
-PARSER_SOURCE_FILES = ../json_schema_to_c.py $(wildcard ../js2c/*.py) $(wildcard ../js2c/*.c)
+PARSER_SOURCE_FILES = ../json_schema_to_c.py $(wildcard ../js2c/*.py) $(wildcard ../js2c/*.c) ../jsmn/jsmn.h
 
 all: $(ALL_TESTS)
 	@echo

@@ -264,6 +264,11 @@ def generate_parser_h(schema, h_file):
 def generate_parser_c(schema, c_file, h_file_name):
     c_file.write('#include "{}"\n'.format(h_file_name))
 
+    c_file.write('#define JSMN_STATIC\n')
+    with open(os.path.join(DIR_OF_THIS_FILE, '..', 'jsmn', 'jsmn.h')) as jsmn_h:
+        c_file.write("/* === jsmn.h (From https://github.com/zserge/jsmn) === */")
+        c_file.write(jsmn_h.read())
+
     with open(os.path.join(DIR_OF_THIS_FILE, 'builtin_parsers.c')) as builtins_file:
         c_file.write("/* === builtin_parsers.c === */")
         c_file.write(builtins_file.read())

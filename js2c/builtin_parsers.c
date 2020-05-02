@@ -27,7 +27,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#include "jsmn/jsmn.h"
+
+/* Hack to let the IDE know that we need JSMN.
+ * In a normal situation, it will be included or pasted before this file. */
+#ifndef JSMN_H
+#error "jsmn.h not included"
+#include "../jsmn/jsmn.h"
+#endif
 
 typedef struct parse_state_s {
     const char* json_string;
