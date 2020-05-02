@@ -23,6 +23,7 @@
 # SOFTWARE.
 #
 import os
+import re
 from abc import ABC, abstractmethod
 
 DIR_OF_THIS_FILE = os.path.dirname(__file__)
@@ -380,10 +381,14 @@ def generate_root_parser(schema, out_file):
 
 def generate_parser_h(schema, h_file):
     h_file.write(NOTE_FOR_GENERATED_FILES)
+    header_guard_name = re.sub("[^A-Z0-9]", "_", os.path.basename(h_file.name).upper())
+    h_file.write("#ifndef {}\n".format(header_guard_name))
+    h_file.write("#define {}\n".format(header_guard_name))
     h_file.write("#include <stdint.h>\n")
     h_file.write("#include <stdbool.h>\n\n")
     GlobalGenerator.generate_type_declaration(schema, schema['$id'], h_file, force=True)
-    h_file.write("bool json_parse_{id}(const char* json_string, {id}_t* out);".format(id=schema['$id']))
+    h_file.write("bool json_parse_{id}(const char* json_string, {id}_t* out);\n".format(id=schema['$id']))
+    h_file.write("#endif /* {} */\n".format(header_guard_name))
 
 
 def generate_parser_c(schema, c_file, h_file_name):
