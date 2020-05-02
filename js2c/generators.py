@@ -33,6 +33,10 @@ NOTE_FOR_GENERATED_FILES = """
 """
 
 
+class NoDefaultValue(Exception):
+    pass
+
+
 class Generator(ABC):
     @classmethod
     @abstractmethod
@@ -54,6 +58,10 @@ class Generator(ABC):
     def generate_parser_bodies(cls, schema, name, out_file):
         pass
 
+    @classmethod
+    def generate_set_default_value(cls, schema, out_var_name, out_file):
+        raise NoDefaultValue("Default values not supported for {}".format(cls.__name__))
+
 
 class StringGenerator(Generator):
     @classmethod
@@ -71,6 +79,19 @@ class StringGenerator(Generator):
             .format(out_var_name, schema["maxLength"])
         )
 
+    @classmethod
+    def generate_set_default_value(cls, schema, out_var_name, out_file):
+        assert 'default' in schema, "Caller is responsible for checking this."
+        if len(schema['default']) > schema['maxLength']:
+            raise ValueError("String default value longer than maxLength")
+        out_file.write(
+            'memcpy({dst}, "{src}", {size});\n'.format(
+                dst=out_var_name,
+                src=schema['default'],
+                size=len(schema['default']) + 1
+            )
+        )
+
 
 class NumberGenerator(Generator):
     @classmethod
@@ -84,6 +105,11 @@ class NumberGenerator(Generator):
             .format(out_var_name)
         )
 
+    @classmethod
+    def generate_set_default_value(cls, schema, out_var_name, out_file):
+        assert 'default' in schema, "Caller is responsible for checking this."
+        out_file.write("{} = {};\n".format(out_var_name, schema['default']))
+
 
 class BoolGenerator(Generator):
     @classmethod
@@ -95,6 +121,16 @@ class BoolGenerator(Generator):
         out_file.write(
             "error = error || builtin_parse_bool(parse_state, {});\n"
             .format(out_var_name)
+        )
+
+    @classmethod
+    def generate_set_default_value(cls, schema, out_var_name, out_file):
+        assert 'default' in schema, "Caller is responsible for checking this."
+        out_file.write(
+            "{} = {};\n".format(
+                out_var_name,
+                'true' if schema['default'] else 'false'
+            )
         )
 
 
@@ -129,6 +165,19 @@ class ObjectGenerator(Generator):
     def generate_seen_flags(cls, schema, out_file):
         for prop_name in schema["properties"]:
             out_file.write("bool seen_{} = false;".format(prop_name))
+
+    @classmethod
+    def generate_default_field_setting(cls, schema, out_file):
+        for prop_name, prop_schema in schema["properties"].items():
+            if 'default' not in prop_schema:
+                continue
+            out_file.write("if (!seen_{}) {{\n".format(prop_name))
+            GlobalGenerator.generate_set_default_value(
+                prop_schema,
+                "out->{}".format(prop_name),
+                out_file
+            )
+            out_file.write("}\n")
 
     @classmethod
     def generate_field_parsers(cls, schema, name, out_file):
@@ -170,6 +219,9 @@ class ObjectGenerator(Generator):
         out_file.write("        ")
         cls.generate_field_parsers(schema, name, out_file)
         out_file.write("    }\n")
+        out_file.write("    if (!error){\n")
+        cls.generate_default_field_setting(schema, out_file)
+        out_file.write("}\n")
         out_file.write("    return error;\n")
         out_file.write("}\n\n")
 
@@ -252,6 +304,11 @@ class GlobalGenerator(Generator):
     def generate_parser_bodies(cls, schema, name, out_file):
         cls.OTHER_GENERATORS[schema["type"]]\
             .generate_parser_bodies(schema, name, out_file)
+
+    @classmethod
+    def generate_set_default_value(cls, schema, out_var_name, out_file):
+        cls.OTHER_GENERATORS[schema["type"]]\
+            .generate_set_default_value(schema, out_var_name, out_file)
 
 
 def generate_root_parser(schema, out_file):

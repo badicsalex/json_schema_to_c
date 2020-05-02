@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "root",
+  "description": "Some demo structure for demoing.",
+  "type": "object",
+  "required": [ "name", "is_good" ],
+  "additionalProperties": false,
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "The name of the vegetable.",
+      "default": "cauliflower",
+      "maxLength": 11
+    },
+    "is_good": {
+      "type": "boolean",
+      "description": "Is the vegetable any good?",
+      "default": true
+    },
+    "number": {
+      "type": "integer",
+      "description": "How many?",
+      "default": 1337
+    },
+    "id": {
+      "type": "string",
+      "maxLength": 4
+    },
+    "exists": {
+      "type": "boolean"
+    },
+    "mass": {
+      "type": "integer"
+    }
+  }
+}
