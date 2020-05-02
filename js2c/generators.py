@@ -241,7 +241,7 @@ def generate_root_parser(schema, out_file):
     out_file.write("    ")
     GlobalGenerator.generate_parser_call(
         schema,
-        "root",
+        "actual_root",
         "out",
         out_file,
     )
@@ -252,7 +252,9 @@ def generate_root_parser(schema, out_file):
 def generate_parser_h(schema, h_file):
     h_file.write("#include <stdint.h>\n")
     h_file.write("#include <stdbool.h>\n\n")
-    GlobalGenerator.generate_type_declaration(schema, "root", h_file)
+    GlobalGenerator.generate_type_declaration(schema, "actual_root", h_file)
+    h_file.write("typedef ")
+    GlobalGenerator.generate_field_declaration(schema, "actual_root", "root_t", h_file)
     h_file.write("bool parse(const char* json_string, root_t* out);")
 
 
@@ -260,5 +262,5 @@ def generate_parser_c(schema, c_file, h_file_name):
     c_file.write('#include "{}"\n'.format(h_file_name))
     c_file.write('#include "json_schema_to_c.h"\n\n')
 
-    GlobalGenerator.generate_parser_bodies(schema, "root", c_file)
+    GlobalGenerator.generate_parser_bodies(schema, "actual_root", c_file)
     generate_root_parser(schema, c_file)
