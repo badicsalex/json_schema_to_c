@@ -4,8 +4,10 @@
 
 root_t root = {};
 
+const char* data = "{\"fruit\": \"apple\"}";
+
 int main(int argc, char** argv){
-    if (parse(argv[1], &root)){
+    if (parse(data, &root)){
         printf("Parse failed\n");
         return 2;
     }

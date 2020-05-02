@@ -57,8 +57,6 @@ def run_test(test_name, tmpdir):
     test_dir = os.path.join(DIR_OF_THIS_FILE, test_name)
     schema_file_name = os.path.join(test_dir, 'schema.json')
     test_c_file_name = os.path.join(test_dir, 'test.c')
-    with open(os.path.join(test_dir, 'data.json')) as data_file:
-        data = data_file.read()
     with open(os.path.join(test_dir, 'output.txt')) as output_file:
         output = output_file.read()
 
@@ -74,7 +72,7 @@ def run_test(test_name, tmpdir):
     )
 
     result = subprocess.run(
-        [os.path.join(tmpdir, 'test'), data],
+        [os.path.join(tmpdir, 'test')],
         check=True,
         stdout=subprocess.PIPE,
         encoding='utf-8',
