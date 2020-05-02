@@ -56,6 +56,11 @@ int main(int argc, char** argv){
         "String too large. Length: 9. Maximum length: 8.",
         10
     );
+    check_error(
+        "{\"name\": \" <4\"}",
+        "String too short. Length: 3. Minimum length: 4.",
+        10
+    );
 
     check_error(
         "{\"is_good\": INVALID}",

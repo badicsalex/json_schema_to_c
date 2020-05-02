@@ -101,8 +101,8 @@ class StringGenerator(Generator):
         if "maxLength" not in schema:
             raise ValueError("Strings must have maxLength")
         out_file.write(
-            "error = error || builtin_parse_string(parse_state, {}[0], {});\n"
-            .format(out_var_name, schema["maxLength"])
+            "error = error || builtin_parse_string(parse_state, {}[0], {}, {});\n"
+            .format(out_var_name, schema.get("minLength", 0), schema["maxLength"])
         )
 
     @classmethod
