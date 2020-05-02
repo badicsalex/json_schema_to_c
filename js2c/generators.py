@@ -233,7 +233,7 @@ class GlobalGenerator(Generator):
 
 
 def generate_root_parser(schema, out_file):
-    out_file.write("bool parse(char* json_string, root_t* out){\n")
+    out_file.write("bool parse(const char* json_string, root_t* out){\n")
     out_file.write("    bool error = false;\n")
     out_file.write("    parse_state_t parse_state_var;\n")
     out_file.write("    parse_state_t* parse_state = &parse_state_var;\n")
@@ -253,7 +253,7 @@ def generate_parser_h(schema, h_file):
     h_file.write("#include <stdint.h>\n")
     h_file.write("#include <stdbool.h>\n\n")
     GlobalGenerator.generate_type_declaration(schema, "root", h_file)
-    h_file.write("bool parse(char* json_string, root_t* out);")
+    h_file.write("bool parse(const char* json_string, root_t* out);")
 
 
 def generate_parser_c(schema, c_file, h_file_name):
