@@ -126,11 +126,36 @@ class NumberGenerator(Generator):
         out_file.write("    int64_t {};\n".format(field_name))
 
     @classmethod
+    def generate_range_check(cls, schema, schema_field_name, out_var_name, check_operator, out_file):
+        # pylint: disable=too-many-arguments
+        # There's no other way around this, pylint.
+        if schema_field_name not in schema:
+            return
+        check_number = schema[schema_field_name]
+        out_file.write("if (!error && !((*{}) {} {}))".format(out_var_name, check_operator, check_number))
+        out_file.write("{\n")
+
+        # Roll back the token thing, as the value was not actually correct
+        out_file.write("    parse_state->current_token -=1; \n")
+        cls.generate_logged_error(
+            [
+                "Integer %li out of range. It must be {} {}.".format(check_operator, check_number),
+                "(*{})".format(out_var_name)
+            ],
+            out_file
+        )
+        out_file.write("}\n")
+
+    @classmethod
     def generate_parser_call(cls, schema, name, out_var_name, out_file):
         out_file.write(
             "error = error || builtin_parse_number(parse_state, {});\n"
             .format(out_var_name)
         )
+        cls.generate_range_check(schema, "minimum", out_var_name, ">=", out_file)
+        cls.generate_range_check(schema, "maximum", out_var_name, "<=", out_file)
+        cls.generate_range_check(schema, "exclusiveMinimum", out_var_name, ">", out_file)
+        cls.generate_range_check(schema, "exclusiveMaximum", out_var_name, "<", out_file)
 
     @classmethod
     def generate_set_default_value(cls, schema, out_var_name, out_file):

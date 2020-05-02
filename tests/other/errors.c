@@ -90,6 +90,27 @@ int main(int argc, char** argv){
     );
 
     check_error(
+        "{\"num2\": 999, \"num\": 5001}",
+        "Integer 5001 out of range. It must be <= 5000.",
+        21
+    );
+    check_error(
+        "{\"num\": 5000, \"num2\": 1000}",
+        "Integer 1000 out of range. It must be < 1000.",
+        22
+    );
+    check_error(
+        "{\"num2\": -999, \"num\": -5001}",
+        "Integer -5001 out of range. It must be >= -5000.",
+        22
+    );
+    check_error(
+        "{\"num\": -5000, \"num2\": -1000}",
+        "Integer -1000 out of range. It must be > -1000.",
+        23
+    );
+
+    check_error(
         "{\"the_array\": 1}",
         "Unexpected token: PRIMITIVE instead of ARRAY",
         14
