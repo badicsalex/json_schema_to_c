@@ -171,12 +171,31 @@ class ObjectGenerator(Generator):
         for prop_name, prop_schema in schema["properties"].items():
             if 'default' not in prop_schema:
                 continue
-            out_file.write("if (!seen_{}) {{\n".format(prop_name))
+            out_file.write("if (!seen_{}) ".format(prop_name))
+            out_file.write("{ \n")
             GlobalGenerator.generate_set_default_value(
                 prop_schema,
                 "out->{}".format(prop_name),
                 out_file
             )
+            out_file.write("}\n")
+
+    @classmethod
+    def generate_required_checks(cls, schema, out_file):
+        for prop_name, prop_schema in schema["properties"].items():
+            if 'default' in prop_schema:
+                continue
+            if 'required' not in schema:
+                raise ValueError("Objects schemas with non-default fields must have a 'required' constraint")
+            if prop_name not in schema['required']:
+                raise ValueError(
+                    "All fields must either be required or have a default value ({})"
+                    .format(prop_name)
+                )
+            out_file.write("if (!seen_{}) ".format(prop_name))
+            out_file.write("{ \n")
+            out_file.write("    /* TODO ERRORLOG */ \n")
+            out_file.write("    error=true; \n")
             out_file.write("}\n")
 
     @classmethod
@@ -219,9 +238,15 @@ class ObjectGenerator(Generator):
         out_file.write("        ")
         cls.generate_field_parsers(schema, name, out_file)
         out_file.write("    }\n")
+
+        out_file.write("    if (!error){\n")
+        cls.generate_required_checks(schema, out_file)
+        out_file.write("    }\n")
+
         out_file.write("    if (!error){\n")
         cls.generate_default_field_setting(schema, out_file)
-        out_file.write("}\n")
+        out_file.write("    }\n")
+
         out_file.write("    return error;\n")
         out_file.write("}\n\n")
 

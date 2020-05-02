@@ -3,7 +3,7 @@
   "$id": "root",
   "description": "Some demo structure for demoing.",
   "type": "object",
-  "required": [ "name", "is_good" ],
+  "required": [ "id", "exists", "mass" ],
   "additionalProperties": false,
   "properties": {
     "name": {

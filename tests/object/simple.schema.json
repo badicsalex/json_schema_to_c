@@ -4,6 +4,7 @@
   "description": "Some demo structure for demoing.",
   "type": "object",
   "additionalProperties": false,
+  "required": ["vegetable"],
   "properties": {
     "vegetable": {
       "type": "object",
