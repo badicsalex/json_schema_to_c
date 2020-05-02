@@ -25,7 +25,48 @@
 import json
 
 
+# WARNING: reviewing the following algorithm might cause brain damage
+# Sorry for that.
+def resolve_children(full_schema, part_to_resolve):
+    if part_to_resolve is None:
+        return
+    if isinstance(part_to_resolve, (str, int, bool)):
+        return
+    if isinstance(part_to_resolve, list):
+        for i, v in enumerate(part_to_resolve):
+            part_to_resolve[i] = resolve_ref(full_schema, v)
+            resolve_children(full_schema, v)
+        return
+    if isinstance(part_to_resolve, dict):
+        for k, v in part_to_resolve.items():
+            part_to_resolve[k] = resolve_ref(full_schema, v)
+            resolve_children(full_schema, v)
+        return
+    raise ValueError("Value {} is not supported by the schema loader".format(part_to_resolve))
+
+
+def resolve_ref(full_schema, part_to_resolve):
+    if not isinstance(part_to_resolve, dict) or "$ref" not in part_to_resolve:
+        return part_to_resolve
+    if len(part_to_resolve) > 1:
+        raise ValueError("Reference nodes should not contain other fields")
+
+    ref_str = part_to_resolve["$ref"]
+    if ref_str[0] != '#':
+        raise ValueError("Only in-file references are supported")
+    if ref_str[1] != '/':
+        raise ValueError("Only path-like references are supported. (Id-based references are not)")
+    ref_str = ref_str[2:] + '/'
+    replacement = full_schema
+    while ref_str:
+        part, ref_str = ref_str.split('/', 1)
+        replacement = replacement[part]
+    return replacement
+# WARNING OVER
+
+
 def load_schema(schema_file):
     schema = json.load(schema_file)
     assert '$id' in schema, "All schemas must have an ID (a field named '$id')"
+    resolve_children(schema, schema)
     return schema
