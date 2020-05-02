@@ -32,16 +32,67 @@ from js2c.generators import generate_parser_h, generate_parser_c
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Create a JSON parser in C based on a json schema")
-    parser.add_argument("schema_file", type=argparse.FileType('r'))
-    parser.add_argument("c_file", type=argparse.FileType('w'))
-    parser.add_argument("h_file", type=argparse.FileType('w'))
+    parser.add_argument(
+        "schema_file",
+        type=argparse.FileType('r'),
+        help="Filename of the JSON schema to use. Schema version 7 is supported.",
+    )
+    parser.add_argument(
+        "c_file",
+        type=argparse.FileType('w'),
+        help="Filename of the generated parser .c file",
+    )
+    parser.add_argument(
+        "h_file",
+        type=argparse.FileType('w'),
+        help="Filename of the generated parser .h file",
+    )
+    parser.add_argument(
+        "--h-prefix-file",
+        metavar="file",
+        type=argparse.FileType('r'),
+        help="Contents of this file will be placed right after the header guard and includes in the generated header.",
+        default=None,
+    )
+    parser.add_argument(
+        "--h-postfix-file",
+        metavar="file",
+        type=argparse.FileType('r'),
+        help="Contents of this file will be placed right before header guard's #endif in the generated header.",
+        default=None,
+    )
+    parser.add_argument(
+        "--c-prefix-file",
+        metavar="file",
+        type=argparse.FileType('r'),
+        help="Contents of this file will be placed right after the includes, before the JSMN code in the generated C file.",
+        default=None,
+    )
+    parser.add_argument(
+        "--c-postfix-file",
+        metavar="file",
+        type=argparse.FileType('r'),
+        help="Contents of this file will be placed at the end of the generated C file.",
+        default=None,
+    )
     return parser.parse_args()
 
 
 def main(args):
     schema = load_schema(args.schema_file)
-    generate_parser_h(schema, args.h_file)
-    generate_parser_c(schema, args.c_file, os.path.basename(args.h_file.name))
+    generate_parser_h(
+        schema,
+        args.h_file,
+        args.h_prefix_file.read() if args.h_prefix_file is not None else None,
+        args.h_postfix_file.read() if args.h_postfix_file is not None else None,
+    )
+    generate_parser_c(
+        schema,
+        args.c_file,
+        os.path.basename(args.h_file.name),
+        args.c_prefix_file.read() if args.c_prefix_file is not None else None,
+        args.c_postfix_file.read() if args.c_postfix_file is not None else None,
+    )
 
 
 if __name__ == "__main__":

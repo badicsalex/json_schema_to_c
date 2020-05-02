@@ -17,6 +17,20 @@ all: $(ALL_TESTS)
 clean:
 	rm -f */*.parser.c */*.parser.h */*.compiled
 
+# === Special test running and compilation rules ===
+
+other/prefix_postfix.parser.c other/prefix_postfix.parser.h &: \
+		other/prefix_postfix.schema.json $(PARSER_SOURCE_FILES) \
+		other/h_prefix.inc other/h_postfix.inc other/c_prefix.inc other/c_postfix.inc
+	echo "other/prefix_postfix: generating schema"
+	../json_schema_to_c.py \
+		--h-prefix other/h_prefix.inc \
+		--h-postfix other/h_postfix.inc \
+		--c-prefix other/c_prefix.inc \
+		--c-postfix other/c_postfix.inc \
+		other/prefix_postfix.schema.json other/prefix_postfix.parser.c other/prefix_postfix.parser.h
+
+# === General test running and compilation rules ===
 %.parser.c %.parser.h: %.schema.json $(PARSER_SOURCE_FILES)
 	echo "$*: generating schema"
 	../json_schema_to_c.py $*.schema.json $*.parser.c $*.parser.h

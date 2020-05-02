@@ -379,24 +379,41 @@ def generate_root_parser(schema, out_file):
     out_file.write("}\n")
 
 
-def generate_parser_h(schema, h_file):
+def generate_parser_h(schema, h_file, prefix, postfix):
     h_file.write(NOTE_FOR_GENERATED_FILES)
+
     header_guard_name = re.sub("[^A-Z0-9]", "_", os.path.basename(h_file.name).upper())
     h_file.write("#ifndef {}\n".format(header_guard_name))
     h_file.write("#define {}\n".format(header_guard_name))
+
     h_file.write("#include <stdint.h>\n")
     h_file.write("#include <stdbool.h>\n\n")
+
+    if prefix:
+        h_file.write("/* === User-added prefix === */\n")
+        h_file.write(prefix)
+
+    h_file.write("/* === Generated type declarations === */\n")
     GlobalGenerator.generate_type_declaration(schema, schema['$id'], h_file, force=True)
     h_file.write("bool json_parse_{id}(const char* json_string, {id}_t* out);\n".format(id=schema['$id']))
+
+    if postfix:
+        h_file.write("/* === User-added postfix === */\n")
+        h_file.write(postfix)
+
     h_file.write("#endif /* {} */\n".format(header_guard_name))
 
 
-def generate_parser_c(schema, c_file, h_file_name):
+def generate_parser_c(schema, c_file, h_file_name, prefix, postfix):
     c_file.write(NOTE_FOR_GENERATED_FILES)
     c_file.write('#include "{}"\n'.format(h_file_name))
 
-    c_file.write('#define JSMN_STATIC\n')
+    if prefix:
+        c_file.write("/* === User-added prefix === */\n")
+        c_file.write(prefix)
+
     with open(os.path.join(DIR_OF_THIS_FILE, '..', 'jsmn', 'jsmn.h')) as jsmn_h:
+        c_file.write('#define JSMN_STATIC\n')
         c_file.write("/* === jsmn.h (From https://github.com/zserge/jsmn) === */\n")
         c_file.write(jsmn_h.read())
 
@@ -407,3 +424,7 @@ def generate_parser_c(schema, c_file, h_file_name):
     c_file.write("/* === Generated parsers === */\n")
     GlobalGenerator.generate_parser_bodies(schema, schema['$id'], c_file)
     generate_root_parser(schema, c_file)
+
+    if postfix:
+        c_file.write("/* === User-added postfix === */\n")
+        c_file.write(postfix)
