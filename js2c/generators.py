@@ -340,13 +340,7 @@ class ArrayGenerator(Generator):
         out_file.write("}} {}_t;\n\n".format(name))
 
     @classmethod
-    def generate_parser_bodies(cls, schema, name, out_file):
-        GlobalGenerator.generate_parser_bodies(schema["items"], "{}_item".format(name), out_file)
-        out_file.write("static bool parse_{name}(parse_state_t* parse_state, {name}_t* out)".format(name=name))
-        out_file.write("{\n")
-        out_file.write("    bool error=check_type(parse_state, JSMN_ARRAY);\n")
-        out_file.write("    int i;\n")
-        out_file.write("    const int n = parse_state->tokens[parse_state->current_token].size;\n")
+    def generate_range_checks(cls, schema, name, out_file):
         out_file.write("    if (!error && (n > {}))\n".format(schema["maxItems"]))
         out_file.write("    {\n")
         cls.generate_logged_error(
@@ -354,6 +348,24 @@ class ArrayGenerator(Generator):
             out_file
         )
         out_file.write("    }\n")
+        if "minItems" in schema:
+            out_file.write("    if (!error && (n < {}))\n".format(schema["minItems"]))
+            out_file.write("    {\n")
+            cls.generate_logged_error(
+                ["Array {} too small. Length: %i. Minimum length: {}.".format(name, schema["minItems"]), "n"],
+                out_file
+            )
+            out_file.write("    }\n")
+
+    @classmethod
+    def generate_parser_bodies(cls, schema, name, out_file):
+        GlobalGenerator.generate_parser_bodies(schema["items"], "{}_item".format(name), out_file)
+        out_file.write("static bool parse_{name}(parse_state_t* parse_state, {name}_t* out)".format(name=name))
+        out_file.write("{\n")
+        out_file.write("    bool error=check_type(parse_state, JSMN_ARRAY);\n")
+        out_file.write("    int i;\n")
+        out_file.write("    const int n = parse_state->tokens[parse_state->current_token].size;\n")
+        cls.generate_range_checks(schema, name, out_file)
         out_file.write("    if (!error){ \n")
         out_file.write("        out->n = n;\n")
         out_file.write("        parse_state->current_token += 1;\n")

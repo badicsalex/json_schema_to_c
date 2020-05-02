@@ -125,6 +125,11 @@ int main(int argc, char** argv){
         "Array root_the_array too large. Length: 4. Maximum length: 3.",
         14
     );
+    check_error(
+        "{\"the_array\": [1]}",
+        "Array root_the_array too small. Length: 1. Minimum length: 2.",
+        14
+    );
 
     check_error(
         "{}",
