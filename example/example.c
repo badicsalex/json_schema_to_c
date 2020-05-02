@@ -4,7 +4,7 @@
 
 char file_contents[10000] = {};
 
-root_t root = {};
+example_schema_t root = {};
 
 int main(int argc, char** argv){
     if (argc<2){
@@ -18,7 +18,7 @@ int main(int argc, char** argv){
     }
     fread(file_contents, sizeof(file_contents)-1, 1, input_file);
     fclose(input_file);
-    if (parse(file_contents, &root)){
+    if (json_parse_example_schema(file_contents, &root)){
         printf("Parse failed\n");
         return 2;
     }

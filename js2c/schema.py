@@ -27,4 +27,5 @@ import json
 
 def load_schema(schema_file):
     schema = json.load(schema_file)
+    assert '$id' in schema, "All schemas must have an ID (a field named '$id')"
     return schema

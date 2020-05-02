@@ -1,7 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "root",
+  "$id": "AnInteresting_schema1d",
   "description": "Some demo structure for demoing.",
-  "type": "string",
-  "maxLength": 19
+  "type": "integer"
 }

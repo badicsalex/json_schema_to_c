@@ -32,7 +32,7 @@ const char* data = " \
 
 int main(int argc, char** argv){
     root_t root = {};
-    assert(!parse(data, &root));
+    assert(!json_parse_root(data, &root));
     assert(!strcmp( root.fruits.items[2], "strawberry"));
     assert(root.multidimensionals.items[1].items[0].items[1] == 12);
     return 0;

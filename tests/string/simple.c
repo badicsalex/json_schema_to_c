@@ -9,7 +9,7 @@ const char* data = "\"apple\"";
 
 int main(int argc, char** argv){
     root_t root = {};
-    assert(!parse(data, &root));
+    assert(!json_parse_root(data, &root));
     assert(!strcmp(root, "apple"));
     return 0;
 }

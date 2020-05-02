@@ -45,8 +45,10 @@ class Generator(ABC):
         pass
 
     @classmethod
-    def generate_type_declaration(cls, schema, name, out_file):
-        pass
+    def generate_type_declaration(cls, schema, name, out_file, *, force=False):
+        if force:
+            out_file.write("typedef ")
+            GlobalGenerator.generate_field_declaration(schema, None, name + "_t", out_file)
 
     @classmethod
     def generate_parser_bodies(cls, schema, name, out_file):
@@ -109,7 +111,7 @@ class ObjectGenerator(Generator):
         )
 
     @classmethod
-    def generate_type_declaration(cls, schema, name, out_file):
+    def generate_type_declaration(cls, schema, name, out_file, *, force=False):
         if "additionalProperties" not in schema or schema["additionalProperties"]:
             raise ValueError(
                 "Object types must have additionalProperties set to false")
@@ -173,7 +175,7 @@ class ArrayGenerator(Generator):
         )
 
     @classmethod
-    def generate_type_declaration(cls, schema, name, out_file):
+    def generate_type_declaration(cls, schema, name, out_file, *, force=False):
         if "maxItems" not in schema:
             raise ValueError("Arrays must have maxItems")
         GlobalGenerator.generate_type_declaration(schema["items"], "{}_item".format(name), out_file)
@@ -230,9 +232,9 @@ class GlobalGenerator(Generator):
             .generate_parser_call(schema, name, out_var_name, out_file)
 
     @classmethod
-    def generate_type_declaration(cls, schema, name, out_file):
+    def generate_type_declaration(cls, schema, name, out_file, *, force=False):
         cls.OTHER_GENERATORS[schema["type"]]\
-            .generate_type_declaration(schema, name, out_file)
+            .generate_type_declaration(schema, name, out_file, force=force)
 
     @classmethod
     def generate_parser_bodies(cls, schema, name, out_file):
@@ -241,7 +243,7 @@ class GlobalGenerator(Generator):
 
 
 def generate_root_parser(schema, out_file):
-    out_file.write("bool parse(const char* json_string, root_t* out){\n")
+    out_file.write("bool json_parse_{id}(const char* json_string, {id}_t* out){{\n".format(id=schema['$id']))
     out_file.write("    bool error = false;\n")
     out_file.write("    parse_state_t parse_state_var;\n")
     out_file.write("    parse_state_t* parse_state = &parse_state_var;\n")
@@ -249,7 +251,7 @@ def generate_root_parser(schema, out_file):
     out_file.write("    ")
     GlobalGenerator.generate_parser_call(
         schema,
-        "actual_root",
+        schema['$id'],
         "out",
         out_file,
     )
@@ -261,10 +263,8 @@ def generate_parser_h(schema, h_file):
     h_file.write(NOTE_FOR_GENERATED_FILES)
     h_file.write("#include <stdint.h>\n")
     h_file.write("#include <stdbool.h>\n\n")
-    GlobalGenerator.generate_type_declaration(schema, "actual_root", h_file)
-    h_file.write("typedef ")
-    GlobalGenerator.generate_field_declaration(schema, "actual_root", "root_t", h_file)
-    h_file.write("bool parse(const char* json_string, root_t* out);")
+    GlobalGenerator.generate_type_declaration(schema, schema['$id'], h_file, force=True)
+    h_file.write("bool json_parse_{id}(const char* json_string, {id}_t* out);".format(id=schema['$id']))
 
 
 def generate_parser_c(schema, c_file, h_file_name):
@@ -281,5 +281,5 @@ def generate_parser_c(schema, c_file, h_file_name):
         c_file.write(builtins_file.read())
 
     c_file.write("/* === Generated parsers === */")
-    GlobalGenerator.generate_parser_bodies(schema, "actual_root", c_file)
+    GlobalGenerator.generate_parser_bodies(schema, schema['$id'], c_file)
     generate_root_parser(schema, c_file)
