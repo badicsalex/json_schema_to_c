@@ -1,2 +1,0 @@
-Sizeof num: 8
-The num: 1337

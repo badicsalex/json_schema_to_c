@@ -1,7 +1,0 @@
-Num 0: 1
-Num 1: 2
-Num 2: 3
-Num 3: 4
-Num 4: 5
-Num 5: 6
-Num 6: 7

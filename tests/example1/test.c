@@ -1,6 +1,8 @@
 #include "parser.h"
 
 #include <stdio.h>
+#include <string.h>
+#include <assert.h>
 
 root_t root = {};
 
@@ -35,5 +37,7 @@ int main(int argc, char** argv){
         printf("Parse failed\n");
         return 2;
     }
-    printf("Some thing is %s\nSome other thing is %ld\n", root.fruits.items[2], root.multidimensionals.items[1].items[0].items[1]);
+    assert(!strcmp( root.fruits.items[2], "strawberry"));
+    assert(root.multidimensionals.items[1].items[0].items[1] == 12);
+    return 0;
 }

@@ -1,2 +1,0 @@
-Bool1: false
-Bool2: true

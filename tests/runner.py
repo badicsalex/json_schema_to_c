@@ -57,9 +57,6 @@ def run_test(test_name, tmpdir):
     test_dir = os.path.join(DIR_OF_THIS_FILE, test_name)
     schema_file_name = os.path.join(test_dir, 'schema.json')
     test_c_file_name = os.path.join(test_dir, 'test.c')
-    with open(os.path.join(test_dir, 'output.txt')) as output_file:
-        output = output_file.read()
-
     subprocess.run(
         JSON_SCHEMA_TO_C + [schema_file_name, 'parser.c', 'parser.h'],
         check=True,
@@ -70,22 +67,12 @@ def run_test(test_name, tmpdir):
         check=True,
         cwd=tmpdir,
     )
-
     result = subprocess.run(
         [os.path.join(tmpdir, 'test')],
         check=True,
         stdout=subprocess.PIPE,
         encoding='utf-8',
     )
-    if result.stdout != output:
-        err_str = "Wrong output (- is expected, + is actual):\n"
-        diff = "".join(
-            difflib.ndiff(
-                result.stdout.splitlines(keepends=True),
-                output.splitlines(keepends=True),
-            )
-        )
-        assert result.stdout == output, err_str + diff
 
 
 def run_test_set(tests):

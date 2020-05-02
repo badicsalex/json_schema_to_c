@@ -1,6 +1,8 @@
 #include "parser.h"
 
 #include <stdio.h>
+#include <string.h>
+#include <assert.h>
 
 root_t root = {};
 
@@ -11,6 +13,6 @@ int main(int argc, char** argv){
         printf("Parse failed\n");
         return 2;
     }
-    printf("The str: %s\n", root.fruit);
+    assert(!strcmp(root.fruit, "apple"));
     return 0;
 }

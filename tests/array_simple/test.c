@@ -1,6 +1,7 @@
 #include "parser.h"
 
 #include <stdio.h>
+#include <assert.h>
 
 root_t root = {};
 
@@ -12,7 +13,7 @@ int main(int argc, char** argv){
         return 2;
     }
     for (unsigned i=0; i<root.the_array.n; ++i){
-        printf("Num %u: %li\n", i, root.the_array.items[i]);
+        assert(root.the_array.items[i] == i + 1);
     }
     return 0;
 }

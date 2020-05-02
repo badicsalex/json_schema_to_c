@@ -1,6 +1,7 @@
 #include "parser.h"
 
 #include <stdio.h>
+#include <assert.h>
 
 root_t root = {};
 
@@ -11,7 +12,7 @@ int main(int argc, char** argv){
         printf("Parse failed\n");
         return 2;
     }
-    printf("Sizeof num: %li\n", sizeof(root.the_num));
-    printf("The num: %li\n", root.the_num);
+    assert(sizeof(root.the_num) == 8);
+    assert(root.the_num == 1337);
     return 0;
 }
