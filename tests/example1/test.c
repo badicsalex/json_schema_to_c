@@ -4,8 +4,6 @@
 #include <string.h>
 #include <assert.h>
 
-root_t root = {};
-
 const char* data = " \
     {                                                     \
         \"fruits\": [\"apple\", \"pear\", \"strawberry\"],\
@@ -33,10 +31,8 @@ const char* data = " \
 ";
 
 int main(int argc, char** argv){
-    if (parse(data, &root)){
-        printf("Parse failed\n");
-        return 2;
-    }
+    root_t root = {};
+    assert(!parse(data, &root));
     assert(!strcmp( root.fruits.items[2], "strawberry"));
     assert(root.multidimensionals.items[1].items[0].items[1] == 12);
     return 0;

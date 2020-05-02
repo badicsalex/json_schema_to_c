@@ -4,15 +4,12 @@
 #include <string.h>
 #include <assert.h>
 
-root_t root = {};
 
-const char* data = "{\"fruit\": \"apple\"}";
+const char* data = "\"apple\"";
 
 int main(int argc, char** argv){
-    if (parse(data, &root)){
-        printf("Parse failed\n");
-        return 2;
-    }
-    assert(!strcmp(root.fruit, "apple"));
+    root_t root = {};
+    assert(!parse(data, &root));
+    assert(!strcmp(root, "apple"));
     return 0;
 }

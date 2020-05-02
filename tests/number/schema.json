@@ -1,11 +1,5 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "description": "Some demo structure for demoing.",
-  "type": "object",
-  "additionalProperties": false,
-  "properties": {
-    "the_num": {
-      "type": "integer"
-    }
-  }
+  "type": "integer"
 }
