@@ -92,7 +92,7 @@ def run_test(test_name, tmpdir):
 
 def run_test_set(tests):
     tests_successful = 0
-    for test in tests:
+    for test in sorted(tests):
         try:
             print("== Running {} ==".format(test))
             with tempfile.TemporaryDirectory() as tmpdir:
