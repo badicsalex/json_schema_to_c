@@ -37,13 +37,13 @@ typedef struct parse_state_s {
     uint64_t current_token;
 } parse_state_t;
 
-static bool check_type(const parse_state_t* parse_state, jsmntype_t type){
+static inline bool check_type(const parse_state_t* parse_state, jsmntype_t type){
     /* TODO errorlog */
     const jsmntok_t* token = &parse_state->tokens[parse_state->current_token];
     return token->type != type;
 }
 
-static bool current_string_is(const parse_state_t* parse_state, const char *s) {
+static inline bool current_string_is(const parse_state_t* parse_state, const char *s) {
     const jsmntok_t* token = &parse_state->tokens[parse_state->current_token];
     return 
         (token->type == JSMN_STRING) &&
@@ -51,7 +51,7 @@ static bool current_string_is(const parse_state_t* parse_state, const char *s) {
         (strncmp(parse_state->json_string + token->start, s, token->end - token->start) == 0);
 }
 
-static bool builtin_parse_string(parse_state_t* parse_state, char *out, uint64_t max_len){
+static inline bool builtin_parse_string(parse_state_t* parse_state, char *out, uint64_t max_len){
     if (check_type(parse_state, JSMN_STRING)){
         return true;
     }
@@ -66,7 +66,7 @@ static bool builtin_parse_string(parse_state_t* parse_state, char *out, uint64_t
     return false;
 }
 
-static bool builtin_parse_bool(parse_state_t* parse_state, bool *out){
+static inline bool builtin_parse_bool(parse_state_t* parse_state, bool *out){
     if (check_type(parse_state, JSMN_PRIMITIVE)){
         return true;
     }
@@ -81,7 +81,7 @@ static bool builtin_parse_bool(parse_state_t* parse_state, bool *out){
     return false;
 }
 
-static bool builtin_parse_number(parse_state_t* parse_state, int64_t *out){
+static inline bool builtin_parse_number(parse_state_t* parse_state, int64_t *out){
     if (check_type(parse_state, JSMN_PRIMITIVE)){
         return true;
     }
@@ -96,7 +96,7 @@ static bool builtin_parse_number(parse_state_t* parse_state, int64_t *out){
     return false;
 }
 
-static bool builtin_parse_json_string(parse_state_t* parse_state, const char* json_string){
+static inline bool builtin_parse_json_string(parse_state_t* parse_state, const char* json_string){
     jsmn_parser parser;
     parse_state->json_string = json_string;
     parse_state->current_token = 0;
