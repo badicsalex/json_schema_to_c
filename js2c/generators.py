@@ -112,9 +112,6 @@ class ObjectGenerator(Generator):
 
     @classmethod
     def generate_type_declaration(cls, schema, name, out_file, *, force=False):
-        if "additionalProperties" not in schema or schema["additionalProperties"]:
-            raise ValueError(
-                "Object types must have additionalProperties set to false")
         for prop_name, prop_schema in schema["properties"].items():
             GlobalGenerator.generate_type_declaration(prop_schema, "{}_{}".format(name, prop_name), out_file)
 
@@ -129,34 +126,49 @@ class ObjectGenerator(Generator):
         out_file.write("}} {}_t;\n\n".format(name))
 
     @classmethod
-    def generate_parser_bodies(cls, schema, name, out_file):
-        for prop_name, prop_schema in schema["properties"].items():
-            GlobalGenerator.generate_parser_bodies(prop_schema, "{}_{}".format(name, prop_name), out_file)
-        out_file.write("static bool parse_{name}(parse_state_t* parse_state, {name}_t* out)".format(name=name))
-        out_file.write("{\n")
-        out_file.write("    bool error=check_type(parse_state, JSMN_OBJECT);\n")
-        out_file.write("    uint64_t i;\n")
-        out_file.write("    const uint64_t n = parse_state->tokens[parse_state->current_token].size;\n")
-        out_file.write("    parse_state->current_token += 1;\n")
-        out_file.write("    for (i = 0; !error && i < n; ++ i) {\n")
-        out_file.write("        ")
+    def generate_seen_flags(cls, schema, out_file):
+        for prop_name in schema["properties"]:
+            out_file.write("bool seen_{} = false;".format(prop_name))
 
+    @classmethod
+    def generate_field_parsers(cls, schema, name, out_file):
         for prop_name, prop_schema in schema["properties"].items():
-            out_file.write('if (current_string_is(parse_state, "{}"))'.format(prop_name))
-            out_file.write("{\n")
-            out_file.write("            parse_state->current_token += 1;\n")
-            out_file.write("            ")
+            out_file.write('if (current_string_is(parse_state, "{}")) {{\n'.format(prop_name))
+            out_file.write("    if(seen_{}){{ \n".format(prop_name))
+            out_file.write("        /* TODO: errorlog */ \n")
+            out_file.write("        error=true;\n")
+            out_file.write("    } \n")
+            out_file.write("    seen_{} = true;\n".format(prop_name))
+            out_file.write("    parse_state->current_token += 1;\n")
             GlobalGenerator.generate_parser_call(
                 prop_schema,
                 "{}_{}".format(name, prop_name),
                 "&out->{}".format(prop_name),
                 out_file
             )
-            out_file.write("        } else ")
+            out_file.write("} else ")
         out_file.write("{\n")
-        out_file.write("            /* TODO ERRORLOG */ \n")
-        out_file.write("            error=true; \n")
-        out_file.write("        }\n")
+        out_file.write("    /* TODO ERRORLOG */ \n")
+        out_file.write("    error=true; \n")
+        out_file.write("}\n")
+
+    @classmethod
+    def generate_parser_bodies(cls, schema, name, out_file):
+        if "additionalProperties" not in schema or schema["additionalProperties"]:
+            raise ValueError(
+                "Object types must have additionalProperties set to false")
+        for prop_name, prop_schema in schema["properties"].items():
+            GlobalGenerator.generate_parser_bodies(prop_schema, "{}_{}".format(name, prop_name), out_file)
+        out_file.write("static bool parse_{name}(parse_state_t* parse_state, {name}_t* out)".format(name=name))
+        out_file.write("{\n")
+        out_file.write("    bool error=check_type(parse_state, JSMN_OBJECT);\n")
+        out_file.write("    uint64_t i;\n")
+        cls.generate_seen_flags(schema, out_file)
+        out_file.write("    const uint64_t n = parse_state->tokens[parse_state->current_token].size;\n")
+        out_file.write("    parse_state->current_token += 1;\n")
+        out_file.write("    for (i = 0; !error && i < n; ++ i) {\n")
+        out_file.write("        ")
+        cls.generate_field_parsers(schema, name, out_file)
         out_file.write("    }\n")
         out_file.write("    return error;\n")
         out_file.write("}\n\n")
