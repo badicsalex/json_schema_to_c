@@ -148,6 +148,8 @@ class ObjectGenerator(Generator):
 
     @classmethod
     def generate_type_declaration(cls, schema, name, out_file, *, force=False):
+        # pylint: disable=unused-argument
+        # "Force" must exist, with this name.
         for prop_name, prop_schema in schema["properties"].items():
             GlobalGenerator.generate_type_declaration(prop_schema, "{}_{}".format(name, prop_name), out_file)
 
@@ -265,6 +267,8 @@ class ArrayGenerator(Generator):
 
     @classmethod
     def generate_type_declaration(cls, schema, name, out_file, *, force=False):
+        # pylint: disable=unused-argument
+        # "Force" must exist, with this name.
         if "maxItems" not in schema:
             raise ValueError("Arrays must have maxItems")
         GlobalGenerator.generate_type_declaration(schema["items"], "{}_item".format(name), out_file)
