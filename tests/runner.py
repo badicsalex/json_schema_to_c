@@ -39,10 +39,16 @@ CC = [
     '-I', '.',
     '-I', JSMN_DIR,
     '-I', os.path.join(DIR_OF_THIS_FILE, '..'),  # for json_schema_to_c.h
+    'test.c',
+    'parser.c',
+    '-o', 'test.compiled',
 ]
 
 JSON_SCHEMA_TO_C = [
-    os.path.join(DIR_OF_THIS_FILE, '..', 'json_schema_to_c.py')
+    os.path.join(DIR_OF_THIS_FILE, '..', 'json_schema_to_c.py'),
+    'schema.json',
+    'parser.c',
+    'parser.h',
 ]
 
 
@@ -55,24 +61,9 @@ def get_all_tests():
 
 def run_test(test_name):
     test_dir = os.path.join(DIR_OF_THIS_FILE, test_name)
-    schema_file_name = os.path.join(test_dir, 'schema.json')
-    test_c_file_name = os.path.join(test_dir, 'test.c')
-    subprocess.run(
-        JSON_SCHEMA_TO_C + [schema_file_name, 'parser.c', 'parser.h'],
-        check=True,
-        cwd=test_dir,
-    )
-    subprocess.run(
-        CC + [test_c_file_name, 'parser.c', '-o', 'test.compiled'],
-        check=True,
-        cwd=test_dir,
-    )
-    result = subprocess.run(
-        [os.path.join(test_dir, 'test.compiled')],
-        check=True,
-        stdout=subprocess.PIPE,
-        encoding='utf-8',
-    )
+    subprocess.run(JSON_SCHEMA_TO_C, check=True, cwd=test_dir)
+    subprocess.run(CC, check=True, cwd=test_dir)
+    subprocess.run(['./test.compiled'], check=True, cwd=test_dir)
 
 
 def run_test_set(tests):
