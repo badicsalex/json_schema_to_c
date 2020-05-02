@@ -285,13 +285,13 @@ def generate_parser_c(schema, c_file, h_file_name):
 
     c_file.write('#define JSMN_STATIC\n')
     with open(os.path.join(DIR_OF_THIS_FILE, '..', 'jsmn', 'jsmn.h')) as jsmn_h:
-        c_file.write("/* === jsmn.h (From https://github.com/zserge/jsmn) === */")
+        c_file.write("/* === jsmn.h (From https://github.com/zserge/jsmn) === */\n")
         c_file.write(jsmn_h.read())
 
     with open(os.path.join(DIR_OF_THIS_FILE, 'builtin_parsers.c')) as builtins_file:
-        c_file.write("/* === builtin_parsers.c === */")
+        c_file.write("/* === builtin_parsers.c === */\n")
         c_file.write(builtins_file.read())
 
-    c_file.write("/* === Generated parsers === */")
+    c_file.write("/* === Generated parsers === */\n")
     GlobalGenerator.generate_parser_bodies(schema, schema['$id'], c_file)
     generate_root_parser(schema, c_file)
