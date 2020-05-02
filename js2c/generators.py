@@ -62,12 +62,22 @@ class Generator(ABC):
     def generate_set_default_value(cls, schema, out_var_name, out_file):
         raise NoDefaultValue("Default values not supported for {}".format(cls.__name__))
 
+    @classmethod
+    def generate_docstring(cls, schema, out_file):
+        # Unlike the above functions, this is not here to be overridden, this is just
+        # a convenience method that really is common between all types.
+        if "description" in schema:
+            out_file.write("/**\n")
+            out_file.write("{}\n".format(schema['description']))
+            out_file.write("*/\n")
+
 
 class StringGenerator(Generator):
     @classmethod
     def generate_field_declaration(cls, schema, name, field_name, out_file):
         if "maxLength" not in schema:
             raise ValueError("Strings must have maxLength")
+        cls.generate_docstring(schema, out_file)
         out_file.write("    char {}[{}];\n".format(field_name, schema["maxLength"] + 1))
 
     @classmethod
@@ -96,6 +106,7 @@ class StringGenerator(Generator):
 class NumberGenerator(Generator):
     @classmethod
     def generate_field_declaration(cls, schema, name, field_name, out_file):
+        cls.generate_docstring(schema, out_file)
         out_file.write("    int64_t {};\n".format(field_name))
 
     @classmethod
@@ -114,6 +125,7 @@ class NumberGenerator(Generator):
 class BoolGenerator(Generator):
     @classmethod
     def generate_field_declaration(cls, schema, name, field_name, out_file):
+        cls.generate_docstring(schema, out_file)
         out_file.write("    bool {};\n".format(field_name))
 
     @classmethod
@@ -153,6 +165,7 @@ class ObjectGenerator(Generator):
         for prop_name, prop_schema in schema["properties"].items():
             GlobalGenerator.generate_type_declaration(prop_schema, "{}_{}".format(name, prop_name), out_file)
 
+        cls.generate_docstring(schema, out_file)
         out_file.write("typedef struct {}_s ".format(name) + "{\n")
         for prop_name, prop_schema in schema["properties"].items():
             GlobalGenerator.generate_field_declaration(
@@ -273,7 +286,12 @@ class ArrayGenerator(Generator):
             raise ValueError("Arrays must have maxItems")
         GlobalGenerator.generate_type_declaration(schema["items"], "{}_item".format(name), out_file)
 
+        cls.generate_docstring(schema, out_file)
         out_file.write("typedef struct {}_s ".format(name) + "{\n")
+
+        out_file.write("/**\n")
+        out_file.write("The number of elements in the array.\n")
+        out_file.write("*/\n")
         out_file.write("    uint64_t n;\n")
         GlobalGenerator.generate_field_declaration(
             schema["items"],
