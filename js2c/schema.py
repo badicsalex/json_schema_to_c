@@ -22,25 +22,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-
-import argparse
-from js2c.schema import load_schema
-from js2c.generators import generate_parser_h, generate_parser_c
+import json
 
 
-def parse_args():
-    parser = argparse.ArgumentParser(description="Create a JSON parser in C based on a json schema")
-    parser.add_argument("schema_file", type=argparse.FileType('r'))
-    parser.add_argument("c_file", type=argparse.FileType('w'))
-    parser.add_argument("h_file", type=argparse.FileType('w'))
-    return parser.parse_args()
-
-
-def main(args):
-    schema = load_schema(args.schema_file)
-    generate_parser_h(schema, args.h_file)
-    generate_parser_c(schema, args.c_file, args.h_file.name)
-
-
-if __name__ == "__main__":
-    main(parse_args())
+def load_schema(schema_file):
+    schema = json.load(schema_file)
+    return schema
