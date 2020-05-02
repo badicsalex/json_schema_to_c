@@ -1,4 +1,4 @@
-.PHONY: check clean help
+.PHONY: check clean help pylint_check
 
 help:
 	@echo "This makefile does not have a default target."
@@ -9,5 +9,11 @@ clean:
 	$(MAKE) -C example clean
 	$(MAKE) -C tests clean
 
-check:
+check: pylint_check pep8_check
 	$(MAKE) -C tests all
+
+pylint_check:
+	pylint js2c *.py
+
+pep8_check:
+	autopep8 -d *.py js2c/*.py --exit-code

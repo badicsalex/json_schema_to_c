@@ -12,6 +12,11 @@ Usage
 
 For now, please see the example directory, and run `make run`
 
+Contribution
+------------
+
+I love to receive pull requests, especially if it's a bugifx or a nice feature, and `make check` was successful on it.
+
 Licence
 -------
 

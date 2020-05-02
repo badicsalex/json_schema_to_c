@@ -110,7 +110,7 @@ class ObjectGenerator(Generator):
 
     @classmethod
     def generate_type_declaration(cls, schema, name, out_file):
-        if "additionalProperties" not in schema or schema["additionalProperties"] != False:
+        if "additionalProperties" not in schema or schema["additionalProperties"]:
             raise ValueError(
                 "Object types must have additionalProperties set to false")
         for prop_name, prop_schema in schema["properties"].items():
