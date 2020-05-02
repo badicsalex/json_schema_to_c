@@ -216,7 +216,8 @@ class ObjectGenerator(Generator):
     @classmethod
     def generate_field_parsers(cls, schema, name, out_file):
         for prop_name, prop_schema in schema["properties"].items():
-            out_file.write('if (current_string_is(parse_state, "{}")) {{\n'.format(prop_name))
+            out_file.write('if (current_string_is(parse_state, "{}"))\n'.format(prop_name))
+            out_file.write("{\n")
             out_file.write("    if(seen_{}){{ \n".format(prop_name))
             out_file.write("        /* TODO: errorlog */ \n")
             out_file.write("        error=true;\n")
@@ -359,7 +360,9 @@ class GlobalGenerator(Generator):
 
 
 def generate_root_parser(schema, out_file):
-    out_file.write("bool json_parse_{id}(const char* json_string, {id}_t* out){{\n".format(id=schema['$id']))
+    out_file.write("bool json_parse_{id}(const char* json_string, {id}_t* out)".format(id=schema['$id']))
+    out_file.write("{ \n")
+
     out_file.write("    bool error = false;\n")
     out_file.write("    parse_state_t parse_state_var;\n")
     out_file.write("    parse_state_t* parse_state = &parse_state_var;\n")
