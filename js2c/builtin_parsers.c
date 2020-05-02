@@ -22,8 +22,6 @@
  * SOFTWARE.
  */
 
-#ifndef JSON_SCHEMA_TO_C_H_
-#define JSON_SCHEMA_TO_C_H_
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -115,5 +113,3 @@ static inline bool builtin_parse_json_string(parse_state_t* parse_state, const c
     }
     return false;
 }
-
-#endif // JSON_SCHEMA_TO_C_H_

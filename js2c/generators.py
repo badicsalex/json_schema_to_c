@@ -22,7 +22,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
+import os
 from abc import ABC, abstractmethod
+
+DIR_OF_THIS_FILE = os.path.dirname(__file__)
 
 
 class Generator(ABC):
@@ -260,7 +263,10 @@ def generate_parser_h(schema, h_file):
 
 def generate_parser_c(schema, c_file, h_file_name):
     c_file.write('#include "{}"\n'.format(h_file_name))
-    c_file.write('#include "json_schema_to_c.h"\n\n')
+
+    with open(os.path.join(DIR_OF_THIS_FILE, 'builtin_parsers.c')) as builtins_file:
+        c_file.write("/* === builtin_parsers.c === */")
+        c_file.write(builtins_file.read())
 
     GlobalGenerator.generate_parser_bodies(schema, "actual_root", c_file)
     generate_root_parser(schema, c_file)
