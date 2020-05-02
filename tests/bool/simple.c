@@ -1,4 +1,4 @@
-#include "parser.h"
+#include "simple.parser.h"
 
 #include <stdio.h>
 #include <assert.h>
