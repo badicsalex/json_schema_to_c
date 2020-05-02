@@ -30,6 +30,15 @@ other/prefix_postfix.parser.c other/prefix_postfix.parser.h &: \
 		--c-postfix other/c_postfix.inc \
 		other/prefix_postfix.schema.json other/prefix_postfix.parser.c other/prefix_postfix.parser.h
 
+other/errors.parser.c other/errors.parser.h &: \
+		other/errors.schema.json $(PARSER_SOURCE_FILES) \
+		other/errors_c_prefix.inc other/errors_h_prefix.inc
+	echo "other/errors: generating schema"
+	../json_schema_to_c.py \
+		--h-prefix other/errors_h_prefix.inc \
+		--c-prefix other/errors_c_prefix.inc \
+		other/errors.schema.json other/errors.parser.c other/errors.parser.h
+
 # === General test running and compilation rules ===
 %.parser.c %.parser.h: %.schema.json $(PARSER_SOURCE_FILES)
 	echo "$*: generating schema"

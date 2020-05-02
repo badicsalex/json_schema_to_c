@@ -72,6 +72,21 @@ class Generator(ABC):
             out_file.write("{}\n".format(schema['description']))
             out_file.write("*/\n")
 
+    @classmethod
+    def generate_logged_error(cls, log_message, out_file):
+        out_file.write("error = true;\n")
+        if isinstance(log_message, str):
+            out_file.write("LOG_ERROR(CURRENT_TOKEN(parse_state).start, \"{}\")\n".format(log_message))
+        else:
+            assert len(log_message) > 1, "Use a simple string, not a 1 element array."
+            out_file.write(
+                "LOG_ERROR(CURRENT_TOKEN(parse_state).start, \"{}\", {})\n"
+                .format(
+                    log_message[0],
+                    ", ".join(log_message[1:]),
+                )
+            )
+
 
 class StringGenerator(Generator):
     @classmethod
@@ -197,7 +212,7 @@ class ObjectGenerator(Generator):
             out_file.write("}\n")
 
     @classmethod
-    def generate_required_checks(cls, schema, out_file):
+    def generate_required_checks(cls, schema, name, out_file):
         for prop_name, prop_schema in schema["properties"].items():
             if 'default' in prop_schema:
                 continue
@@ -210,8 +225,7 @@ class ObjectGenerator(Generator):
                 )
             out_file.write("if (!seen_{}) ".format(prop_name))
             out_file.write("{ \n")
-            out_file.write("    /* TODO ERRORLOG */ \n")
-            out_file.write("    error=true; \n")
+            cls.generate_logged_error("Missing required field in {}: {}".format(name, prop_name), out_file)
             out_file.write("}\n")
 
     @classmethod
@@ -220,8 +234,7 @@ class ObjectGenerator(Generator):
             out_file.write('if (current_string_is(parse_state, "{}"))\n'.format(prop_name))
             out_file.write("{\n")
             out_file.write("    if(seen_{}){{ \n".format(prop_name))
-            out_file.write("        /* TODO: errorlog */ \n")
-            out_file.write("        error=true;\n")
+            cls.generate_logged_error("Duplicate field definition in {}: {}".format(name, prop_name), out_file)
             out_file.write("    } \n")
             out_file.write("    seen_{} = true;\n".format(prop_name))
             out_file.write("    parse_state->current_token += 1;\n")
@@ -233,8 +246,7 @@ class ObjectGenerator(Generator):
             )
             out_file.write("} else ")
         out_file.write("{\n")
-        out_file.write("    /* TODO ERRORLOG */ \n")
-        out_file.write("    error=true; \n")
+        cls.generate_logged_error(["Unknown field in {}: %.*s".format(name), "CURRENT_STRING_FOR_ERROR(parse_state)"], out_file)
         out_file.write("}\n")
 
     @classmethod
@@ -257,7 +269,7 @@ class ObjectGenerator(Generator):
         out_file.write("    }\n")
 
         out_file.write("    if (!error){\n")
-        cls.generate_required_checks(schema, out_file)
+        cls.generate_required_checks(schema, name, out_file)
         out_file.write("    }\n")
 
         out_file.write("    if (!error){\n")
@@ -308,11 +320,19 @@ class ArrayGenerator(Generator):
         out_file.write("static bool parse_{name}(parse_state_t* parse_state, {name}_t* out)".format(name=name))
         out_file.write("{\n")
         out_file.write("    bool error=check_type(parse_state, JSMN_ARRAY);\n")
-        out_file.write("    uint64_t i;\n")
-        out_file.write("    const uint64_t n = parse_state->tokens[parse_state->current_token].size;\n")
-        out_file.write("    out->n = n;\n")
-        out_file.write("    parse_state->current_token += 1;\n")
-        out_file.write("    for (i = 0; !error && i < n; ++ i) {\n")
+        out_file.write("    int i;\n")
+        out_file.write("    const int n = parse_state->tokens[parse_state->current_token].size;\n")
+        out_file.write("    if (!error && (n > {}))\n".format(schema["maxItems"]))
+        out_file.write("    {\n")
+        cls.generate_logged_error(
+            ["Array {} too large. Length: %i. Maximum length: {}.".format(name, schema["maxItems"]), "n"],
+            out_file
+        )
+        out_file.write("    }\n")
+        out_file.write("    if (!error){ \n")
+        out_file.write("        out->n = n;\n")
+        out_file.write("        parse_state->current_token += 1;\n")
+        out_file.write("        for (i = 0; !error && i < n; ++ i) {\n")
         out_file.write("        ")
         GlobalGenerator.generate_parser_call(
             schema["items"],
@@ -320,6 +340,7 @@ class ArrayGenerator(Generator):
             "&out->items[i]",
             out_file
         )
+        out_file.write("        }\n")
         out_file.write("    }\n")
         out_file.write("    return error;\n")
         out_file.write("}\n\n")

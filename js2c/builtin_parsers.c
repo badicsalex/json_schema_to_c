@@ -35,16 +35,52 @@
 #include "../jsmn/jsmn.h"
 #endif
 
+#ifndef LOG_ERROR
+#define LOG_ERROR(position, ...)
+#endif
+
 typedef struct parse_state_s {
     const char* json_string;
     jsmntok_t tokens[1024];
     uint64_t current_token;
 } parse_state_t;
 
+#define CURRENT_TOKEN(parse_state) ((parse_state)->tokens[(parse_state)->current_token])
+#define CURRENT_STRING_LENGTH(parse_state) (CURRENT_TOKEN(parse_state).end - CURRENT_TOKEN(parse_state).start)
+#define CURRENT_STRING_FOR_ERROR(parse_state) CURRENT_STRING_LENGTH(parse_state), ((parse_state)->json_string + CURRENT_TOKEN(parse_state).start)
+
+const char* token_type_as_string(jsmntype_t type){
+    switch(type){
+        case JSMN_UNDEFINED: return "UNDEFINED";
+        case JSMN_OBJECT: return "OBJECT";
+        case JSMN_ARRAY: return "ARRAY";
+        case JSMN_STRING: return "STRING";
+        case JSMN_PRIMITIVE: return "PRIMITIVE";
+        default: return "UNKNOWN";
+    }
+}
+
+const char* jsmn_error_as_string(int err){
+    switch(err){
+        case JSMN_ERROR_INVAL: return "Invalid character";
+        case JSMN_ERROR_NOMEM: return "JSON file too complex";
+        case JSMN_ERROR_PART: return "End-of-file reached (JSON file incomplete)";
+        default: return "Internal error";
+    }
+}
+
 static inline bool check_type(const parse_state_t* parse_state, jsmntype_t type){
-    /* TODO errorlog */
     const jsmntok_t* token = &parse_state->tokens[parse_state->current_token];
-    return token->type != type;
+    if (token->type != type){
+        LOG_ERROR(
+            token->start,
+            "Unexpected token: %s instead of %s",
+            token_type_as_string(token->type),
+            token_type_as_string(type)
+        )
+        return true;
+    }
+    return false;
 }
 
 static inline bool current_string_is(const parse_state_t* parse_state, const char *s) {
@@ -61,7 +97,7 @@ static inline bool builtin_parse_string(parse_state_t* parse_state, char *out, u
     }
     const jsmntok_t* token = &parse_state->tokens[parse_state->current_token];
     if (token->end - token->start > max_len){
-        /* TODO errorlog */
+        LOG_ERROR(token->start, "String too large. Length: %i. Maximum length: %li.", token->end - token->start, max_len);
         return true;
     }
     memcpy(out, parse_state->json_string + token->start, token->end - token->start);
@@ -77,7 +113,7 @@ static inline bool builtin_parse_bool(parse_state_t* parse_state, bool *out){
     const jsmntok_t* token = &parse_state->tokens[parse_state->current_token];
     const char first_char = parse_state->json_string[token->start];
     if (first_char != 't' && first_char != 'f'){
-        /* TODO errorlog */
+        LOG_ERROR(token->start, "Invalid boolean literal: %.*s", CURRENT_STRING_FOR_ERROR(parse_state));
         return true;
     }
     *out = first_char == 't';
@@ -90,12 +126,12 @@ static inline bool builtin_parse_number(parse_state_t* parse_state, int64_t *out
         return true;
     }
     const jsmntok_t* token = &parse_state->tokens[parse_state->current_token];
-    const char first_char = parse_state->json_string[token->start];
-    if (first_char != '-' && !(first_char >= '0' && first_char <= '9')){
-        /* TODO errorlog */
+    char * end_char = NULL;
+    *out = strtol(parse_state->json_string + token->start, &end_char, 10);
+    if (end_char != parse_state->json_string + token->end){
+        LOG_ERROR(token->start, "Invalid integer literal: %.*s", CURRENT_STRING_FOR_ERROR(parse_state));
         return true;
     }
-    *out = atoi(parse_state->json_string + token->start);
     parse_state->current_token += 1;
     return false;
 }
@@ -114,7 +150,7 @@ static inline bool builtin_parse_json_string(parse_state_t* parse_state, const c
         sizeof(parse_state->tokens) / sizeof(parse_state->tokens[0])
     );
     if (token_num < 0) {
-        /* TODO errorlog */
+        LOG_ERROR(parser.pos, "JSON syntax error: %s", jsmn_error_as_string(token_num));
         return true;
     }
     return false;
