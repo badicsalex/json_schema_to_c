@@ -49,7 +49,7 @@ typedef struct parse_state_s {
 #define CURRENT_STRING_LENGTH(parse_state) (CURRENT_TOKEN(parse_state).end - CURRENT_TOKEN(parse_state).start)
 #define CURRENT_STRING_FOR_ERROR(parse_state) CURRENT_STRING_LENGTH(parse_state), ((parse_state)->json_string + CURRENT_TOKEN(parse_state).start)
 
-const char* token_type_as_string(jsmntype_t type){
+static const char* token_type_as_string(jsmntype_t type){
     switch(type){
         case JSMN_UNDEFINED: return "UNDEFINED";
         case JSMN_OBJECT: return "OBJECT";
@@ -60,7 +60,7 @@ const char* token_type_as_string(jsmntype_t type){
     }
 }
 
-const char* jsmn_error_as_string(int err){
+static const char* jsmn_error_as_string(int err){
     switch(err){
         case JSMN_ERROR_INVAL: return "Invalid character";
         case JSMN_ERROR_NOMEM: return "JSON file too complex";
