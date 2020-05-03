@@ -62,6 +62,12 @@ class CodeBlockPrinter:
             self.file.write("\n{}{}".format(" "*self.indent_level, line))
         self.last_was_else = (line == "else")
 
+    def print_with_docstring(self, line, docstring):
+        if not docstring:
+            self.print(line)
+        else:
+            self.print(line.ljust(40) + "/**< {} */".format(docstring))
+
     def print_separator(self, separator_str):
         pad_length = (70 - len(separator_str))//2
         self.print("/* {p} {s} {p} */".format(p="=" * pad_length, s=separator_str))

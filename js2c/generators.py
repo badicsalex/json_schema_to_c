@@ -66,15 +66,6 @@ class Generator(ABC):
         raise NoDefaultValue("Default values not supported for {}".format(cls.__name__))
 
     @classmethod
-    def generate_docstring(cls, schema, out_file):
-        # Unlike the above functions, this is not here to be overridden, this is just
-        # a convenience method that really is common between all types.
-        if "description" in schema:
-            out_file.print("/**")
-            out_file.print("{}".format(schema['description']))
-            out_file.print("*/")
-
-    @classmethod
     def generate_logged_error(cls, log_message, out_file):
         if isinstance(log_message, str):
             out_file.print("LOG_ERROR(CURRENT_TOKEN(parse_state).start, \"{}\")".format(log_message))
@@ -95,8 +86,10 @@ class StringGenerator(Generator):
     def generate_field_declaration(cls, schema, name, field_name, out_file):
         if "maxLength" not in schema:
             raise ValueError("Strings must have maxLength")
-        cls.generate_docstring(schema, out_file)
-        out_file.print("char {}[{}];".format(field_name, schema["maxLength"] + 1))
+        out_file.print_with_docstring(
+            "char {}[{}];".format(field_name, schema["maxLength"] + 1),
+            schema.get('description', '')
+        )
 
     @classmethod
     def generate_parser_call(cls, schema, name, out_var_name, out_file):
@@ -126,8 +119,10 @@ class StringGenerator(Generator):
 class NumberGenerator(Generator):
     @classmethod
     def generate_field_declaration(cls, schema, name, field_name, out_file):
-        cls.generate_docstring(schema, out_file)
-        out_file.print("int64_t {};".format(field_name))
+        out_file.print_with_docstring(
+            "int64_t {};".format(field_name),
+            schema.get("description", "")
+        )
 
     @classmethod
     def generate_range_check(cls, schema, schema_field_name, out_var_name, check_operator, out_file):
@@ -170,8 +165,10 @@ class NumberGenerator(Generator):
 class BoolGenerator(Generator):
     @classmethod
     def generate_field_declaration(cls, schema, name, field_name, out_file):
-        cls.generate_docstring(schema, out_file)
-        out_file.print("bool {};".format(field_name))
+        out_file.print_with_docstring(
+            "bool {};".format(field_name),
+            schema.get('description', '')
+        )
 
     @classmethod
     def generate_parser_call(cls, schema, name, out_var_name, out_file):
@@ -196,7 +193,10 @@ class BoolGenerator(Generator):
 class ObjectGenerator(Generator):
     @classmethod
     def generate_field_declaration(cls, schema, name, field_name, out_file):
-        out_file.print("{}_t {};".format(name, field_name))
+        out_file.print_with_docstring(
+            "{}_t {};".format(name, field_name),
+            schema.get('description', '')
+        )
 
     @classmethod
     def generate_parser_call(cls, schema, name, out_var_name, out_file):
@@ -214,7 +214,6 @@ class ObjectGenerator(Generator):
         for prop_name, prop_schema in schema["properties"].items():
             GlobalGenerator.generate_type_declaration(prop_schema, "{}_{}".format(name, prop_name), out_file)
 
-        cls.generate_docstring(schema, out_file)
         out_file.print("typedef struct {}_s ".format(name) + "{")
         with out_file.indent():
             for prop_name, prop_schema in schema["properties"].items():
@@ -225,6 +224,7 @@ class ObjectGenerator(Generator):
                     out_file
                 )
         out_file.print("}} {}_t;".format(name))
+        out_file.print("")
 
     @classmethod
     def generate_seen_flags(cls, schema, out_file):
@@ -311,7 +311,10 @@ class ObjectGenerator(Generator):
 class ArrayGenerator(Generator):
     @classmethod
     def generate_field_declaration(cls, schema, name, field_name, out_file):
-        out_file.print("    {}_t {};".format(name, field_name))
+        out_file.print_with_docstring(
+            "{}_t {};".format(name, field_name),
+            schema.get('description', '')
+        )
 
     @classmethod
     def generate_parser_call(cls, schema, name, out_var_name, out_file):
@@ -330,19 +333,16 @@ class ArrayGenerator(Generator):
             raise ValueError("Arrays must have maxItems")
         GlobalGenerator.generate_type_declaration(schema["items"], "{}_item".format(name), out_file)
 
-        cls.generate_docstring(schema, out_file)
         out_file.print("typedef struct {}_s ".format(name) + "{")
         with out_file.indent():
-            out_file.print("/**")
-            out_file.print("The number of elements in the array.")
-            out_file.print("*/")
-            out_file.print("    uint64_t n;")
+            out_file.print_with_docstring("uint64_t n;", "The number of elements in the array")
             GlobalGenerator.generate_field_declaration(
                 schema["items"],
                 "{}_item".format(name),
                 "items[{}]".format(schema["maxItems"]), out_file
             )
         out_file.print("}} {}_t;".format(name))
+        out_file.print("")
 
     @classmethod
     def generate_range_checks(cls, schema, name, out_file):

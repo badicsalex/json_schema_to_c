@@ -40,11 +40,13 @@
       "items": {
           "type": "array",
           "maxItems": 7,
+          "description": "The first array-in-array",
           "items": {
               "type": "array",
               "maxItems": 9,
               "items": {
-                  "type": "integer"
+                  "type": "integer",
+                  "description": "The innermost number"
               }
           }
       }
