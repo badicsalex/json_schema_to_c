@@ -24,20 +24,25 @@
 #
 
 
-class IndentContextManager:
-    def __init__(self, printer, indent_level):
+class CodeBlockContextManager:
+    def __init__(self, printer, indent_level, indent_only=False):
         self.printer = printer
         self.indent_level = indent_level
+        self.indent_only = indent_only
 
     def __enter__(self):
+        if not self.indent_only:
+            self.printer.print("{")
         self.printer.indent_level += self.indent_level
         return self
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
         self.printer.indent_level -= self.indent_level
+        if not self.indent_only:
+            self.printer.print("}")
 
 
-class IndentedPrinter:
+class CodeBlockPrinter:
     def __init__(self, file):
         self.file = file
         self.indent_level = 0
@@ -53,5 +58,8 @@ class IndentedPrinter:
         """ Write raw data to the file """
         self.file.write(data)
 
+    def code_block(self, indent_level=4):
+        return CodeBlockContextManager(self, indent_level)
+
     def indent(self, indent_level=4):
-        return IndentContextManager(self, indent_level)
+        return CodeBlockContextManager(self, indent_level, indent_only=True)
