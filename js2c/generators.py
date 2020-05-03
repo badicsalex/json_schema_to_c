@@ -26,6 +26,8 @@ import os
 import re
 from abc import ABC, abstractmethod
 
+from .utils import IndentedPrinter
+
 DIR_OF_THIS_FILE = os.path.dirname(__file__)
 
 NOTE_FOR_GENERATED_FILES = """
@@ -52,7 +54,7 @@ class Generator(ABC):
     @classmethod
     def generate_type_declaration(cls, schema, name, out_file, *, force=False):
         if force:
-            out_file.write("typedef ")
+            out_file.print("typedef ")
             GlobalGenerator.generate_field_declaration(schema, None, name + "_t", out_file)
 
     @classmethod
@@ -68,19 +70,19 @@ class Generator(ABC):
         # Unlike the above functions, this is not here to be overridden, this is just
         # a convenience method that really is common between all types.
         if "description" in schema:
-            out_file.write("/**\n")
-            out_file.write("{}\n".format(schema['description']))
-            out_file.write("*/\n")
+            out_file.print("/**")
+            out_file.print("{}".format(schema['description']))
+            out_file.print("*/")
 
     @classmethod
     def generate_logged_error(cls, log_message, out_file):
-        out_file.write("error = true;\n")
+        out_file.print("error = true;")
         if isinstance(log_message, str):
-            out_file.write("LOG_ERROR(CURRENT_TOKEN(parse_state).start, \"{}\")\n".format(log_message))
+            out_file.print("LOG_ERROR(CURRENT_TOKEN(parse_state).start, \"{}\")".format(log_message))
         else:
             assert len(log_message) > 1, "Use a simple string, not a 1 element array."
-            out_file.write(
-                "LOG_ERROR(CURRENT_TOKEN(parse_state).start, \"{}\", {})\n"
+            out_file.print(
+                "LOG_ERROR(CURRENT_TOKEN(parse_state).start, \"{}\", {})"
                 .format(
                     log_message[0],
                     ", ".join(log_message[1:]),
@@ -94,14 +96,14 @@ class StringGenerator(Generator):
         if "maxLength" not in schema:
             raise ValueError("Strings must have maxLength")
         cls.generate_docstring(schema, out_file)
-        out_file.write("    char {}[{}];\n".format(field_name, schema["maxLength"] + 1))
+        out_file.print("char {}[{}];".format(field_name, schema["maxLength"] + 1))
 
     @classmethod
     def generate_parser_call(cls, schema, name, out_var_name, out_file):
         if "maxLength" not in schema:
             raise ValueError("Strings must have maxLength")
-        out_file.write(
-            "error = error || builtin_parse_string(parse_state, {}[0], {}, {});\n"
+        out_file.print(
+            "error = error || builtin_parse_string(parse_state, {}[0], {}, {});"
             .format(out_var_name, schema.get("minLength", 0), schema["maxLength"])
         )
 
@@ -110,8 +112,8 @@ class StringGenerator(Generator):
         assert 'default' in schema, "Caller is responsible for checking this."
         if len(schema['default']) > schema['maxLength']:
             raise ValueError("String default value longer than maxLength")
-        out_file.write(
-            'memcpy({dst}, "{src}", {size});\n'.format(
+        out_file.print(
+            'memcpy({dst}, "{src}", {size});'.format(
                 dst=out_var_name,
                 src=schema['default'],
                 size=len(schema['default']) + 1
@@ -123,7 +125,7 @@ class NumberGenerator(Generator):
     @classmethod
     def generate_field_declaration(cls, schema, name, field_name, out_file):
         cls.generate_docstring(schema, out_file)
-        out_file.write("    int64_t {};\n".format(field_name))
+        out_file.print("int64_t {};".format(field_name))
 
     @classmethod
     def generate_range_check(cls, schema, schema_field_name, out_var_name, check_operator, out_file):
@@ -132,24 +134,24 @@ class NumberGenerator(Generator):
         if schema_field_name not in schema:
             return
         check_number = schema[schema_field_name]
-        out_file.write("if (!error && !((*{}) {} {}))".format(out_var_name, check_operator, check_number))
-        out_file.write("{\n")
-
-        # Roll back the token thing, as the value was not actually correct
-        out_file.write("    parse_state->current_token -=1; \n")
-        cls.generate_logged_error(
-            [
-                "Integer %li out of range. It must be {} {}.".format(check_operator, check_number),
-                "(*{})".format(out_var_name)
-            ],
-            out_file
-        )
-        out_file.write("}\n")
+        out_file.print("if (!error && !((*{}) {} {}))".format(out_var_name, check_operator, check_number))
+        out_file.print("{")
+        with out_file.indent():
+            # Roll back the token, as the value was not actually correct
+            out_file.print("parse_state->current_token -=1;")
+            cls.generate_logged_error(
+                [
+                    "Integer %li out of range. It must be {} {}.".format(check_operator, check_number),
+                    "(*{})".format(out_var_name)
+                ],
+                out_file
+            )
+        out_file.print("}")
 
     @classmethod
     def generate_parser_call(cls, schema, name, out_var_name, out_file):
-        out_file.write(
-            "error = error || builtin_parse_number(parse_state, {});\n"
+        out_file.print(
+            "error = error || builtin_parse_number(parse_state, {});"
             .format(out_var_name)
         )
         cls.generate_range_check(schema, "minimum", out_var_name, ">=", out_file)
@@ -160,27 +162,27 @@ class NumberGenerator(Generator):
     @classmethod
     def generate_set_default_value(cls, schema, out_var_name, out_file):
         assert 'default' in schema, "Caller is responsible for checking this."
-        out_file.write("{} = {};\n".format(out_var_name, schema['default']))
+        out_file.print("{} = {};".format(out_var_name, schema['default']))
 
 
 class BoolGenerator(Generator):
     @classmethod
     def generate_field_declaration(cls, schema, name, field_name, out_file):
         cls.generate_docstring(schema, out_file)
-        out_file.write("    bool {};\n".format(field_name))
+        out_file.print("bool {};".format(field_name))
 
     @classmethod
     def generate_parser_call(cls, schema, name, out_var_name, out_file):
-        out_file.write(
-            "error = error || builtin_parse_bool(parse_state, {});\n"
+        out_file.print(
+            "error = error || builtin_parse_bool(parse_state, {});"
             .format(out_var_name)
         )
 
     @classmethod
     def generate_set_default_value(cls, schema, out_var_name, out_file):
         assert 'default' in schema, "Caller is responsible for checking this."
-        out_file.write(
-            "{} = {};\n".format(
+        out_file.print(
+            "{} = {};".format(
                 out_var_name,
                 'true' if schema['default'] else 'false'
             )
@@ -190,12 +192,12 @@ class BoolGenerator(Generator):
 class ObjectGenerator(Generator):
     @classmethod
     def generate_field_declaration(cls, schema, name, field_name, out_file):
-        out_file.write("    {}_t {};\n".format(name, field_name))
+        out_file.print("    {}_t {};".format(name, field_name))
 
     @classmethod
     def generate_parser_call(cls, schema, name, out_var_name, out_file):
-        out_file.write(
-            "error = error || parse_{}(parse_state, {});\n"
+        out_file.print(
+            "error = error || parse_{}(parse_state, {});"
             .format(name, out_var_name)
         )
 
@@ -207,7 +209,7 @@ class ObjectGenerator(Generator):
             GlobalGenerator.generate_type_declaration(prop_schema, "{}_{}".format(name, prop_name), out_file)
 
         cls.generate_docstring(schema, out_file)
-        out_file.write("typedef struct {}_s ".format(name) + "{\n")
+        out_file.print("typedef struct {}_s ".format(name) + "{")
         for prop_name, prop_schema in schema["properties"].items():
             GlobalGenerator.generate_field_declaration(
                 prop_schema,
@@ -215,26 +217,27 @@ class ObjectGenerator(Generator):
                 prop_name,
                 out_file
             )
-        out_file.write("}} {}_t;\n\n".format(name))
+        out_file.print("}} {}_t;".format(name))
 
     @classmethod
     def generate_seen_flags(cls, schema, out_file):
         for prop_name in schema["properties"]:
-            out_file.write("bool seen_{} = false;".format(prop_name))
+            out_file.print("bool seen_{} = false;".format(prop_name))
 
     @classmethod
     def generate_default_field_setting(cls, schema, out_file):
         for prop_name, prop_schema in schema["properties"].items():
             if 'default' not in prop_schema:
                 continue
-            out_file.write("if (!seen_{}) ".format(prop_name))
-            out_file.write("{ \n")
-            GlobalGenerator.generate_set_default_value(
-                prop_schema,
-                "out->{}".format(prop_name),
-                out_file
-            )
-            out_file.write("}\n")
+            out_file.print("if (!seen_{}) ".format(prop_name))
+            out_file.print("{ ")
+            with out_file.indent():
+                GlobalGenerator.generate_set_default_value(
+                    prop_schema,
+                    "out->{}".format(prop_name),
+                    out_file
+                )
+            out_file.print("}")
 
     @classmethod
     def generate_required_checks(cls, schema, name, out_file):
@@ -248,31 +251,37 @@ class ObjectGenerator(Generator):
                     "All fields must either be required or have a default value ({})"
                     .format(prop_name)
                 )
-            out_file.write("if (!seen_{}) ".format(prop_name))
-            out_file.write("{ \n")
-            cls.generate_logged_error("Missing required field in {}: {}".format(name, prop_name), out_file)
-            out_file.write("}\n")
+            out_file.print("if (!seen_{}) ".format(prop_name))
+            out_file.print("{ ")
+            with out_file.indent():
+                cls.generate_logged_error("Missing required field in {}: {}".format(name, prop_name), out_file)
+            out_file.print("}")
 
     @classmethod
     def generate_field_parsers(cls, schema, name, out_file):
         for prop_name, prop_schema in schema["properties"].items():
-            out_file.write('if (current_string_is(parse_state, "{}"))\n'.format(prop_name))
-            out_file.write("{\n")
-            out_file.write("    if(seen_{}){{ \n".format(prop_name))
-            cls.generate_logged_error("Duplicate field definition in {}: {}".format(name, prop_name), out_file)
-            out_file.write("    } \n")
-            out_file.write("    seen_{} = true;\n".format(prop_name))
-            out_file.write("    parse_state->current_token += 1;\n")
-            GlobalGenerator.generate_parser_call(
-                prop_schema,
-                "{}_{}".format(name, prop_name),
-                "&out->{}".format(prop_name),
-                out_file
-            )
-            out_file.write("} else ")
-        out_file.write("{\n")
-        cls.generate_logged_error(["Unknown field in {}: %.*s".format(name), "CURRENT_STRING_FOR_ERROR(parse_state)"], out_file)
-        out_file.write("}\n")
+            out_file.print('if (current_string_is(parse_state, "{}"))'.format(prop_name))
+            out_file.print("{")
+            with out_file.indent():
+                out_file.print("if(seen_{}) ".format(prop_name))
+                out_file.print("{ ")
+                with out_file.indent():
+                    cls.generate_logged_error("Duplicate field definition in {}: {}".format(name, prop_name), out_file)
+                out_file.print("} ")
+                out_file.print("seen_{} = true;".format(prop_name))
+                out_file.print("parse_state->current_token += 1;")
+                GlobalGenerator.generate_parser_call(
+                    prop_schema,
+                    "{}_{}".format(name, prop_name),
+                    "&out->{}".format(prop_name),
+                    out_file
+                )
+            out_file.print("}")
+            out_file.print("else")
+        out_file.print("{")
+        with out_file.indent():
+            cls.generate_logged_error(["Unknown field in {}: %.*s".format(name), "CURRENT_STRING_FOR_ERROR(parse_state)"], out_file)
+        out_file.print("}")
 
     @classmethod
     def generate_parser_bodies(cls, schema, name, out_file):
@@ -281,39 +290,46 @@ class ObjectGenerator(Generator):
                 "Object types must have additionalProperties set to false")
         for prop_name, prop_schema in schema["properties"].items():
             GlobalGenerator.generate_parser_bodies(prop_schema, "{}_{}".format(name, prop_name), out_file)
-        out_file.write("static bool parse_{name}(parse_state_t* parse_state, {name}_t* out)".format(name=name))
-        out_file.write("{\n")
-        out_file.write("    bool error=check_type(parse_state, JSMN_OBJECT);\n")
-        out_file.write("    uint64_t i;\n")
-        cls.generate_seen_flags(schema, out_file)
-        out_file.write("    const uint64_t n = parse_state->tokens[parse_state->current_token].size;\n")
-        out_file.write("    parse_state->current_token += 1;\n")
-        out_file.write("    for (i = 0; !error && i < n; ++ i) {\n")
-        out_file.write("        ")
-        cls.generate_field_parsers(schema, name, out_file)
-        out_file.write("    }\n")
+        out_file.print("static bool parse_{name}(parse_state_t* parse_state, {name}_t* out)".format(name=name))
+        out_file.print("{")
+        with out_file.indent():
+            out_file.print("bool error=check_type(parse_state, JSMN_OBJECT);")
+            out_file.print("uint64_t i;")
+            cls.generate_seen_flags(schema, out_file)
 
-        out_file.write("    if (!error){\n")
-        cls.generate_required_checks(schema, name, out_file)
-        out_file.write("    }\n")
+            out_file.print("const uint64_t n = parse_state->tokens[parse_state->current_token].size;")
+            out_file.print("parse_state->current_token += 1;")
+            out_file.print("for (i = 0; !error && i < n; ++ i)")
+            out_file.print("{")
+            with out_file.indent():
+                cls.generate_field_parsers(schema, name, out_file)
+            out_file.print("}")
 
-        out_file.write("    if (!error){\n")
-        cls.generate_default_field_setting(schema, out_file)
-        out_file.write("    }\n")
+            out_file.print("if (!error)")
+            out_file.print("{")
+            with out_file.indent():
+                cls.generate_required_checks(schema, name, out_file)
+            out_file.print("}")
 
-        out_file.write("    return error;\n")
-        out_file.write("}\n\n")
+            out_file.print("if (!error)")
+            out_file.print("{")
+            with out_file.indent():
+                cls.generate_default_field_setting(schema, out_file)
+            out_file.print("}")
+
+            out_file.print("return error;")
+        out_file.print("}")
 
 
 class ArrayGenerator(Generator):
     @classmethod
     def generate_field_declaration(cls, schema, name, field_name, out_file):
-        out_file.write("    {}_t {};\n".format(name, field_name))
+        out_file.print("    {}_t {};".format(name, field_name))
 
     @classmethod
     def generate_parser_call(cls, schema, name, out_var_name, out_file):
-        out_file.write(
-            "error = error || parse_{}(parse_state, {});\n"
+        out_file.print(
+            "error = error || parse_{}(parse_state, {});"
             .format(name, out_var_name)
         )
 
@@ -326,61 +342,65 @@ class ArrayGenerator(Generator):
         GlobalGenerator.generate_type_declaration(schema["items"], "{}_item".format(name), out_file)
 
         cls.generate_docstring(schema, out_file)
-        out_file.write("typedef struct {}_s ".format(name) + "{\n")
-
-        out_file.write("/**\n")
-        out_file.write("The number of elements in the array.\n")
-        out_file.write("*/\n")
-        out_file.write("    uint64_t n;\n")
-        GlobalGenerator.generate_field_declaration(
-            schema["items"],
-            "{}_item".format(name),
-            "items[{}]".format(schema["maxItems"]), out_file
-        )
-        out_file.write("}} {}_t;\n\n".format(name))
+        out_file.print("typedef struct {}_s ".format(name) + "{")
+        with out_file.indent():
+            out_file.print("/**")
+            out_file.print("The number of elements in the array.")
+            out_file.print("*/")
+            out_file.print("    uint64_t n;")
+            GlobalGenerator.generate_field_declaration(
+                schema["items"],
+                "{}_item".format(name),
+                "items[{}]".format(schema["maxItems"]), out_file
+            )
+        out_file.print("}} {}_t;".format(name))
 
     @classmethod
     def generate_range_checks(cls, schema, name, out_file):
-        out_file.write("    if (!error && (n > {}))\n".format(schema["maxItems"]))
-        out_file.write("    {\n")
-        cls.generate_logged_error(
-            ["Array {} too large. Length: %i. Maximum length: {}.".format(name, schema["maxItems"]), "n"],
-            out_file
-        )
-        out_file.write("    }\n")
-        if "minItems" in schema:
-            out_file.write("    if (!error && (n < {}))\n".format(schema["minItems"]))
-            out_file.write("    {\n")
+        out_file.print("if (!error && (n > {}))".format(schema["maxItems"]))
+        out_file.print("{")
+        with out_file.indent():
             cls.generate_logged_error(
-                ["Array {} too small. Length: %i. Minimum length: {}.".format(name, schema["minItems"]), "n"],
+                ["Array {} too large. Length: %i. Maximum length: {}.".format(name, schema["maxItems"]), "n"],
                 out_file
             )
-            out_file.write("    }\n")
+        out_file.print("}")
+        if "minItems" in schema:
+            out_file.print("if (!error && (n < {}))".format(schema["minItems"]))
+            out_file.print("{")
+            with out_file.indent():
+                cls.generate_logged_error(
+                    ["Array {} too small. Length: %i. Minimum length: {}.".format(name, schema["minItems"]), "n"],
+                    out_file
+                )
+            out_file.print("}")
 
     @classmethod
     def generate_parser_bodies(cls, schema, name, out_file):
         GlobalGenerator.generate_parser_bodies(schema["items"], "{}_item".format(name), out_file)
-        out_file.write("static bool parse_{name}(parse_state_t* parse_state, {name}_t* out)".format(name=name))
-        out_file.write("{\n")
-        out_file.write("    bool error=check_type(parse_state, JSMN_ARRAY);\n")
-        out_file.write("    int i;\n")
-        out_file.write("    const int n = parse_state->tokens[parse_state->current_token].size;\n")
-        cls.generate_range_checks(schema, name, out_file)
-        out_file.write("    if (!error){ \n")
-        out_file.write("        out->n = n;\n")
-        out_file.write("        parse_state->current_token += 1;\n")
-        out_file.write("        for (i = 0; !error && i < n; ++ i) {\n")
-        out_file.write("        ")
-        GlobalGenerator.generate_parser_call(
-            schema["items"],
-            "{}_item".format(name),
-            "&out->items[i]",
-            out_file
-        )
-        out_file.write("        }\n")
-        out_file.write("    }\n")
-        out_file.write("    return error;\n")
-        out_file.write("}\n\n")
+        out_file.print("static bool parse_{name}(parse_state_t* parse_state, {name}_t* out)".format(name=name))
+        out_file.print("{")
+        with out_file.indent():
+            out_file.print("bool error=check_type(parse_state, JSMN_ARRAY);")
+            out_file.print("int i;")
+            out_file.print("const int n = parse_state->tokens[parse_state->current_token].size;")
+            cls.generate_range_checks(schema, name, out_file)
+            out_file.print("if (!error){ ")
+            with out_file.indent():
+                out_file.print("out->n = n;")
+                out_file.print("parse_state->current_token += 1;")
+                out_file.print("for (i = 0; !error && i < n; ++ i) {")
+                with out_file.indent():
+                    GlobalGenerator.generate_parser_call(
+                        schema["items"],
+                        "{}_item".format(name),
+                        "&out->items[i]",
+                        out_file
+                    )
+                out_file.print("}")
+            out_file.print("}")
+            out_file.print("return error;")
+        out_file.print("}")
 
 
 class GlobalGenerator(Generator):
@@ -419,70 +439,75 @@ class GlobalGenerator(Generator):
 
 
 def generate_root_parser(schema, out_file):
-    out_file.write("bool json_parse_{id}(const char* json_string, {id}_t* out)".format(id=schema['$id']))
-    out_file.write("{ \n")
-
-    out_file.write("    bool error = false;\n")
-    out_file.write("    parse_state_t parse_state_var;\n")
-    out_file.write("    parse_state_t* parse_state = &parse_state_var;\n")
-    out_file.write("    error = error || builtin_parse_json_string(parse_state, json_string);\n")
-    out_file.write("    ")
-    GlobalGenerator.generate_parser_call(
-        schema,
-        schema['$id'],
-        "out",
-        out_file,
-    )
-    out_file.write("    return error;\n")
-    out_file.write("}\n")
+    out_file.print("bool json_parse_{id}(const char* json_string, {id}_t* out)".format(id=schema['$id']))
+    out_file.print("{ ")
+    with out_file.indent():
+        out_file.print("bool error = false;")
+        out_file.print("parse_state_t parse_state_var;")
+        out_file.print("parse_state_t* parse_state = &parse_state_var;")
+        out_file.print("error = error || builtin_parse_json_string(parse_state, json_string);")
+        out_file.print("")
+        GlobalGenerator.generate_parser_call(
+            schema,
+            schema['$id'],
+            "out",
+            out_file,
+        )
+        out_file.print("return error;")
+    out_file.print("}")
 
 
 def generate_parser_h(schema, h_file, prefix, postfix):
+    h_file_name = h_file.name
+    h_file = IndentedPrinter(h_file)
+
     h_file.write(NOTE_FOR_GENERATED_FILES)
 
-    header_guard_name = re.sub("[^A-Z0-9]", "_", os.path.basename(h_file.name).upper())
-    h_file.write("#ifndef {}\n".format(header_guard_name))
-    h_file.write("#define {}\n".format(header_guard_name))
+    header_guard_name = re.sub("[^A-Z0-9]", "_", os.path.basename(h_file_name).upper())
+    h_file.print("#ifndef {}".format(header_guard_name))
+    h_file.print("#define {}".format(header_guard_name))
 
-    h_file.write("#include <stdint.h>\n")
-    h_file.write("#include <stdbool.h>\n\n")
+    h_file.print("#include <stdint.h>")
+    h_file.print("#include <stdbool.h>")
 
     if prefix:
-        h_file.write("/* === User-added prefix === */\n")
+        h_file.print("/* === User-added prefix === */")
         h_file.write(prefix)
 
-    h_file.write("/* === Generated type declarations === */\n")
+    h_file.print("/* === Generated type declarations === */")
     GlobalGenerator.generate_type_declaration(schema, schema['$id'], h_file, force=True)
-    h_file.write("bool json_parse_{id}(const char* json_string, {id}_t* out);\n".format(id=schema['$id']))
+    h_file.print("bool json_parse_{id}(const char* json_string, {id}_t* out);".format(id=schema['$id']))
 
     if postfix:
-        h_file.write("/* === User-added postfix === */\n")
+        h_file.print("/* === User-added postfix === */")
         h_file.write(postfix)
 
-    h_file.write("#endif /* {} */\n".format(header_guard_name))
+    h_file.print("#endif /* {} */".format(header_guard_name))
 
 
 def generate_parser_c(schema, c_file, h_file_name, prefix, postfix):
+    c_file = IndentedPrinter(c_file)
+
     c_file.write(NOTE_FOR_GENERATED_FILES)
-    c_file.write('#include "{}"\n'.format(h_file_name))
+    c_file.print('#include "{}"'.format(h_file_name))
 
     if prefix:
-        c_file.write("/* === User-added prefix === */\n")
+        c_file.print("/* === User-added prefix === */")
         c_file.write(prefix)
 
     with open(os.path.join(DIR_OF_THIS_FILE, '..', 'jsmn', 'jsmn.h')) as jsmn_h:
-        c_file.write('#define JSMN_STATIC\n')
-        c_file.write("/* === jsmn.h (From https://github.com/zserge/jsmn) === */\n")
+        c_file.print('#define JSMN_STATIC')
+        c_file.print("/* === jsmn.h (From https://github.com/zserge/jsmn) === */")
         c_file.write(jsmn_h.read())
 
     with open(os.path.join(DIR_OF_THIS_FILE, 'builtin_parsers.c')) as builtins_file:
-        c_file.write("/* === builtin_parsers.c === */\n")
+        c_file.print("/* === builtin_parsers.c === */")
         c_file.write(builtins_file.read())
 
-    c_file.write("/* === Generated parsers === */\n")
+    c_file.print("/* === Generated parsers === */")
     GlobalGenerator.generate_parser_bodies(schema, schema['$id'], c_file)
     generate_root_parser(schema, c_file)
 
     if postfix:
-        c_file.write("/* === User-added postfix === */\n")
+        c_file.print("/* === User-added postfix === */")
         c_file.write(postfix)
