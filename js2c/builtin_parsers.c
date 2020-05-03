@@ -88,7 +88,7 @@ static inline bool current_string_is(const parse_state_t* parse_state, const cha
     return 
         (token->type == JSMN_STRING) &&
         (strlen(s) == token->end - token->start) &&
-        (strncmp(parse_state->json_string + token->start, s, token->end - token->start) == 0);
+        (memcmp(parse_state->json_string + token->start, s, token->end - token->start) == 0);
 }
 
 static inline bool builtin_parse_string(parse_state_t* parse_state, char *out, uint64_t min_len, uint64_t max_len){
