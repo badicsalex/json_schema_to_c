@@ -9,14 +9,17 @@
     "fruits": {
       "type": "array",
       "maxItems": 16,
+      "description": "Fruits to buy.",
       "items": {
         "type": "string",
-          "maxLength": 19
+        "maxLength": 19,
+        "description": "Names of the fruits"
       }
     },
     "vegetables": {
       "type": "array",
       "maxItems": 16,
+      "description": "Vegetables to buy.",
       "items": {
           "type": "object",
           "required": [ "name", "is_good" ],
@@ -37,6 +40,7 @@
     "multidimensionals": {
       "type": "array",
       "maxItems": 5,
+      "description": "A demo field for multidimensional arrays",
       "items": {
           "type": "array",
           "maxItems": 7,
@@ -44,7 +48,8 @@
               "type": "array",
               "maxItems": 9,
               "items": {
-                  "type": "integer"
+                  "type": "integer",
+                  "description": "The innermost numeric data"
               }
           }
       }
