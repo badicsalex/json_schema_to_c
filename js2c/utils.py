@@ -54,6 +54,10 @@ class CodeBlockPrinter:
         else:
             self.file.write("{}{}\n".format(" "*self.indent_level, line))
 
+    def print_separator(self, separator_str):
+        pad_length = (70 - len(separator_str))//2
+        self.print("/* {p} {s} {p} */".format(p="=" * pad_length, s=separator_str))
+
     def write(self, data):
         """ Write raw data to the file """
         self.file.write(data)

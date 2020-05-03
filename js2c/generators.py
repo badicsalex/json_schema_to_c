@@ -304,6 +304,7 @@ class ObjectGenerator(Generator):
             cls.generate_required_checks(schema, name, out_file)
             cls.generate_default_field_setting(schema, out_file)
             out_file.print("return false;")
+        out_file.print("")
 
 
 class ArrayGenerator(Generator):
@@ -380,6 +381,7 @@ class ArrayGenerator(Generator):
                     out_file
                 )
             out_file.print("return false;")
+        out_file.print("")
 
 
 class GlobalGenerator(Generator):
@@ -432,6 +434,7 @@ def generate_root_parser(schema, out_file):
             out_file,
         )
         out_file.print("return false;")
+    out_file.print("")
 
 
 def generate_parser_h(schema, h_file, prefix, postfix):
@@ -448,15 +451,15 @@ def generate_parser_h(schema, h_file, prefix, postfix):
     h_file.print("#include <stdbool.h>")
 
     if prefix:
-        h_file.print("/* === User-added prefix === */")
+        h_file.print_separator("User-added prefix")
         h_file.write(prefix)
 
-    h_file.print("/* === Generated type declarations === */")
+    h_file.print_separator("Generated type declarations")
     GlobalGenerator.generate_type_declaration(schema, schema['$id'], h_file, force=True)
     h_file.print("bool json_parse_{id}(const char* json_string, {id}_t* out);".format(id=schema['$id']))
 
     if postfix:
-        h_file.print("/* === User-added postfix === */")
+        h_file.print_separator("User-added postfix")
         h_file.write(postfix)
 
     h_file.print("#endif /* {} */".format(header_guard_name))
@@ -469,22 +472,27 @@ def generate_parser_c(schema, c_file, h_file_name, prefix, postfix):
     c_file.print('#include "{}"'.format(h_file_name))
 
     if prefix:
-        c_file.print("/* === User-added prefix === */")
+        c_file.print_separator("User-added prefix")
         c_file.write(prefix)
 
     with open(os.path.join(DIR_OF_THIS_FILE, '..', 'jsmn', 'jsmn.h')) as jsmn_h:
+        c_file.print("")
         c_file.print('#define JSMN_STATIC')
-        c_file.print("/* === jsmn.h (From https://github.com/zserge/jsmn) === */")
+        c_file.print("")
+        c_file.print_separator("jsmn.h (From https://github.com/zserge/jsmn)")
         c_file.write(jsmn_h.read())
+        c_file.print("")
 
     with open(os.path.join(DIR_OF_THIS_FILE, 'builtin_parsers.c')) as builtins_file:
-        c_file.print("/* === builtin_parsers.c === */")
+        c_file.print_separator("builtin_parsers.c")
         c_file.write(builtins_file.read())
+        c_file.print("")
 
-    c_file.print("/* === Generated parsers === */")
+    c_file.print_separator("Generated parsers")
+    c_file.print("")
     GlobalGenerator.generate_parser_bodies(schema, schema['$id'], c_file)
     generate_root_parser(schema, c_file)
 
     if postfix:
-        c_file.print("/* === User-added postfix === */")
+        c_file.print_separator("User-added postfix")
         c_file.write(postfix)
