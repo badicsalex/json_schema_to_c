@@ -216,13 +216,14 @@ class ObjectGenerator(Generator):
 
         cls.generate_docstring(schema, out_file)
         out_file.print("typedef struct {}_s ".format(name) + "{")
-        for prop_name, prop_schema in schema["properties"].items():
-            GlobalGenerator.generate_field_declaration(
-                prop_schema,
-                "{}_{}".format(name, prop_name),
-                prop_name,
-                out_file
-            )
+        with out_file.indent():
+            for prop_name, prop_schema in schema["properties"].items():
+                GlobalGenerator.generate_field_declaration(
+                    prop_schema,
+                    "{}_{}".format(name, prop_name),
+                    prop_name,
+                    out_file
+                )
         out_file.print("}} {}_t;".format(name))
 
     @classmethod
