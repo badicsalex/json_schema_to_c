@@ -46,13 +46,21 @@ class CodeBlockPrinter:
     def __init__(self, file):
         self.file = file
         self.indent_level = 0
+        self.last_was_else = False
 
     def print(self, line):
         """ Print an indented line """
-        if not line:
+        if line == "else":
+            self.file.write(" else ")
+        elif line == "{":
+            self.file.write("{")
+        elif not line:
             self.file.write("\n")
+        elif self.last_was_else:
+            self.file.write(line)
         else:
-            self.file.write("{}{}\n".format(" "*self.indent_level, line))
+            self.file.write("\n{}{}".format(" "*self.indent_level, line))
+        self.last_was_else = (line == "else")
 
     def print_separator(self, separator_str):
         pad_length = (70 - len(separator_str))//2
