@@ -7,6 +7,8 @@
 
 
 int main(int argc, char** argv){
+    (void)argc;
+    (void)argv;
     root_t root = {};
     assert(!json_parse_root("{ \"name\": \"potato\", \"is_good\": true}", &root));
     assert(!strcmp(root.name, "potato"));

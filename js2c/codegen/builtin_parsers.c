@@ -87,21 +87,21 @@ static inline bool current_string_is(const parse_state_t* parse_state, const cha
     const jsmntok_t* token = &parse_state->tokens[parse_state->current_token];
     return 
         (token->type == JSMN_STRING) &&
-        (strlen(s) == token->end - token->start) &&
+        (strlen(s) == (size_t)(token->end - token->start)) &&
         (memcmp(parse_state->json_string + token->start, s, token->end - token->start) == 0);
 }
 
-static inline bool builtin_parse_string(parse_state_t* parse_state, char *out, uint64_t min_len, uint64_t max_len){
+static inline bool builtin_parse_string(parse_state_t* parse_state, char *out, int min_len, int max_len){
     if (check_type(parse_state, JSMN_STRING)){
         return true;
     }
     const jsmntok_t* token = &parse_state->tokens[parse_state->current_token];
     if (token->end - token->start > max_len){
-        LOG_ERROR(token->start, "String too large. Length: %i. Maximum length: %li.", token->end - token->start, max_len);
+        LOG_ERROR(token->start, "String too large. Length: %i. Maximum length: %i.", token->end - token->start, max_len);
         return true;
     }
     if (token->end - token->start < min_len){
-        LOG_ERROR(token->start, "String too short. Length: %i. Minimum length: %li.", token->end - token->start, min_len);
+        LOG_ERROR(token->start, "String too short. Length: %i. Minimum length: %i.", token->end - token->start, min_len);
         return true;
     }
     memcpy(out, parse_state->json_string + token->start, token->end - token->start);

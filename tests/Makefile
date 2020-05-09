@@ -5,6 +5,7 @@
 CFLAGS= \
 	-Wall \
 	-Werror \
+	-Wextra \
 	-g
 
 ALL_TESTS =  $(patsubst %.c,%.run,$(filter-out %.parser.c, $(wildcard */*.c)))

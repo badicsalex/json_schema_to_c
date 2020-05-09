@@ -7,6 +7,8 @@
 
 
 int main(int argc, char** argv){
+    (void)argc;
+    (void)argv;
     root_t got, expected;
     /* memset is needed for the later memcmp. Otherwise, padding bytes will not get set to 0. */
     memset(&got, 0, sizeof(root_t));

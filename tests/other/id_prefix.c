@@ -5,6 +5,8 @@
 
 
 int main(int argc, char** argv){
+    (void)argc;
+    (void)argv;
 
     /* We are mainly interested in the type name and the parse functio name.*/
     AnInteresting_schema1d_t the_object = 0;

@@ -31,6 +31,8 @@ const char* data = " \
 ";
 
 int main(int argc, char** argv){
+    (void)argc;
+    (void)argv;
     root_t root = {};
     assert(!json_parse_root(data, &root));
     assert(!strcmp( root.fruits.items[2], "strawberry"));

@@ -5,6 +5,8 @@
 
 
 int main(int argc, char** argv){
+    (void)argc;
+    (void)argv;
     bool the_bool;
     assert(!json_parse_root("true", &the_bool));
     assert(the_bool == true);

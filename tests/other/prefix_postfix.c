@@ -20,6 +20,8 @@
 #endif
 
 int main(int argc, char** argv){
+    (void)argc;
+    (void)argv;
     assert(c_prefix_included());
     assert(c_postfix_included());
     return 0;

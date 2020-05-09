@@ -22,6 +22,8 @@ void check_error(const char* json, const char* expected_str, int expected_pos){
 }
 
 int main(int argc, char** argv){
+    (void)argc;
+    (void)argv;
     check_error(
         "INVALID",
         "Unexpected token: PRIMITIVE instead of OBJECT",
