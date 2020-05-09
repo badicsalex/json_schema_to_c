@@ -37,6 +37,8 @@ class Generator(ABC):
     def __init__(self, schema, name, generators):
         _ = generators  # used only by subclasses
         self.name = name
+        if "$id" in schema:
+            self.name = schema["$id"]
         for attr in get_type_hints(self.__class__):
             if attr in schema:
                 setattr(self, attr, schema[attr])
