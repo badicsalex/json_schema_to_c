@@ -41,11 +41,7 @@ class ObjectGenerator(Generator):
                 "{}_{}".format(name, field_name),
                 generators,
             )
-
-    def generate_field_declaration(self, field_name, out_file):
-        out_file.print_with_docstring(
-            "{}_t {};".format(self.name, field_name), self.description
-        )
+        self.c_type = "{}_t".format(self.name)
 
     def generate_parser_call(self, out_var_name, out_file):
         out_file.print(
@@ -68,7 +64,7 @@ class ObjectGenerator(Generator):
                     field_name,
                     out_file
                 )
-        out_file.print("}} {}_t;".format(self.name))
+        out_file.print("}} {};".format(self.c_type))
         out_file.print("")
 
     def generate_seen_flags(self, out_file):
@@ -125,7 +121,7 @@ class ObjectGenerator(Generator):
         for field_generator in self.fields.values():
             field_generator.generate_parser_bodies(out_file)
 
-        out_file.print("static bool parse_{name}(parse_state_t* parse_state, {name}_t* out)".format(name=self.name))
+        out_file.print("static bool parse_{}(parse_state_t* parse_state, {}* out)".format(self.name, self.c_type))
         with out_file.code_block():
             out_file.print("if(check_type(parse_state, JSMN_OBJECT))")
             with out_file.code_block():

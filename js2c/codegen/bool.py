@@ -29,11 +29,7 @@ from .base import Generator
 
 class BoolGenerator(Generator):
     default: Optional[bool] = None
-
-    def generate_field_declaration(self, field_name, out_file):
-        out_file.print_with_docstring(
-            "bool {};".format(field_name), self.description
-        )
+    c_type: str = "bool"
 
     def generate_parser_call(self, out_var_name, out_file):
         out_file.print(

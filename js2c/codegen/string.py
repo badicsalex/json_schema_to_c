@@ -43,11 +43,7 @@ class StringGenerator(Generator):
         if self.default is not None and len(self.default) < self.minLength:
             print("MinLength", self.minLength)
             raise ValueError("String default value shorter than minLength")
-
-    def generate_field_declaration(self, field_name, out_file):
-        out_file.print_with_docstring(
-            "char {}[{}];".format(field_name, self.maxLength + 1), self.description
-        )
+        self.c_type = "{}_t".format(self.name)
 
     def generate_parser_call(self, out_var_name, out_file):
         out_file.print(
@@ -56,6 +52,14 @@ class StringGenerator(Generator):
         )
         with out_file.code_block():
             out_file.print("return true;")
+
+    def generate_type_declaration(self, out_file, *, force=False):
+        _ = force  # basically (void)force
+
+        out_file.print_with_docstring(
+            "typedef char {}[{}];".format(self.c_type, self.maxLength + 1), self.description
+        )
+        out_file.print("")
 
     def has_default_value(self):
         return self.default is not None

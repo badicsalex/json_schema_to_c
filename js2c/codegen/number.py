@@ -33,11 +33,7 @@ class NumberGenerator(Generator):
     exclusiveMinimum: Optional[int] = None
     exclusiveMaximum: Optional[int] = None
     default: Optional[int] = None
-
-    def generate_field_declaration(self, field_name, out_file):
-        out_file.print_with_docstring(
-            "int64_t {};".format(field_name), self.description
-        )
+    c_type: str = "int64_t"
 
     @classmethod
     def generate_range_check(cls, check_number, out_var_name, check_operator, out_file):

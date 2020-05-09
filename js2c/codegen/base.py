@@ -32,6 +32,7 @@ class NoDefaultValue(Exception):
 
 class Generator(ABC):
     description: str = ''
+    c_type: str = None
 
     def __init__(self, schema, name, generators):
         _ = generators  # used only by subclasses
@@ -41,12 +42,13 @@ class Generator(ABC):
                 setattr(self, attr, schema[attr])
 
     @abstractmethod
-    def generate_field_declaration(self, field_name, out_file):
-        pass
-
-    @abstractmethod
     def generate_parser_call(self, out_var_name, out_file):
         pass
+
+    def generate_field_declaration(self, field_name, out_file):
+        out_file.print_with_docstring(
+            "{} {};".format(self.c_type, field_name), self.description
+        )
 
     def generate_type_declaration(self, out_file, *, force=False):
         if force:
