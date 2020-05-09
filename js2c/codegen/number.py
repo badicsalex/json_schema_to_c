@@ -81,3 +81,6 @@ class NumberGenerator(Generator):
     def generate_set_default_value(self, out_var_name, out_file):
         assert self.has_default_value(), "Caller is responsible for checking this."
         out_file.print("{} = {}{};".format(out_var_name, self.default, self.default_suffix))
+
+    def max_token_num(self):
+        return 1

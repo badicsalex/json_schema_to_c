@@ -40,6 +40,16 @@ other/errors.parser.c other/errors.parser.h &: \
 		--c-prefix other/errors_c_prefix.inc \
 		other/errors.schema.json other/errors.parser.c other/errors.parser.h
 
+other/max_tokens.parser.c other/max_tokens.parser.h &: \
+		other/max_tokens.schema.json $(PARSER_SOURCE_FILES) \
+		other/errors_c_prefix.inc other/errors_h_prefix.inc
+	echo "other/max_tokens: generating schema"
+	../json_schema_to_c.py \
+		--h-prefix other/errors_h_prefix.inc \
+		--c-prefix other/errors_c_prefix.inc \
+		other/max_tokens.schema.json other/max_tokens.parser.c other/max_tokens.parser.h
+
+
 # === General test running and compilation rules ===
 %.parser.c %.parser.h: %.schema.json $(PARSER_SOURCE_FILES)
 	echo "$*: generating schema"

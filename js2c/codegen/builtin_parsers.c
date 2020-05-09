@@ -41,7 +41,7 @@
 
 typedef struct parse_state_s {
     const char* json_string;
-    jsmntok_t tokens[1024];
+    jsmntok_t tokens[MAX_TOKEN_NUM];
     uint64_t current_token;
 } parse_state_t;
 

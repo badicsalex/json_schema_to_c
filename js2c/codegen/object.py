@@ -140,3 +140,6 @@ class ObjectGenerator(Generator):
             self.generate_default_field_setting(out_file)
             out_file.print("return false;")
         out_file.print("")
+
+    def max_token_num(self):
+        return sum(1 + field_generator.max_token_num() for field_generator in self.fields.values()) + 1

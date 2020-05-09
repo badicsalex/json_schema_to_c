@@ -100,3 +100,6 @@ class ArrayGenerator(Generator):
                 )
             out_file.print("return false;")
         out_file.print("")
+
+    def max_token_num(self):
+        return self.maxItems * self.item_generator.max_token_num() + 1

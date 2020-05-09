@@ -118,6 +118,8 @@ class RootGenerator:
 
         with open(os.path.join(DIR_OF_THIS_FILE, 'builtin_parsers.c')) as builtins_file:
             c_file.print_separator("builtin_parsers.c")
+
+            c_file.print("#define MAX_TOKEN_NUM {}".format(self.root_generator.max_token_num()))
             c_file.write(builtins_file.read())
             c_file.print("")
 

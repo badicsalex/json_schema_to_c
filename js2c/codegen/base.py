@@ -47,6 +47,10 @@ class Generator(ABC):
     def generate_parser_call(self, out_var_name, out_file):
         pass
 
+    @abstractmethod
+    def max_token_num(self):
+        pass
+
     def generate_field_declaration(self, field_name, out_file):
         out_file.print_with_docstring(
             "{} {};".format(self.c_type, field_name), self.description
