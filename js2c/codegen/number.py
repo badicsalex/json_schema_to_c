@@ -33,7 +33,19 @@ class NumberGenerator(Generator):
     exclusiveMinimum: Optional[int] = None
     exclusiveMaximum: Optional[int] = None
     default: Optional[int] = None
-    c_type: str = "int64_t"
+
+    def __init__(self, schema, name, generators):
+        super().__init__(schema, name, generators)
+        if self.minimum is not None and self.minimum >= 0:
+            self.c_type = "uint64_t"
+            self.parser_fn = "builtin_parse_unsigned"
+            self.default_suffix = "ULL"
+            if self.minimum == 0:
+                self.minimum = None
+        else:
+            self.c_type = "int64_t"
+            self.parser_fn = "builtin_parse_signed"
+            self.default_suffix = "LL"
 
     @classmethod
     def generate_range_check(cls, check_number, out_var_name, check_operator, out_file):
@@ -53,8 +65,8 @@ class NumberGenerator(Generator):
 
     def generate_parser_call(self, out_var_name, out_file):
         out_file.print(
-            "if(builtin_parse_number(parse_state, {}))"
-            .format(out_var_name)
+            "if({}(parse_state, {}))"
+            .format(self.parser_fn, out_var_name)
         )
         with out_file.code_block():
             out_file.print("return true;")
@@ -68,4 +80,4 @@ class NumberGenerator(Generator):
 
     def generate_set_default_value(self, out_var_name, out_file):
         assert self.has_default_value(), "Caller is responsible for checking this."
-        out_file.print("{} = {};".format(out_var_name, self.default))
+        out_file.print("{} = {}{};".format(out_var_name, self.default, self.default_suffix))

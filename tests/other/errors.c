@@ -77,23 +77,43 @@ int main(int argc, char** argv){
 
     check_error(
         "{\"num\": INVALID}",
-        "Invalid integer literal: INVALID",
+        "Invalid signed integer literal: INVALID",
         8
     );
     check_error(
         "{\"num\": 100e}",
-        "Invalid integer literal: 100e",
+        "Invalid signed integer literal: 100e",
         8
     );
     check_error(
         "{\"num\": 0x100}",
-        "Invalid integer literal: 0x100",
+        "Invalid signed integer literal: 0x100",
         8
     );
     check_error(
         "{\"num\": \"1234\"}",
         "Unexpected token: STRING instead of PRIMITIVE",
         9
+    );
+    check_error(
+        "{\"unsigned_num\": INVALID}",
+        "Invalid unsigned integer literal: INVALID",
+        17
+    );
+    check_error(
+        "{\"unsigned_num\": 100e}",
+        "Invalid unsigned integer literal: 100e",
+        17
+    );
+    check_error(
+        "{\"unsigned_num\": 0x100}",
+        "Invalid unsigned integer literal: 0x100",
+        17
+    );
+    check_error(
+        "{\"unsigned_num\": \"1234\"}",
+        "Unexpected token: STRING instead of PRIMITIVE",
+        18
     );
 
     check_error(
@@ -115,6 +135,26 @@ int main(int argc, char** argv){
         "{\"num\": -5000, \"num2\": -1000}",
         "Integer -1000 out of range. It must be > -1000.",
         23
+    );
+    check_error(
+        "{\"unsigned_num\": -5000}",
+        "Invalid unsigned integer literal: -5000",
+        17
+    );
+    check_error(
+        "{\"unsigned_num2\": -5000}",
+        "Invalid unsigned integer literal: -5000",
+        18
+    );
+    check_error(
+        "{\"unsigned_num2\": 120}",
+        "Integer 120 out of range. It must be >= 123.",
+        18
+    );
+    check_error(
+        "{\"unsigned_num2\": 1200}",
+        "Integer 1200 out of range. It must be <= 456.",
+        18
     );
 
     check_error(

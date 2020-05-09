@@ -28,6 +28,17 @@
       "exclusiveMinimum": -1000,
       "exclusiveMaximum": 1000
     },
+    "unsigned_num": {
+      "type": "integer",
+      "default": 420,
+      "minimum": 0
+    },
+    "unsigned_num2": {
+      "type": "integer",
+      "default": 420,
+      "minimum": 123,
+      "maximum": 456
+    },
     "the_array": {
       "type": "array",
       "maxItems": 3,
