@@ -22,5 +22,6 @@ int main(int argc, char** argv){
         printf("Parse failed\n");
         return 2;
     }
-    printf("Some thing is %s\nSome other thing is %ld\n", root.fruits.items[2], root.multidimensionals.items[1].items[0].items[1]);
+    printf("Some thing is %s\n", root.fruits.items[2]);
+    printf("Some other thing is %ld\n", root.multidimensionals.items[1].items[0].items[1]);
 }
