@@ -411,93 +411,90 @@ class ArrayGenerator(Generator):
         out_file.print("")
 
 
-GENERATORS = {
-    "string": StringGenerator,
-    "integer": NumberGenerator,
-    "boolean": BoolGenerator,
-    "object": ObjectGenerator,
-    "array": ArrayGenerator,
-}
+class RootGenerator:
+    GENERATORS = {
+        "string": StringGenerator,
+        "integer": NumberGenerator,
+        "boolean": BoolGenerator,
+        "object": ObjectGenerator,
+        "array": ArrayGenerator,
+    }
 
+    def __init__(self, schema):
+        root_generator_class = self.GENERATORS[schema['type']]
+        self.root_generator = root_generator_class(schema, schema['$id'], self.GENERATORS)
+        self.name = schema['$id']
 
-def generate_root_parser(schema, out_file):
-    out_file.print("bool json_parse_{id}(const char* json_string, {id}_t* out)".format(id=schema['$id']))
-    with out_file.code_block():
-        out_file.print("parse_state_t parse_state_var;")
-        out_file.print("parse_state_t* parse_state = &parse_state_var;")
-        out_file.print("if(builtin_parse_json_string(parse_state, json_string))")
+    def generate_root_parser(self, out_file):
+        out_file.print("bool json_parse_{name}(const char* json_string, {name}_t* out)".format(name=self.name))
         with out_file.code_block():
-            out_file.print("return true;")
-        root_generator_class = GENERATORS[schema['type']]
-        root_generator = root_generator_class(schema, schema['$id'], GENERATORS)
-        root_generator.generate_parser_call(
-            "out",
-            out_file,
-        )
-        out_file.print("return false;")
-    out_file.print("")
+            out_file.print("parse_state_t parse_state_var;")
+            out_file.print("parse_state_t* parse_state = &parse_state_var;")
+            out_file.print("if(builtin_parse_json_string(parse_state, json_string))")
+            with out_file.code_block():
+                out_file.print("return true;")
+            self.root_generator.generate_parser_call(
+                "out",
+                out_file,
+            )
+            out_file.print("return false;")
+        out_file.print("")
 
+    def generate_parser_h(self, h_file, prefix, postfix):
+        h_file_name = h_file.name
+        h_file = CodeBlockPrinter(h_file)
 
-def generate_parser_h(schema, h_file, prefix, postfix):
-    h_file_name = h_file.name
-    h_file = CodeBlockPrinter(h_file)
+        h_file.write(NOTE_FOR_GENERATED_FILES)
 
-    h_file.write(NOTE_FOR_GENERATED_FILES)
+        header_guard_name = re.sub("[^A-Z0-9]", "_", os.path.basename(h_file_name).upper())
+        h_file.print("#ifndef {}".format(header_guard_name))
+        h_file.print("#define {}".format(header_guard_name))
 
-    header_guard_name = re.sub("[^A-Z0-9]", "_", os.path.basename(h_file_name).upper())
-    h_file.print("#ifndef {}".format(header_guard_name))
-    h_file.print("#define {}".format(header_guard_name))
+        h_file.print("#include <stdint.h>")
+        h_file.print("#include <stdbool.h>")
 
-    h_file.print("#include <stdint.h>")
-    h_file.print("#include <stdbool.h>")
+        if prefix:
+            h_file.print_separator("User-added prefix")
+            h_file.write(prefix)
 
-    if prefix:
-        h_file.print_separator("User-added prefix")
-        h_file.write(prefix)
+        h_file.print_separator("Generated type declarations")
+        self.root_generator.generate_type_declaration(h_file, force=True)
+        h_file.print("bool json_parse_{name}(const char* json_string, {name}_t* out);".format(name=self.name))
 
-    h_file.print_separator("Generated type declarations")
-    root_generator_class = GENERATORS[schema['type']]
-    root_generator = root_generator_class(schema, schema['$id'], GENERATORS)
-    root_generator.generate_type_declaration(h_file, force=True)
-    h_file.print("bool json_parse_{id}(const char* json_string, {id}_t* out);".format(id=schema['$id']))
+        if postfix:
+            h_file.print_separator("User-added postfix")
+            h_file.write(postfix)
 
-    if postfix:
-        h_file.print_separator("User-added postfix")
-        h_file.write(postfix)
+        h_file.print("#endif /* {} */".format(header_guard_name))
 
-    h_file.print("#endif /* {} */".format(header_guard_name))
+    def generate_parser_c(self, c_file, h_file_name, prefix, postfix):
+        c_file = CodeBlockPrinter(c_file)
 
+        c_file.write(NOTE_FOR_GENERATED_FILES)
+        c_file.print('#include "{}"'.format(h_file_name))
 
-def generate_parser_c(schema, c_file, h_file_name, prefix, postfix):
-    c_file = CodeBlockPrinter(c_file)
+        if prefix:
+            c_file.print_separator("User-added prefix")
+            c_file.write(prefix)
 
-    c_file.write(NOTE_FOR_GENERATED_FILES)
-    c_file.print('#include "{}"'.format(h_file_name))
+        with open(os.path.join(DIR_OF_THIS_FILE, '..', 'jsmn', 'jsmn.h')) as jsmn_h:
+            c_file.print("")
+            c_file.print('#define JSMN_STATIC')
+            c_file.print("")
+            c_file.print_separator("jsmn.h (From https://github.com/zserge/jsmn)")
+            c_file.write(jsmn_h.read())
+            c_file.print("")
 
-    if prefix:
-        c_file.print_separator("User-added prefix")
-        c_file.write(prefix)
+        with open(os.path.join(DIR_OF_THIS_FILE, 'builtin_parsers.c')) as builtins_file:
+            c_file.print_separator("builtin_parsers.c")
+            c_file.write(builtins_file.read())
+            c_file.print("")
 
-    with open(os.path.join(DIR_OF_THIS_FILE, '..', 'jsmn', 'jsmn.h')) as jsmn_h:
+        c_file.print_separator("Generated parsers")
         c_file.print("")
-        c_file.print('#define JSMN_STATIC')
-        c_file.print("")
-        c_file.print_separator("jsmn.h (From https://github.com/zserge/jsmn)")
-        c_file.write(jsmn_h.read())
-        c_file.print("")
+        self.root_generator.generate_parser_bodies(c_file)
+        self.generate_root_parser(c_file)
 
-    with open(os.path.join(DIR_OF_THIS_FILE, 'builtin_parsers.c')) as builtins_file:
-        c_file.print_separator("builtin_parsers.c")
-        c_file.write(builtins_file.read())
-        c_file.print("")
-
-    c_file.print_separator("Generated parsers")
-    c_file.print("")
-    root_generator_class = GENERATORS[schema['type']]
-    root_generator = root_generator_class(schema, schema['$id'], GENERATORS)
-    root_generator.generate_parser_bodies(c_file)
-    generate_root_parser(schema, c_file)
-
-    if postfix:
-        c_file.print_separator("User-added postfix")
-        c_file.write(postfix)
+        if postfix:
+            c_file.print_separator("User-added postfix")
+            c_file.write(postfix)

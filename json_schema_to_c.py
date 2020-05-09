@@ -27,7 +27,7 @@ import argparse
 import os
 
 from js2c.schema import load_schema
-from js2c.generators import generate_parser_h, generate_parser_c
+from js2c.generators import RootGenerator
 
 
 def parse_args():
@@ -80,14 +80,13 @@ def parse_args():
 
 def main(args):
     schema = load_schema(args.schema_file)
-    generate_parser_h(
-        schema,
+    root_generator = RootGenerator(schema)
+    root_generator.generate_parser_h(
         args.h_file,
         args.h_prefix_file.read() if args.h_prefix_file is not None else None,
         args.h_postfix_file.read() if args.h_postfix_file is not None else None,
     )
-    generate_parser_c(
-        schema,
+    root_generator.generate_parser_c(
         args.c_file,
         os.path.basename(args.h_file.name),
         args.c_prefix_file.read() if args.c_prefix_file is not None else None,
