@@ -10,7 +10,7 @@
       "type": "string",
       "maxLength": 8,
       "minLength": 4,
-      "default":""
+      "default":"abcd"
     },
     "is_good": {
       "type": "boolean",
