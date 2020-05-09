@@ -131,7 +131,7 @@ static inline bool builtin_parse_signed(parse_state_t* parse_state, int64_t *out
     }
     const jsmntok_t* token = &parse_state->tokens[parse_state->current_token];
     char * end_char = NULL;
-    *out = strtol(parse_state->json_string + token->start, &end_char, 10);
+    *out = strtoll(parse_state->json_string + token->start, &end_char, 10);
     if (end_char != parse_state->json_string + token->end){
         LOG_ERROR(token->start, "Invalid signed integer literal: %.*s", CURRENT_STRING_FOR_ERROR(parse_state));
         return true;
