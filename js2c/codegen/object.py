@@ -1,0 +1,146 @@
+#!/usr/bin/env python3
+#
+# MIT License
+#
+# Copyright (c) 2020 Alex Badics
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+#
+from typing import List
+
+from .base import Generator
+
+
+class ObjectGenerator(Generator):
+    required: List[int] = []
+    additionalProperties: bool = True
+
+    def __init__(self, schema, name, generators):
+        super().__init__(schema, name, generators)
+        self.fields = {}
+        for field_name, field_schema in schema['properties'].items():
+            generator_class = generators[field_schema['type']]
+            self.fields[field_name] = generator_class(
+                field_schema,
+                "{}_{}".format(name, field_name),
+                generators,
+            )
+
+    def generate_field_declaration(self, field_name, out_file):
+        out_file.print_with_docstring(
+            "{}_t {};".format(self.name, field_name), self.description
+        )
+
+    def generate_parser_call(self, out_var_name, out_file):
+        out_file.print(
+            "if(parse_{}(parse_state, {}))"
+            .format(self.name, out_var_name)
+        )
+        with out_file.code_block():
+            out_file.print("return true;")
+
+    def generate_type_declaration(self, out_file, *, force=False):
+        _ = force  # This is python's way of saying (void)force
+
+        for field_name, field_generator in self.fields.items():
+            field_generator.generate_type_declaration(out_file)
+
+        out_file.print("typedef struct {}_s ".format(self.name) + "{")
+        with out_file.indent():
+            for field_name, field_generator in self.fields.items():
+                field_generator.generate_field_declaration(
+                    field_name,
+                    out_file
+                )
+        out_file.print("}} {}_t;".format(self.name))
+        out_file.print("")
+
+    def generate_seen_flags(self, out_file):
+        for field_name in self.fields:
+            out_file.print("bool seen_{} = false;".format(field_name))
+
+    def generate_default_field_setting(self, out_file):
+        for field_name, field_generator in self.fields.items():
+            if not field_generator.has_default_value():
+                continue
+            out_file.print("if (!seen_{})".format(field_name))
+            with out_file.code_block():
+                field_generator.generate_set_default_value(
+                    "out->{}".format(field_name),
+                    out_file
+                )
+
+    def generate_required_checks(self, out_file):
+        for field_name, field_generator in self.fields.items():
+            if field_generator.has_default_value():
+                continue
+            if field_name not in self.required:
+                raise ValueError(
+                    "All fields must either be required or have a default value ({})"
+                    .format(field_name)
+                )
+            out_file.print("if (!seen_{}) ".format(field_name))
+            with out_file.code_block():
+                self.generate_logged_error("Missing required field in {}: {}".format(self.name, field_name), out_file)
+
+    def generate_field_parsers(self, out_file):
+        for field_name, field_generator in self.fields.items():
+            out_file.print('if (current_string_is(parse_state, "{}"))'.format(field_name))
+            with out_file.code_block():
+                out_file.print("if(seen_{}) ".format(field_name))
+                with out_file.code_block():
+                    self.generate_logged_error("Duplicate field definition in {}: {}".format(self.name, field_name), out_file)
+                out_file.print("seen_{} = true;".format(field_name))
+                out_file.print("parse_state->current_token += 1;")
+                field_generator.generate_parser_call(
+                    "&out->{}".format(field_name),
+                    out_file
+                )
+            out_file.print("else")
+        with out_file.code_block():
+            self.generate_logged_error(["Unknown field in {}: %.*s".format(self.name), "CURRENT_STRING_FOR_ERROR(parse_state)"], out_file)
+
+    def generate_parser_bodies(self, out_file):
+        if self.additionalProperties:
+            raise ValueError(
+                "Object types must have additionalProperties set to false"
+            )
+
+        for field_generator in self.fields.values():
+            field_generator.generate_parser_bodies(out_file)
+
+        out_file.print("static bool parse_{name}(parse_state_t* parse_state, {name}_t* out)".format(name=self.name))
+        with out_file.code_block():
+            out_file.print("if(check_type(parse_state, JSMN_OBJECT))")
+            with out_file.code_block():
+                out_file.print("return true;")
+
+            out_file.print("uint64_t i;")
+            self.generate_seen_flags(out_file)
+
+            out_file.print("const uint64_t n = parse_state->tokens[parse_state->current_token].size;")
+            out_file.print("parse_state->current_token += 1;")
+            out_file.print("for (i = 0; i < n; ++ i)")
+            with out_file.code_block():
+                self.generate_field_parsers(out_file)
+
+            self.generate_required_checks(out_file)
+            self.generate_default_field_setting(out_file)
+            out_file.print("return false;")
+        out_file.print("")

@@ -27,7 +27,7 @@ import argparse
 import os
 
 from js2c.schema import load_schema
-from js2c.generators import RootGenerator
+from js2c.codegen.root import RootGenerator
 
 
 def parse_args():

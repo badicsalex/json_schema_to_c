@@ -32,7 +32,7 @@
  * In a normal situation, it will be included or pasted before this file. */
 #ifndef JSMN_H
 #error "jsmn.h not included"
-#include "../jsmn/jsmn.h"
+#include "../../jsmn/jsmn.h"
 #endif
 
 #ifndef LOG_ERROR
