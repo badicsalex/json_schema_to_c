@@ -24,6 +24,8 @@
 #
 import os
 import re
+from typing import get_type_hints, Optional, List
+
 from abc import ABC, abstractmethod
 
 from .utils import CodeBlockPrinter
@@ -41,29 +43,37 @@ class NoDefaultValue(Exception):
 
 
 class Generator(ABC):
-    @classmethod
+    description: str = ''
+
+    def __init__(self, schema, name, generators):
+        _ = generators  # used only by subclasses
+        self.name = name
+        for attr in get_type_hints(self.__class__):
+            if attr in schema:
+                setattr(self, attr, schema[attr])
+
     @abstractmethod
-    def generate_field_declaration(cls, schema, name, field_name, out_file):
+    def generate_field_declaration(self, field_name, out_file):
         pass
 
-    @classmethod
     @abstractmethod
-    def generate_parser_call(cls, schema, name, out_var_name, out_file):
+    def generate_parser_call(self, out_var_name, out_file):
         pass
 
-    @classmethod
-    def generate_type_declaration(cls, schema, name, out_file, *, force=False):
+    def generate_type_declaration(self, out_file, *, force=False):
         if force:
             out_file.print("typedef ")
-            GlobalGenerator.generate_field_declaration(schema, None, name + "_t", out_file)
+            self.generate_field_declaration(self.name + "_t", out_file)
 
-    @classmethod
-    def generate_parser_bodies(cls, schema, name, out_file):
+    def generate_parser_bodies(self, out_file):
         pass
 
     @classmethod
-    def generate_set_default_value(cls, schema, out_var_name, out_file):
-        raise NoDefaultValue("Default values not supported for {}".format(cls.__name__))
+    def has_default_value(cls):
+        return False
+
+    def generate_set_default_value(self, out_var_name, out_file):
+        raise NoDefaultValue("Default values not supported for {}".format(self.__class__.__name__))
 
     @classmethod
     def generate_logged_error(cls, log_message, out_file):
@@ -82,55 +92,65 @@ class Generator(ABC):
 
 
 class StringGenerator(Generator):
-    @classmethod
-    def generate_field_declaration(cls, schema, name, field_name, out_file):
-        if "maxLength" not in schema:
+    minLength: int = 0
+    maxLength: Optional[int] = None
+    default: Optional[str] = None
+
+    def __init__(self, schema, name, generators):
+        super().__init__(schema, name, generators)
+        if self.maxLength is None:
             raise ValueError("Strings must have maxLength")
+
+        if self.default is not None and len(self.default) > self.maxLength:
+            raise ValueError("String default value longer than maxLength")
+
+        if self.default is not None and len(self.default) < self.minLength:
+            print("MinLength", self.minLength)
+            raise ValueError("String default value shorter than minLength")
+
+    def generate_field_declaration(self, field_name, out_file):
         out_file.print_with_docstring(
-            "char {}[{}];".format(field_name, schema["maxLength"] + 1),
-            schema.get('description', '')
+            "char {}[{}];".format(field_name, self.maxLength + 1), self.description
         )
 
-    @classmethod
-    def generate_parser_call(cls, schema, name, out_var_name, out_file):
-        if "maxLength" not in schema:
-            raise ValueError("Strings must have maxLength")
+    def generate_parser_call(self, out_var_name, out_file):
         out_file.print(
             "if(builtin_parse_string(parse_state, {}[0], {}, {}))"
-            .format(out_var_name, schema.get("minLength", 0), schema["maxLength"])
+            .format(out_var_name, self.minLength, self.maxLength)
         )
         with out_file.code_block():
             out_file.print("return true;")
 
-    @classmethod
-    def generate_set_default_value(cls, schema, out_var_name, out_file):
-        assert 'default' in schema, "Caller is responsible for checking this."
-        if len(schema['default']) > schema['maxLength']:
-            raise ValueError("String default value longer than maxLength")
+    def has_default_value(self):
+        return self.default is not None
+
+    def generate_set_default_value(self, out_var_name, out_file):
+        assert self.has_default_value(), "Caller is responsible for checking this."
         out_file.print(
             'memcpy({dst}, "{src}", {size});'.format(
                 dst=out_var_name,
-                src=schema['default'],
-                size=len(schema['default']) + 1
+                src=self.default,
+                size=len(self.default) + 1
             )
         )
 
 
 class NumberGenerator(Generator):
-    @classmethod
-    def generate_field_declaration(cls, schema, name, field_name, out_file):
+    minimum: Optional[int] = None
+    maximum: Optional[int] = None
+    exclusiveMinimum: Optional[int] = None
+    exclusiveMaximum: Optional[int] = None
+    default: Optional[int] = None
+
+    def generate_field_declaration(self, field_name, out_file):
         out_file.print_with_docstring(
-            "int64_t {};".format(field_name),
-            schema.get("description", "")
+            "int64_t {};".format(field_name), self.description
         )
 
     @classmethod
-    def generate_range_check(cls, schema, schema_field_name, out_var_name, check_operator, out_file):
-        # pylint: disable=too-many-arguments
-        # There's no other way around this, pylint.
-        if schema_field_name not in schema:
+    def generate_range_check(cls, check_number, out_var_name, check_operator, out_file):
+        if check_number is None:
             return
-        check_number = schema[schema_field_name]
         out_file.print("if (!((*{}) {} {}))".format(out_var_name, check_operator, check_number))
         with out_file.code_block():
             # Roll back the token, as the value was not actually correct
@@ -143,35 +163,35 @@ class NumberGenerator(Generator):
                 out_file
             )
 
-    @classmethod
-    def generate_parser_call(cls, schema, name, out_var_name, out_file):
+    def generate_parser_call(self, out_var_name, out_file):
         out_file.print(
             "if(builtin_parse_number(parse_state, {}))"
             .format(out_var_name)
         )
         with out_file.code_block():
             out_file.print("return true;")
-        cls.generate_range_check(schema, "minimum", out_var_name, ">=", out_file)
-        cls.generate_range_check(schema, "maximum", out_var_name, "<=", out_file)
-        cls.generate_range_check(schema, "exclusiveMinimum", out_var_name, ">", out_file)
-        cls.generate_range_check(schema, "exclusiveMaximum", out_var_name, "<", out_file)
+        self.generate_range_check(self.minimum, out_var_name, ">=", out_file)
+        self.generate_range_check(self.maximum, out_var_name, "<=", out_file)
+        self.generate_range_check(self.exclusiveMinimum, out_var_name, ">", out_file)
+        self.generate_range_check(self.exclusiveMaximum, out_var_name, "<", out_file)
 
-    @classmethod
-    def generate_set_default_value(cls, schema, out_var_name, out_file):
-        assert 'default' in schema, "Caller is responsible for checking this."
-        out_file.print("{} = {};".format(out_var_name, schema['default']))
+    def has_default_value(self):
+        return self.default is not None
+
+    def generate_set_default_value(self, out_var_name, out_file):
+        assert self.has_default_value(), "Caller is responsible for checking this."
+        out_file.print("{} = {};".format(out_var_name, self.default))
 
 
 class BoolGenerator(Generator):
-    @classmethod
-    def generate_field_declaration(cls, schema, name, field_name, out_file):
+    default: Optional[bool] = None
+
+    def generate_field_declaration(self, field_name, out_file):
         out_file.print_with_docstring(
-            "bool {};".format(field_name),
-            schema.get('description', '')
+            "bool {};".format(field_name), self.description
         )
 
-    @classmethod
-    def generate_parser_call(cls, schema, name, out_var_name, out_file):
+    def generate_parser_call(self, out_var_name, out_file):
         out_file.print(
             "if(builtin_parse_bool(parse_state, {}))"
             .format(out_var_name)
@@ -179,205 +199,211 @@ class BoolGenerator(Generator):
         with out_file.code_block():
             out_file.print("return true;")
 
-    @classmethod
-    def generate_set_default_value(cls, schema, out_var_name, out_file):
-        assert 'default' in schema, "Caller is responsible for checking this."
+    def has_default_value(self):
+        return self.default is not None
+
+    def generate_set_default_value(self, out_var_name, out_file):
+        assert self.has_default_value(), "Caller is responsible for checking this."
         out_file.print(
             "{} = {};".format(
                 out_var_name,
-                'true' if schema['default'] else 'false'
+                'true' if self.default else 'false'
             )
         )
 
 
 class ObjectGenerator(Generator):
-    @classmethod
-    def generate_field_declaration(cls, schema, name, field_name, out_file):
+    required: List[int] = []
+    additionalProperties: bool = True
+
+    def __init__(self, schema, name, generators):
+        super().__init__(schema, name, generators)
+        self.fields = {}
+        for field_name, field_schema in schema['properties'].items():
+            generator_class = generators[field_schema['type']]
+            self.fields[field_name] = generator_class(
+                field_schema,
+                "{}_{}".format(name, field_name),
+                generators,
+            )
+
+    def generate_field_declaration(self, field_name, out_file):
         out_file.print_with_docstring(
-            "{}_t {};".format(name, field_name),
-            schema.get('description', '')
+            "{}_t {};".format(self.name, field_name), self.description
         )
 
-    @classmethod
-    def generate_parser_call(cls, schema, name, out_var_name, out_file):
+    def generate_parser_call(self, out_var_name, out_file):
         out_file.print(
             "if(parse_{}(parse_state, {}))"
-            .format(name, out_var_name)
+            .format(self.name, out_var_name)
         )
         with out_file.code_block():
             out_file.print("return true;")
 
-    @classmethod
-    def generate_type_declaration(cls, schema, name, out_file, *, force=False):
-        # pylint: disable=unused-argument
-        # "Force" must exist, with this name.
-        for prop_name, prop_schema in schema["properties"].items():
-            GlobalGenerator.generate_type_declaration(prop_schema, "{}_{}".format(name, prop_name), out_file)
+    def generate_type_declaration(self, out_file, *, force=False):
+        _ = force  # This is python's way of saying (void)force
 
-        out_file.print("typedef struct {}_s ".format(name) + "{")
+        for field_name, field_generator in self.fields.items():
+            field_generator.generate_type_declaration(out_file)
+
+        out_file.print("typedef struct {}_s ".format(self.name) + "{")
         with out_file.indent():
-            for prop_name, prop_schema in schema["properties"].items():
-                GlobalGenerator.generate_field_declaration(
-                    prop_schema,
-                    "{}_{}".format(name, prop_name),
-                    prop_name,
+            for field_name, field_generator in self.fields.items():
+                field_generator.generate_field_declaration(
+                    field_name,
                     out_file
                 )
-        out_file.print("}} {}_t;".format(name))
+        out_file.print("}} {}_t;".format(self.name))
         out_file.print("")
 
-    @classmethod
-    def generate_seen_flags(cls, schema, out_file):
-        for prop_name in schema["properties"]:
-            out_file.print("bool seen_{} = false;".format(prop_name))
+    def generate_seen_flags(self, out_file):
+        for field_name in self.fields:
+            out_file.print("bool seen_{} = false;".format(field_name))
 
-    @classmethod
-    def generate_default_field_setting(cls, schema, out_file):
-        for prop_name, prop_schema in schema["properties"].items():
-            if 'default' not in prop_schema:
+    def generate_default_field_setting(self, out_file):
+        for field_name, field_generator in self.fields.items():
+            if not field_generator.has_default_value():
                 continue
-            out_file.print("if (!seen_{})".format(prop_name))
+            out_file.print("if (!seen_{})".format(field_name))
             with out_file.code_block():
-                GlobalGenerator.generate_set_default_value(
-                    prop_schema,
-                    "out->{}".format(prop_name),
+                field_generator.generate_set_default_value(
+                    "out->{}".format(field_name),
                     out_file
                 )
 
-    @classmethod
-    def generate_required_checks(cls, schema, name, out_file):
-        for prop_name, prop_schema in schema["properties"].items():
-            if 'default' in prop_schema:
+    def generate_required_checks(self, out_file):
+        for field_name, field_generator in self.fields.items():
+            if field_generator.has_default_value():
                 continue
-            if 'required' not in schema:
-                raise ValueError("Objects schemas with non-default fields must have a 'required' constraint")
-            if prop_name not in schema['required']:
+            if field_name not in self.required:
                 raise ValueError(
                     "All fields must either be required or have a default value ({})"
-                    .format(prop_name)
+                    .format(field_name)
                 )
-            out_file.print("if (!seen_{}) ".format(prop_name))
+            out_file.print("if (!seen_{}) ".format(field_name))
             with out_file.code_block():
-                cls.generate_logged_error("Missing required field in {}: {}".format(name, prop_name), out_file)
+                self.generate_logged_error("Missing required field in {}: {}".format(self.name, field_name), out_file)
 
-    @classmethod
-    def generate_field_parsers(cls, schema, name, out_file):
-        for prop_name, prop_schema in schema["properties"].items():
-            out_file.print('if (current_string_is(parse_state, "{}"))'.format(prop_name))
+    def generate_field_parsers(self, out_file):
+        for field_name, field_generator in self.fields.items():
+            out_file.print('if (current_string_is(parse_state, "{}"))'.format(field_name))
             with out_file.code_block():
-                out_file.print("if(seen_{}) ".format(prop_name))
+                out_file.print("if(seen_{}) ".format(field_name))
                 with out_file.code_block():
-                    cls.generate_logged_error("Duplicate field definition in {}: {}".format(name, prop_name), out_file)
-                out_file.print("seen_{} = true;".format(prop_name))
+                    self.generate_logged_error("Duplicate field definition in {}: {}".format(self.name, field_name), out_file)
+                out_file.print("seen_{} = true;".format(field_name))
                 out_file.print("parse_state->current_token += 1;")
-                GlobalGenerator.generate_parser_call(
-                    prop_schema,
-                    "{}_{}".format(name, prop_name),
-                    "&out->{}".format(prop_name),
+                field_generator.generate_parser_call(
+                    "&out->{}".format(field_name),
                     out_file
                 )
             out_file.print("else")
         with out_file.code_block():
-            cls.generate_logged_error(["Unknown field in {}: %.*s".format(name), "CURRENT_STRING_FOR_ERROR(parse_state)"], out_file)
+            self.generate_logged_error(["Unknown field in {}: %.*s".format(self.name), "CURRENT_STRING_FOR_ERROR(parse_state)"], out_file)
 
-    @classmethod
-    def generate_parser_bodies(cls, schema, name, out_file):
-        if "additionalProperties" not in schema or schema["additionalProperties"]:
+    def generate_parser_bodies(self, out_file):
+        if self.additionalProperties:
             raise ValueError(
-                "Object types must have additionalProperties set to false")
-        for prop_name, prop_schema in schema["properties"].items():
-            GlobalGenerator.generate_parser_bodies(prop_schema, "{}_{}".format(name, prop_name), out_file)
-        out_file.print("static bool parse_{name}(parse_state_t* parse_state, {name}_t* out)".format(name=name))
+                "Object types must have additionalProperties set to false"
+            )
+
+        for field_generator in self.fields.values():
+            field_generator.generate_parser_bodies(out_file)
+
+        out_file.print("static bool parse_{name}(parse_state_t* parse_state, {name}_t* out)".format(name=self.name))
         with out_file.code_block():
             out_file.print("if(check_type(parse_state, JSMN_OBJECT))")
             with out_file.code_block():
                 out_file.print("return true;")
 
             out_file.print("uint64_t i;")
-            cls.generate_seen_flags(schema, out_file)
+            self.generate_seen_flags(out_file)
 
             out_file.print("const uint64_t n = parse_state->tokens[parse_state->current_token].size;")
             out_file.print("parse_state->current_token += 1;")
             out_file.print("for (i = 0; i < n; ++ i)")
             with out_file.code_block():
-                cls.generate_field_parsers(schema, name, out_file)
+                self.generate_field_parsers(out_file)
 
-            cls.generate_required_checks(schema, name, out_file)
-            cls.generate_default_field_setting(schema, out_file)
+            self.generate_required_checks(out_file)
+            self.generate_default_field_setting(out_file)
             out_file.print("return false;")
         out_file.print("")
 
 
 class ArrayGenerator(Generator):
-    @classmethod
-    def generate_field_declaration(cls, schema, name, field_name, out_file):
-        out_file.print_with_docstring(
-            "{}_t {};".format(name, field_name),
-            schema.get('description', '')
+    minItems: int = 0
+    maxItems: Optional[int] = None
+
+    def __init__(self, schema, name, generators):
+        super().__init__(schema, name, generators)
+        if self.maxItems is None:
+            raise ValueError("Arrays must have maxItems")
+        item_generator_class = generators[schema["items"]["type"]]
+        self.item_generator = item_generator_class(
+            schema["items"],
+            "{}_item".format(name),
+            generators
         )
 
-    @classmethod
-    def generate_parser_call(cls, schema, name, out_var_name, out_file):
+    def generate_field_declaration(self, field_name, out_file):
+        out_file.print_with_docstring(
+            "{}_t {};".format(self.name, field_name), self.description
+        )
+
+    def generate_parser_call(self, out_var_name, out_file):
         out_file.print(
             "if(parse_{}(parse_state, {}))"
-            .format(name, out_var_name)
+            .format(self.name, out_var_name)
         )
         with out_file.code_block():
             out_file.print("return true;")
 
-    @classmethod
-    def generate_type_declaration(cls, schema, name, out_file, *, force=False):
-        # pylint: disable=unused-argument
-        # "Force" must exist, with this name.
-        if "maxItems" not in schema:
-            raise ValueError("Arrays must have maxItems")
-        GlobalGenerator.generate_type_declaration(schema["items"], "{}_item".format(name), out_file)
+    def generate_type_declaration(self, out_file, *, force=False):
+        _ = force  # basically (void)force
 
-        out_file.print("typedef struct {}_s ".format(name) + "{")
+        self.item_generator.generate_type_declaration(out_file)
+
+        out_file.print("typedef struct {}_s ".format(self.name) + "{")
         with out_file.indent():
             out_file.print_with_docstring("uint64_t n;", "The number of elements in the array")
-            GlobalGenerator.generate_field_declaration(
-                schema["items"],
-                "{}_item".format(name),
-                "items[{}]".format(schema["maxItems"]), out_file
+            self.item_generator.generate_field_declaration(
+                "items[{}]".format(self.maxItems), out_file
             )
-        out_file.print("}} {}_t;".format(name))
+        out_file.print("}} {}_t;".format(self.name))
         out_file.print("")
 
-    @classmethod
-    def generate_range_checks(cls, schema, name, out_file):
-        out_file.print("if (n > {})".format(schema["maxItems"]))
+    def generate_range_checks(self, out_file):
+        out_file.print("if (n > {})".format(self.maxItems))
         with out_file.code_block():
-            cls.generate_logged_error(
-                ["Array {} too large. Length: %i. Maximum length: {}.".format(name, schema["maxItems"]), "n"],
+            self.generate_logged_error(
+                ["Array {} too large. Length: %i. Maximum length: {}.".format(self.name, self.maxItems), "n"],
                 out_file
             )
-        if "minItems" in schema:
-            out_file.print("if (n < {})".format(schema["minItems"]))
+        if self.minItems:
+            out_file.print("if (n < {})".format(self.minItems))
             with out_file.code_block():
-                cls.generate_logged_error(
-                    ["Array {} too small. Length: %i. Minimum length: {}.".format(name, schema["minItems"]), "n"],
+                self.generate_logged_error(
+                    ["Array {} too small. Length: %i. Minimum length: {}.".format(self.name, self.minItems), "n"],
                     out_file
                 )
 
-    @classmethod
-    def generate_parser_bodies(cls, schema, name, out_file):
-        GlobalGenerator.generate_parser_bodies(schema["items"], "{}_item".format(name), out_file)
-        out_file.print("static bool parse_{name}(parse_state_t* parse_state, {name}_t* out)".format(name=name))
+    def generate_parser_bodies(self, out_file):
+        self.item_generator.generate_parser_bodies(out_file)
+
+        out_file.print("static bool parse_{name}(parse_state_t* parse_state, {name}_t* out)".format(name=self.name))
         with out_file.code_block():
             out_file.print("if(check_type(parse_state, JSMN_ARRAY))")
             with out_file.code_block():
                 out_file.print("return true;")
             out_file.print("int i;")
             out_file.print("const int n = parse_state->tokens[parse_state->current_token].size;")
-            cls.generate_range_checks(schema, name, out_file)
+            self.generate_range_checks(out_file)
             out_file.print("out->n = n;")
             out_file.print("parse_state->current_token += 1;")
             out_file.print("for (i = 0; i < n; ++ i)")
             with out_file.code_block():
-                GlobalGenerator.generate_parser_call(
-                    schema["items"],
-                    "{}_item".format(name),
+                self.item_generator.generate_parser_call(
                     "&out->items[i]",
                     out_file
                 )
@@ -385,39 +411,13 @@ class ArrayGenerator(Generator):
         out_file.print("")
 
 
-class GlobalGenerator(Generator):
-    OTHER_GENERATORS = {
-        "string": StringGenerator,
-        "integer": NumberGenerator,
-        "boolean": BoolGenerator,
-        "object": ObjectGenerator,
-        "array": ArrayGenerator,
-    }
-
-    @classmethod
-    def generate_field_declaration(cls, schema, name, field_name, out_file):
-        cls.OTHER_GENERATORS[schema["type"]]\
-            .generate_field_declaration(schema, name, field_name, out_file)
-
-    @classmethod
-    def generate_parser_call(cls, schema, name, out_var_name, out_file):
-        cls.OTHER_GENERATORS[schema["type"]]\
-            .generate_parser_call(schema, name, out_var_name, out_file)
-
-    @classmethod
-    def generate_type_declaration(cls, schema, name, out_file, *, force=False):
-        cls.OTHER_GENERATORS[schema["type"]]\
-            .generate_type_declaration(schema, name, out_file, force=force)
-
-    @classmethod
-    def generate_parser_bodies(cls, schema, name, out_file):
-        cls.OTHER_GENERATORS[schema["type"]]\
-            .generate_parser_bodies(schema, name, out_file)
-
-    @classmethod
-    def generate_set_default_value(cls, schema, out_var_name, out_file):
-        cls.OTHER_GENERATORS[schema["type"]]\
-            .generate_set_default_value(schema, out_var_name, out_file)
+GENERATORS = {
+    "string": StringGenerator,
+    "integer": NumberGenerator,
+    "boolean": BoolGenerator,
+    "object": ObjectGenerator,
+    "array": ArrayGenerator,
+}
 
 
 def generate_root_parser(schema, out_file):
@@ -428,9 +428,9 @@ def generate_root_parser(schema, out_file):
         out_file.print("if(builtin_parse_json_string(parse_state, json_string))")
         with out_file.code_block():
             out_file.print("return true;")
-        GlobalGenerator.generate_parser_call(
-            schema,
-            schema['$id'],
+        root_generator_class = GENERATORS[schema['type']]
+        root_generator = root_generator_class(schema, schema['$id'], GENERATORS)
+        root_generator.generate_parser_call(
             "out",
             out_file,
         )
@@ -456,7 +456,9 @@ def generate_parser_h(schema, h_file, prefix, postfix):
         h_file.write(prefix)
 
     h_file.print_separator("Generated type declarations")
-    GlobalGenerator.generate_type_declaration(schema, schema['$id'], h_file, force=True)
+    root_generator_class = GENERATORS[schema['type']]
+    root_generator = root_generator_class(schema, schema['$id'], GENERATORS)
+    root_generator.generate_type_declaration(h_file, force=True)
     h_file.print("bool json_parse_{id}(const char* json_string, {id}_t* out);".format(id=schema['$id']))
 
     if postfix:
@@ -491,7 +493,9 @@ def generate_parser_c(schema, c_file, h_file_name, prefix, postfix):
 
     c_file.print_separator("Generated parsers")
     c_file.print("")
-    GlobalGenerator.generate_parser_bodies(schema, schema['$id'], c_file)
+    root_generator_class = GENERATORS[schema['type']]
+    root_generator = root_generator_class(schema, schema['$id'], GENERATORS)
+    root_generator.generate_parser_bodies(c_file)
     generate_root_parser(schema, c_file)
 
     if postfix:
