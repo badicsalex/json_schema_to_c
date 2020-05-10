@@ -41,6 +41,7 @@ int main(int argc, char** argv){
     assert(!strcmp(got.name, "potato"));
     assert(!got.is_good);
     assert(got.number == 5);
+    assert(got.attributes.n == 0);
 
     return 0;
 }

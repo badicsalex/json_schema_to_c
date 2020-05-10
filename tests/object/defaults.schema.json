@@ -31,6 +31,14 @@
     },
     "mass": {
       "type": "integer"
+    },
+    "attributes": {
+      "type": "array",
+      "maxItems": 4,
+      "items": {
+        "type": "string",
+        "maxLength": 4
+      }
     }
   }
 }
