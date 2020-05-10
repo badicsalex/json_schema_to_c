@@ -170,5 +170,20 @@ int main(int argc, char** argv){
         2
     );
 
+    check_error(
+        "{\"error_arr\": [{}]}",
+        "Error parsing THE ERRORER, value=\"INVALID DEFAULT\": error calling error_creating_parser",
+        21
+    );
+    check_error(
+        "{\"error_arr\": [{\"trigger\": \"ab\"}]}",
+        "Error parsing THE ERRORER, value=\"ab\": Custom error",
+        28
+    );
+    check_error(
+        "{\"error_arr\": [{\"trigger\": \"abc\"}]}",
+        "Error parsing THE ERRORER, value=\"abc\": error calling error_creating_parser",
+        28
+    );
     return 0;
 }

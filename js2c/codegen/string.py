@@ -31,6 +31,8 @@ class StringGenerator(Generator):
     minLength: int = 0
     maxLength: Optional[int] = None
     default: Optional[str] = None
+    cType: Optional[str] = None
+    cParseFunction: Optional[str] = None
 
     def __init__(self, schema, name, generators):
         super().__init__(schema, name, generators)
@@ -43,18 +45,51 @@ class StringGenerator(Generator):
         if self.default is not None and len(self.default) < self.minLength:
             print("MinLength", self.minLength)
             raise ValueError("String default value shorter than minLength")
-        self.c_type = "{}_t".format(self.name)
+
+        if self.cType is not None:
+            if self.cParseFunction is None:
+                raise ValueError("cParseFunction must be set if cType is set")
+            self.c_type = self.cType
+        else:
+            self.c_type = "{}_t".format(self.name)
+
+    def generate_custom_parser_call(self, src, src_length, out_var_name, out_file):
+        with out_file.code_block():
+            out_file.print("const char* error=NULL;")
+            out_file.print(
+                "if({}({}, {}, {}, &error))"
+                .format(self.cParseFunction, src, src_length, out_var_name)
+            )
+            with out_file.code_block():
+                self.generate_logged_error([
+                    "Error parsing {}, value=\\\"%.*s\\\": %s".format(self.name),
+                    src_length,
+                    src,
+                    "error ? error : \"error calling {}\"".format(self.cParseFunction),
+                ], out_file)
+            out_file.print("parse_state->current_token += 1;")
 
     def generate_parser_call(self, out_var_name, out_file):
-        out_file.print(
-            "if(builtin_parse_string(parse_state, {}[0], {}, {}))"
-            .format(out_var_name, self.minLength, self.maxLength)
-        )
-        with out_file.code_block():
-            out_file.print("return true;")
+        if self.cParseFunction is not None:
+            self.generate_custom_parser_call(
+                "CURRENT_STRING(parse_state)",
+                "CURRENT_STRING_LENGTH(parse_state)",
+                out_var_name,
+                out_file
+            )
+        else:
+            out_file.print(
+                "if(builtin_parse_string(parse_state, {}[0], {}, {}))"
+                .format(out_var_name, self.minLength, self.maxLength)
+            )
+            with out_file.code_block():
+                out_file.print("return true;")
 
     def generate_type_declaration(self, out_file, *, force=False):
         _ = force  # basically (void)force
+
+        if self.cType is not None:
+            return
 
         out_file.print_with_docstring(
             "typedef char {}[{}];".format(self.c_type, self.maxLength + 1), self.description
@@ -66,13 +101,21 @@ class StringGenerator(Generator):
 
     def generate_set_default_value(self, out_var_name, out_file):
         assert self.has_default_value(), "Caller is responsible for checking this."
-        out_file.print(
-            'memcpy({dst}, "{src}", {size});'.format(
-                dst=out_var_name,
-                src=self.default,
-                size=len(self.default) + 1
+        if self.cParseFunction is not None:
+            self.generate_custom_parser_call(
+                '"{}"'.format(self.default),
+                str(len(self.default)),
+                "&{}".format(out_var_name),
+                out_file
             )
-        )
+        else:
+            out_file.print(
+                'memcpy({dst}, "{src}", {size});'.format(
+                    dst=out_var_name,
+                    src=self.default,
+                    size=len(self.default) + 1
+                )
+            )
 
     def max_token_num(self):
         return 1

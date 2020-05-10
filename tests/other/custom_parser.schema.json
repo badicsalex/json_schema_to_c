@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "root",
+  "description": "Some demo structure for demoing.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "cType": "int64_t",
+      "cParseFunction": "hex_parser",
+      "description": "The Identifier",
+      "default": "0xABCDEF",
+      "maxLength": 8
+    },
+    "point": {
+      "type": "string",
+      "cType": "custom_point_t",
+      "cParseFunction": "pt_prsr",
+      "description": "The coordinates",
+      "default": "ab",
+      "maxLength": 2
+    }
+  }
+}

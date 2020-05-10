@@ -28,3 +28,14 @@ void check_error(const char* json, const char* expected_str, int expected_pos){
     }
 }
 
+bool error_creating_parser(const char* src, int size, int* out, const char** error){
+    (void)src;
+    if (size == 1) {
+        *out = 0;
+        return false;
+    }
+    if (size == 2) {
+        *error = "Custom error";
+    }
+    return true;
+}

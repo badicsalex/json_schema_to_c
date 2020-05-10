@@ -49,6 +49,14 @@ other/max_tokens.parser.c other/max_tokens.parser.h &: \
 		--c-prefix other/errors_c_prefix.inc \
 		other/max_tokens.schema.json other/max_tokens.parser.c other/max_tokens.parser.h
 
+other/custom_parser.parser.c other/custom_parser.parser.h &: \
+		other/custom_parser.schema.json $(PARSER_SOURCE_FILES) \
+		other/custom_parser_c_prefix.inc other/custom_parser_h_prefix.inc
+	echo "other/custom_parser: generating schema"
+	../json_schema_to_c.py \
+		--h-prefix other/custom_parser_h_prefix.inc \
+		--c-prefix other/custom_parser_c_prefix.inc \
+		other/custom_parser.schema.json other/custom_parser.parser.c other/custom_parser.parser.h
 
 # === General test running and compilation rules ===
 %.parser.c %.parser.h: %.schema.json $(PARSER_SOURCE_FILES)

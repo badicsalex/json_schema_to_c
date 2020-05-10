@@ -32,7 +32,8 @@ class NoDefaultValue(Exception):
 
 class Generator(ABC):
     description: str = ''
-    c_type: str = None
+
+    c_type: str = None  # Not meant to be overridden from schema
 
     def __init__(self, schema, name, generators):
         _ = generators  # used only by subclasses
@@ -40,6 +41,8 @@ class Generator(ABC):
         if "$id" in schema:
             self.name = schema["$id"]
         for attr in get_type_hints(self.__class__):
+            if attr == "c_type":
+                continue
             if attr in schema:
                 setattr(self, attr, schema[attr])
 

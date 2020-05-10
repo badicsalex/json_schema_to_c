@@ -46,6 +46,24 @@
       "items": {
           "type": "integer"
       }
+    },
+    "error_arr": {
+      "type": "array",
+      "maxItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "trigger": {
+            "$id": "THE ERRORER",
+            "type": "string",
+            "maxLength": 15,
+            "cType": "int",
+            "cParseFunction": "error_creating_parser",
+            "default": "INVALID DEFAULT"
+          }
+        }
+      }
     }
   }
 }

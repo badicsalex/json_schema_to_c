@@ -46,8 +46,9 @@ typedef struct parse_state_s {
 } parse_state_t;
 
 #define CURRENT_TOKEN(parse_state) ((parse_state)->tokens[(parse_state)->current_token])
+#define CURRENT_STRING(parse_state) ((parse_state)->json_string + CURRENT_TOKEN(parse_state).start)
 #define CURRENT_STRING_LENGTH(parse_state) (CURRENT_TOKEN(parse_state).end - CURRENT_TOKEN(parse_state).start)
-#define CURRENT_STRING_FOR_ERROR(parse_state) CURRENT_STRING_LENGTH(parse_state), ((parse_state)->json_string + CURRENT_TOKEN(parse_state).start)
+#define CURRENT_STRING_FOR_ERROR(parse_state) CURRENT_STRING_LENGTH(parse_state), CURRENT_STRING(parse_state)
 
 static inline const char* token_type_as_string(jsmntype_t type){
     switch(type){
