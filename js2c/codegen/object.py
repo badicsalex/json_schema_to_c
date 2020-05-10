@@ -141,5 +141,16 @@ class ObjectGenerator(Generator):
             out_file.print("return false;")
         out_file.print("")
 
+    def has_default_value(self):
+        return len(self.required) == 0 and all(field_generator.has_default_value() for field_generator in self.fields.values())
+
+    def generate_set_default_value(self, out_var_name, out_file):
+        assert self.has_default_value(), "Caller is responsible for checking this."
+        for field_name, field_generator in self.fields.items():
+            field_generator.generate_set_default_value(
+                "{}.{}".format(out_var_name, field_name),
+                out_file
+            )
+
     def max_token_num(self):
         return sum(1 + field_generator.max_token_num() for field_generator in self.fields.values()) + 1

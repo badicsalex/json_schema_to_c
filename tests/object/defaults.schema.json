@@ -39,6 +39,38 @@
         "type": "string",
         "maxLength": 4
       }
+    },
+    "sub_obj": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "is_good": {
+          "type": "boolean",
+          "description": "Is the vegetable any good?",
+          "default": true
+        },
+        "number": {
+          "type": "integer",
+          "description": "How many?",
+          "default": 1337
+        },
+        "sub_obj": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "is_good": {
+              "type": "boolean",
+              "description": "Is the vegetable any good?",
+              "default": true
+            },
+            "number": {
+              "type": "integer",
+              "description": "How many?",
+              "default": 1337
+            }
+          }
+        }
+      }
     }
   }
 }

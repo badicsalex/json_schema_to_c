@@ -21,7 +21,16 @@ int main(int argc, char** argv){
         .number=1337,
         .id="1234",
         .exists=false,
-        .mass=4321
+        .mass=4321,
+        .attributes={.n=0},
+        .sub_obj={
+            .is_good=true,
+            .number=1337,
+            .sub_obj={
+                .is_good=true,
+                .number=1337
+            }
+        }
     };
     assert(!json_parse_root("{ \"id\": \"1234\", \"exists\": false, \"mass\": 4321}", &got));
 
@@ -34,7 +43,8 @@ int main(int argc, char** argv){
                 \"name\": \"potato\", \
                 \"is_good\": false, \
                 \"number\": 5, \
-                \"id\": \"1234\", \"exists\": false, \"mass\": 4321 \
+                \"id\": \"1234\", \"exists\": false, \"mass\": 4321, \
+                \"sub_obj\": { \"sub_obj\": {\"number\": 420 }} \
             }", &got
         )
     );
@@ -42,6 +52,7 @@ int main(int argc, char** argv){
     assert(!got.is_good);
     assert(got.number == 5);
     assert(got.attributes.n == 0);
+    assert(got.sub_obj.sub_obj.number == 420);
 
     return 0;
 }
