@@ -57,9 +57,9 @@ class EnumGenerator(Generator):
 
         out_file.print("typedef enum {}_e".format(self.name) + "{")
         with out_file.indent():
-            for enum_name in self.enum[:]:
+            for enum_name in self.enum[:-1]:
                 out_file.print("{},".format(self.convert_enum_name(enum_name)))
-            out_file.print("{}".format(self.convert_enum_name("last")))
+            out_file.print("{}".format(self.convert_enum_name(self.enum[-1])))
         out_file.print("}} {};".format(self.c_type))
         out_file.print("")
 

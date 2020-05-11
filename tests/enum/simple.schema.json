@@ -3,5 +3,5 @@
   "$id": "the_enum",
   "description": "Some demo structure for demoing.",
   "type": "string",
-  "enum": ["value1", "value to s@nitize", "and_the_last"]
+  "enum": ["value1", "value to s@nitize", "last", "num", "number", "size"]
 }
