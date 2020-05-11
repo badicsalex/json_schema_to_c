@@ -27,11 +27,7 @@ import re
 
 from .code_block_printer import CodeBlockPrinter
 
-from .array import ArrayGenerator
-from .number import NumberGenerator
-from .bool import BoolGenerator
-from .object import ObjectGenerator
-from .string import StringGenerator
+from .generator_factory import GeneratorFactory
 
 
 DIR_OF_THIS_FILE = os.path.dirname(__file__)
@@ -43,17 +39,8 @@ NOTE_FOR_GENERATED_FILES = """
 
 
 class RootGenerator:
-    GENERATORS = {
-        "string": StringGenerator,
-        "integer": NumberGenerator,
-        "boolean": BoolGenerator,
-        "object": ObjectGenerator,
-        "array": ArrayGenerator,
-    }
-
     def __init__(self, schema):
-        root_generator_class = self.GENERATORS[schema['type']]
-        self.root_generator = root_generator_class(schema, schema['$id'], self.GENERATORS)
+        self.root_generator = GeneratorFactory.get_generator_for(schema, schema['$id'])
         self.name = schema['$id']
 
     def generate_root_parser(self, out_file):

@@ -22,38 +22,26 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from typing import Optional
+from .array import ArrayGenerator
+from .number import NumberGenerator
+from .bool import BoolGenerator
+from .object import ObjectGenerator
+from .string import StringGenerator
 
-from .base import Generator
 
-
-class BoolGenerator(Generator):
-    default: Optional[bool] = None
-    c_type: str = "bool"
+class GeneratorFactory:
+    #pylint: disable=too-few-public-methods
+    GENERATORS = [
+        StringGenerator,
+        NumberGenerator,
+        BoolGenerator,
+        ObjectGenerator,
+        ArrayGenerator,
+    ]
 
     @classmethod
-    def can_parse_schema(cls, schema):
-        return schema.get('type') == 'boolean'
-
-    def generate_parser_call(self, out_var_name, out_file):
-        out_file.print(
-            "if(builtin_parse_bool(parse_state, {}))"
-            .format(out_var_name)
-        )
-        with out_file.code_block():
-            out_file.print("return true;")
-
-    def has_default_value(self):
-        return self.default is not None
-
-    def generate_set_default_value(self, out_var_name, out_file):
-        assert self.has_default_value(), "Caller is responsible for checking this."
-        out_file.print(
-            "{} = {};".format(
-                out_var_name,
-                'true' if self.default else 'false'
-            )
-        )
-
-    def max_token_num(self):
-        return 1
+    def get_generator_for(cls, schema, name):
+        for generator_class in cls.GENERATORS:
+            if generator_class.can_parse_schema(schema):
+                return generator_class(schema, name, cls)
+        raise ValueError("Could not find any generators to parse schema: {}.".format(schema))

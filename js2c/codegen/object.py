@@ -31,17 +31,19 @@ class ObjectGenerator(Generator):
     required: List[int] = []
     additionalProperties: bool = True
 
-    def __init__(self, schema, name, generators):
-        super().__init__(schema, name, generators)
+    def __init__(self, schema, name, generator_factory):
+        super().__init__(schema, name, generator_factory)
         self.fields = {}
         for field_name, field_schema in schema['properties'].items():
-            generator_class = generators[field_schema['type']]
-            self.fields[field_name] = generator_class(
+            self.fields[field_name] = generator_factory.get_generator_for(
                 field_schema,
                 "{}_{}".format(name, field_name),
-                generators,
             )
         self.c_type = "{}_t".format(self.name)
+
+    @classmethod
+    def can_parse_schema(cls, schema):
+        return schema.get('type') == 'object'
 
     def generate_parser_call(self, out_var_name, out_file):
         out_file.print(

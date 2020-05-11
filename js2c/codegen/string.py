@@ -34,8 +34,8 @@ class StringGenerator(Generator):
     cType: Optional[str] = None
     cParseFunction: Optional[str] = None
 
-    def __init__(self, schema, name, generators):
-        super().__init__(schema, name, generators)
+    def __init__(self, schema, name, generator_factory):
+        super().__init__(schema, name, generator_factory)
         if self.maxLength is None:
             raise ValueError("Strings must have maxLength")
 
@@ -52,6 +52,10 @@ class StringGenerator(Generator):
             self.c_type = self.cType
         else:
             self.c_type = "{}_t".format(self.name)
+
+    @classmethod
+    def can_parse_schema(cls, schema):
+        return schema.get('type') == 'string'
 
     def generate_custom_parser_call(self, src, src_length, out_var_name, out_file):
         with out_file.code_block():

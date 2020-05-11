@@ -35,8 +35,8 @@ class Generator(ABC):
 
     c_type: str = None  # Not meant to be overridden from schema
 
-    def __init__(self, schema, name, generators):
-        _ = generators  # used only by subclasses
+    def __init__(self, schema, name, generator_factory):
+        _ = generator_factory  # used only by subclasses
         self.name = name
         if "$id" in schema:
             self.name = schema["$id"]
@@ -52,6 +52,11 @@ class Generator(ABC):
 
     @abstractmethod
     def max_token_num(self):
+        pass
+
+    @classmethod
+    @abstractmethod
+    def can_parse_schema(cls, schema):
         pass
 
     def generate_field_declaration(self, field_name, out_file):

@@ -34,8 +34,8 @@ class NumberGenerator(Generator):
     exclusiveMaximum: Optional[int] = None
     default: Optional[int] = None
 
-    def __init__(self, schema, name, generators):
-        super().__init__(schema, name, generators)
+    def __init__(self, schema, name, generator_factory):
+        super().__init__(schema, name, generator_factory)
         if self.minimum is not None and self.minimum >= 0:
             self.c_type = "uint64_t"
             self.parser_fn = "builtin_parse_unsigned"
@@ -46,6 +46,10 @@ class NumberGenerator(Generator):
             self.c_type = "int64_t"
             self.parser_fn = "builtin_parse_signed"
             self.default_suffix = "LL"
+
+    @classmethod
+    def can_parse_schema(cls, schema):
+        return schema.get('type') == 'integer'
 
     @classmethod
     def generate_range_check(cls, check_number, out_var_name, check_operator, out_file):
