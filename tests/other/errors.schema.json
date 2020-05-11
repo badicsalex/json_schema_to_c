@@ -64,6 +64,11 @@
           }
         }
       }
+    },
+    "the_enum": {
+      "type": "string",
+      "enum": ["a", "b"],
+      "default": "a"
     }
   }
 }

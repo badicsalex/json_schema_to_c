@@ -71,6 +71,11 @@
           }
         }
       }
+    },
+    "the_enum": {
+      "type": "string",
+      "enum": ["enum_val_1", "enum_val_2", "enum_val_3"],
+      "default": "enum_val_2"
     }
   }
 }

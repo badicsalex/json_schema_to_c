@@ -185,5 +185,16 @@ int main(int argc, char** argv){
         "Error parsing THE ERRORER, value=\"abc\": error calling error_creating_parser",
         28
     );
+
+    check_error(
+        "{\"the_enum\": \"x\"}",
+        "Unknown enum value in root_the_enum: x",
+        14
+    );
+    check_error(
+        "{\"the_enum\": 5}",
+        "Unexpected token: PRIMITIVE instead of STRING",
+        13
+    );
     return 0;
 }

@@ -27,11 +27,13 @@ from .number import NumberGenerator
 from .bool import BoolGenerator
 from .object import ObjectGenerator
 from .string import StringGenerator
+from .enum import EnumGenerator
 
 
 class GeneratorFactory:
     #pylint: disable=too-few-public-methods
     GENERATORS = [
+        EnumGenerator,
         StringGenerator,
         NumberGenerator,
         BoolGenerator,

@@ -30,7 +30,8 @@ int main(int argc, char** argv){
                 .is_good=true,
                 .number=1337
             }
-        }
+        },
+        .the_enum=ROOT_THE_ENUM_ENUM_VAL_2
     };
     assert(!json_parse_root("{ \"id\": \"1234\", \"exists\": false, \"mass\": 4321}", &got));
 
@@ -44,7 +45,8 @@ int main(int argc, char** argv){
                 \"is_good\": false, \
                 \"number\": 5, \
                 \"id\": \"1234\", \"exists\": false, \"mass\": 4321, \
-                \"sub_obj\": { \"sub_obj\": {\"number\": 420 }} \
+                \"sub_obj\": { \"sub_obj\": {\"number\": 420 }}, \
+                \"the_enum\": \"enum_val_3\" \
             }", &got
         )
     );
@@ -53,6 +55,7 @@ int main(int argc, char** argv){
     assert(got.number == 5);
     assert(got.attributes.n == 0);
     assert(got.sub_obj.sub_obj.number == 420);
+    assert(got.the_enum == ROOT_THE_ENUM_ENUM_VAL_3);
 
     return 0;
 }
