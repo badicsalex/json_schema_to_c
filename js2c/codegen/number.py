@@ -23,11 +23,12 @@
 # SOFTWARE.
 #
 from typing import Optional
+from abc import abstractmethod
 
 from .base import Generator
 
 
-class NumberGenerator(Generator):
+class NumberGeneratorBase(Generator):
     minimum: Optional[int] = None
     maximum: Optional[int] = None
     exclusiveMinimum: Optional[int] = None
@@ -46,10 +47,17 @@ class NumberGenerator(Generator):
             self.c_type = "int64_t"
             self.parser_fn = "builtin_parse_signed"
             self.default_suffix = "LL"
+        self.radix = None
 
-    @classmethod
-    def can_parse_schema(cls, schema):
-        return schema.get('type') == 'integer'
+    @property
+    @abstractmethod
+    def string_allowed(self):
+        pass
+
+    @property
+    @abstractmethod
+    def number_allowed(self):
+        pass
 
     @classmethod
     def generate_range_check(cls, check_number, out_var_name, check_operator, out_file):
@@ -69,8 +77,14 @@ class NumberGenerator(Generator):
 
     def generate_parser_call(self, out_var_name, out_file):
         out_file.print(
-            "if({}(parse_state, {}))"
-            .format(self.parser_fn, out_var_name)
+            "if({}(parse_state, {}, {}, {}, {}))"
+            .format(
+                self.parser_fn,
+                'true' if self.number_allowed else 'false',
+                'true' if self.string_allowed else 'false',
+                self.radix,
+                out_var_name
+            )
         )
         with out_file.code_block():
             out_file.print("return true;")
@@ -88,3 +102,89 @@ class NumberGenerator(Generator):
 
     def max_token_num(self):
         return 1
+
+
+class NumberGenerator(NumberGeneratorBase):
+    def __init__(self, schema, name, generator_factory):
+        super().__init__(schema, name, generator_factory)
+        self.radix = 10
+
+    @property
+    def string_allowed(self):
+        return False
+
+    @property
+    def number_allowed(self):
+        return True
+
+    @classmethod
+    def can_parse_schema(cls, schema):
+        return schema.get('type') == 'integer'
+
+
+class NumericStringGenerator(NumberGenerator):
+    UNSIGNED_PATTERNS = {
+        '[0-9]+': 10,
+        '[0-9a-fA-F]+': 16,
+        '(0x|0X)?[0-9a-fA-F]+': 16,
+        '(0[0-7]+|[0-9]+|0[xX][0-9a-fA-F]+)': 0,
+    }
+    SIGNED_PATTERNS = {'[+-]?' + k: v for k, v in UNSIGNED_PATTERNS.items()}
+
+    pattern: Optional[str] = None
+
+    def __init__(self, schema, name, generator_factory):
+        # minimum might be in the schema if this constructor is called by NumberStringAnyOfGenerator
+        if 'minimum' not in schema and schema['pattern'] in self.UNSIGNED_PATTERNS:
+            schema['minimum'] = 0
+        super().__init__(schema, name, generator_factory)
+        if self.c_type == 'uint64_t':
+            pattern_set = self.UNSIGNED_PATTERNS
+        else:
+            pattern_set = self.SIGNED_PATTERNS
+
+        if self.pattern not in pattern_set:
+            valid_patterns = ", ".join('"{}"'.format(p) for p in pattern_set)
+            raise ValueError(
+                'Pattern "{}" is not a valid pattern for this value range. Valid patterns are: {}'
+                .format(self.pattern, valid_patterns)
+            )
+        self.radix = pattern_set[self.pattern]
+        if isinstance(self.default, str):
+            self.default = int(self.default, self.radix)
+
+    @property
+    def string_allowed(self):
+        return True
+
+    @property
+    def number_allowed(self):
+        return False
+
+    @classmethod
+    def can_parse_schema(cls, schema):
+        if schema.get('type') != 'string':
+            return False
+        return schema.get('pattern') in cls.UNSIGNED_PATTERNS or schema.get('pattern') in cls.SIGNED_PATTERNS
+
+
+class NumberStringAnyOfGenerator(NumericStringGenerator):
+    def __init__(self, schema, name, generator_factory):
+        combined_schema = schema['anyOf'][0]
+        combined_schema.update(schema['anyOf'][1])
+        combined_schema['type'] = 'string'
+        super().__init__(combined_schema, name, generator_factory)
+
+    @classmethod
+    def can_parse_schema(cls, schema):
+        if "anyOf" not in schema or len(schema['anyOf']) != 2:
+            return False
+        return set((schema['anyOf'][0]['type'], schema['anyOf'][1]['type'])) == set(('integer', 'string'))
+
+    @property
+    def string_allowed(self):
+        return True
+
+    @property
+    def number_allowed(self):
+        return True

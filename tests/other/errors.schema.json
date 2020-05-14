@@ -28,6 +28,25 @@
       "exclusiveMinimum": -1000,
       "exclusiveMaximum": 1000
     },
+    "numeric_string": {
+      "type": "string",
+      "default": "1234",
+      "pattern": "[0-9]+"
+    },
+    "anyof_hex": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "default": 1234,
+          "minimum": 123,
+          "maximum": 1000000
+        },
+        {
+          "type": "string",
+          "pattern": "[0-9a-fA-F]+"
+        }
+      ]
+    },
     "unsigned_num": {
       "type": "integer",
       "default": 420,

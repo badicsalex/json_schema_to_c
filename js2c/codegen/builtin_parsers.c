@@ -126,13 +126,21 @@ static inline bool builtin_parse_bool(parse_state_t* parse_state, bool *out){
     return false;
 }
 
-static inline bool builtin_parse_signed(parse_state_t* parse_state, int64_t *out){
-    if (check_type(parse_state, JSMN_PRIMITIVE)){
+static inline bool builtin_parse_signed(parse_state_t* parse_state, bool number_allowed, bool string_allowed, int radix, int64_t *out){
+    const jsmntok_t* token = &parse_state->tokens[parse_state->current_token];
+    if (!((number_allowed && token->type == JSMN_PRIMITIVE) || (string_allowed && token->type == JSMN_STRING))){
+        LOG_ERROR(
+            token->start,
+            "Unexpected token: %s",
+            token_type_as_string(token->type)
+        )
         return true;
     }
-    const jsmntok_t* token = &parse_state->tokens[parse_state->current_token];
+    if (token->type == JSMN_PRIMITIVE){
+        radix = 10;
+    }
     char * end_char = NULL;
-    *out = strtoll(parse_state->json_string + token->start, &end_char, 10);
+    *out = strtoll(parse_state->json_string + token->start, &end_char, radix);
     if (end_char != parse_state->json_string + token->end){
         LOG_ERROR(token->start, "Invalid signed integer literal: %.*s", CURRENT_STRING_FOR_ERROR(parse_state));
         return true;
@@ -141,18 +149,26 @@ static inline bool builtin_parse_signed(parse_state_t* parse_state, int64_t *out
     return false;
 }
 
-static inline bool builtin_parse_unsigned(parse_state_t* parse_state, uint64_t *out){
-    if (check_type(parse_state, JSMN_PRIMITIVE)){
+static inline bool builtin_parse_unsigned(parse_state_t* parse_state, bool number_allowed, bool string_allowed, int radix, uint64_t *out){
+    const jsmntok_t* token = &parse_state->tokens[parse_state->current_token];
+    if (!((number_allowed && token->type == JSMN_PRIMITIVE) || (string_allowed && token->type == JSMN_STRING))){
+        LOG_ERROR(
+            token->start,
+            "Unexpected token: %s",
+            token_type_as_string(token->type)
+        )
         return true;
     }
-    const jsmntok_t* token = &parse_state->tokens[parse_state->current_token];
+    if (token->type == JSMN_PRIMITIVE){
+        radix = 10;
+    }
     const char * start_char = parse_state->json_string + token->start;
     char * end_char = NULL;
-    if (*start_char > '9' || *start_char < '0'){
+    if (*start_char == '-'){
         LOG_ERROR(token->start, "Invalid unsigned integer literal: %.*s", CURRENT_STRING_FOR_ERROR(parse_state));
         return true;
     }
-    *out = strtoull(start_char, &end_char, 10);
+    *out = strtoull(start_char, &end_char, radix);
     if (end_char != parse_state->json_string + token->end){
         LOG_ERROR(token->start, "Invalid unsigned integer literal: %.*s", CURRENT_STRING_FOR_ERROR(parse_state));
         return true;

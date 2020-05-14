@@ -73,7 +73,7 @@ int main(int argc, char** argv){
     );
     check_error(
         "{\"num\": \"1234\"}",
-        "Unexpected token: STRING instead of PRIMITIVE",
+        "Unexpected token: STRING",
         9
     );
     check_error(
@@ -93,7 +93,7 @@ int main(int argc, char** argv){
     );
     check_error(
         "{\"unsigned_num\": \"1234\"}",
-        "Unexpected token: STRING instead of PRIMITIVE",
+        "Unexpected token: STRING",
         18
     );
 
@@ -136,6 +136,37 @@ int main(int argc, char** argv){
         "{\"unsigned_num2\": 1200}",
         "Integer 1200 out of range. It must be <= 456.",
         18
+    );
+
+    check_error(
+        "{\"numeric_string\": 1234}",
+        "Unexpected token: PRIMITIVE",
+        19
+    );
+    check_error(
+        "{\"numeric_string\": -1234}",
+        "Unexpected token: PRIMITIVE",
+        19
+    );
+    check_error(
+        "{\"numeric_string\": \"0x1234\"}",
+        "Invalid unsigned integer literal: 0x1234",
+        20
+    );
+    check_error(
+        "{\"numeric_string\": \"INVALID\"}",
+        "Invalid unsigned integer literal: INVALID",
+        20
+    );
+    check_error(
+        "{\"anyof_hex\": 12}",
+        "Integer 12 out of range. It must be >= 123.",
+        14
+    );
+    check_error(
+        "{\"anyof_hex\": \"12\"}",
+        "Integer 18 out of range. It must be >= 123.",
+        15
     );
 
     check_error(

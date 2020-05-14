@@ -23,7 +23,7 @@
 # SOFTWARE.
 #
 from .array import ArrayGenerator
-from .number import NumberGenerator
+from .number import NumberGenerator, NumericStringGenerator, NumberStringAnyOfGenerator
 from .bool import BoolGenerator
 from .object import ObjectGenerator
 from .string import StringGenerator
@@ -34,6 +34,8 @@ class GeneratorFactory:
     #pylint: disable=too-few-public-methods
     GENERATORS = [
         EnumGenerator,
+        NumericStringGenerator,
+        NumberStringAnyOfGenerator,
         StringGenerator,
         NumberGenerator,
         BoolGenerator,
