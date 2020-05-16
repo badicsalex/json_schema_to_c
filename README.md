@@ -11,15 +11,18 @@ The following schema features are supported:
 * Min and max length for arrays and strings
 * Min and max values for integers
 * In-document path-like `$ref` resoltion
-* Default values for simple types (`int`, `bool`, `string`)
+* Default values:
+  * Full support for simple types (`int`, `bool`, `string`)
+  * Implicit default value for object, where all fields have a default value
+  * Implicit default value (empty array) for arrays with `minItems: 0`
 * Required fields
+* `additionalProperties: true`, i.e. skipping unknown fields
 
 Important limitations:
 
 * Strings and arrays must have a `maxLength` or `maxItems` field
-* `additionalProperties` must be explicitly `false` for all objects.
 * All object fields must either be required or have a default value
-* Default values for objects and arrays are not supported
+* Complex default values for objects and arrays are not supported
 * All object property names must be valid C tokens
 * Floats and `null` are not supported
 * More advanced `$ref` declarations (especially pointing to another file) are not supported
