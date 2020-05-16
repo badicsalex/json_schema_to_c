@@ -30,7 +30,7 @@ import json
 def resolve_children(full_schema, part_to_resolve):
     if part_to_resolve is None:
         return
-    if isinstance(part_to_resolve, (str, int, bool)):
+    if isinstance(part_to_resolve, (str, int, bool, float)):
         return
     if isinstance(part_to_resolve, list):
         for i, v in enumerate(part_to_resolve):

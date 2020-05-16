@@ -24,6 +24,7 @@
 #
 from .array import ArrayGenerator
 from .integer import IntegerGenerator, NumericStringGenerator, IntegerStringAnyOfGenerator
+from .float import FloatGenerator
 from .bool import BoolGenerator
 from .object import ObjectGenerator
 from .string import StringGenerator
@@ -38,6 +39,7 @@ class GeneratorFactory:
         IntegerStringAnyOfGenerator,
         StringGenerator,
         IntegerGenerator,
+        FloatGenerator,
         BoolGenerator,
         ObjectGenerator,
         ArrayGenerator,

@@ -177,6 +177,32 @@ static inline bool builtin_parse_unsigned(parse_state_t* parse_state, bool numbe
     return false;
 }
 
+static inline bool builtin_parse_double(parse_state_t* parse_state, double *out){
+    const jsmntok_t* token = &parse_state->tokens[parse_state->current_token];
+    if (check_type(parse_state, JSMN_PRIMITIVE)){
+        return true;
+    }
+    const char * start_char = parse_state->json_string + token->start;
+    if (token->end - token->start >= 2){
+        if (
+            start_char[1] != '.' &&
+            start_char[1] != 'e' && start_char[1] != 'E' &&
+            !(start_char[1] >= '0' && start_char[1] <= '9')
+        ){
+            LOG_ERROR(token->start, "Invalid floating point literal: %.*s", CURRENT_STRING_FOR_ERROR(parse_state));
+            return true;
+        }
+    }
+    char * end_char = NULL;
+    *out = strtod(start_char, &end_char);
+    if (end_char != parse_state->json_string + token->end){
+        LOG_ERROR(token->start, "Invalid floating point literal: %.*s", CURRENT_STRING_FOR_ERROR(parse_state));
+        return true;
+    }
+    parse_state->current_token += 1;
+    return false;
+}
+
 static inline bool builtin_skip(parse_state_t* parse_state);
 
 static inline bool builtin_skip_array(parse_state_t* parse_state){

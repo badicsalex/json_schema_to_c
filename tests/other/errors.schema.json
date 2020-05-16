@@ -28,6 +28,18 @@
       "exclusiveMinimum": -1000,
       "exclusiveMaximum": 1000
     },
+    "fnum": {
+      "type": "number",
+      "default": 1337,
+      "minimum": -5000,
+      "maximum": 5000
+    },
+    "fnum2": {
+      "type": "number",
+      "default": 420,
+      "exclusiveMinimum": -1000,
+      "exclusiveMaximum": 1000
+    },
     "numeric_string": {
       "type": "string",
       "default": "1234",
