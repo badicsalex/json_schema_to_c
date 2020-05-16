@@ -30,14 +30,15 @@ class ArrayGenerator(Generator):
     minItems: int = 0
     maxItems: Optional[int] = None
 
-    def __init__(self, schema, name, generator_factory):
-        super().__init__(schema, name, generator_factory)
+    def __init__(self, schema, name, args, generator_factory):
+        super().__init__(schema, name, args, generator_factory)
         if self.maxItems is None:
             raise ValueError("Arrays must have maxItems")
 
         self.item_generator = generator_factory.get_generator_for(
             schema["items"],
-            "{}_item".format(name)
+            "{}_item".format(name),
+            args
         )
         self.c_type = "{}_t".format(self.name)
 

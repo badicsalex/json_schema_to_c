@@ -28,6 +28,7 @@ import os
 
 from js2c.schema import load_schema
 from js2c.codegen.root import RootGenerator
+from js2c.codegen.base import GeneratorArgs
 
 
 def parse_args():
@@ -75,12 +76,24 @@ def parse_args():
         help="Contents of this file will be placed at the end of the generated C file.",
         default=None,
     )
+    parser.add_argument(
+        "--allow-additional-properties",
+        metavar="token_num",
+        type=int,
+        help="Allow additionalProperties to be true (default for objects), and leave a $token_num amount of space for these "
+             "additional properties during the tokenizing step. (One token is basically one element, e.g. a string literal or a number)",
+        default=None
+    )
     return parser.parse_args()
 
 
 def main(args):
     schema = load_schema(args.schema_file)
-    root_generator = RootGenerator(schema)
+    generator_args = GeneratorArgs(
+        additional_properties_allowed=args.allow_additional_properties is not None,
+        additional_token_number=args.allow_additional_properties,
+    )
+    root_generator = RootGenerator(schema, generator_args)
     root_generator.generate_parser_h(
         args.h_file,
         args.h_prefix_file.read() if args.h_prefix_file is not None else None,

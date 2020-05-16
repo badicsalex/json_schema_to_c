@@ -23,6 +23,7 @@
 # SOFTWARE.
 #
 from typing import get_type_hints
+from collections import namedtuple
 from abc import ABC, abstractmethod
 
 
@@ -30,13 +31,23 @@ class NoDefaultValue(Exception):
     pass
 
 
+GeneratorArgs = namedtuple(
+    "GeneratorArgs",
+    [
+        "additional_properties_allowed",
+        "additional_token_number",
+    ]
+)
+
+
 class Generator(ABC):
     description: str = ''
 
     c_type: str = None  # Not meant to be overridden from schema
 
-    def __init__(self, schema, name, generator_factory):
+    def __init__(self, schema, name, args, generator_factory):
         _ = generator_factory  # used only by subclasses
+        self.args = args
         self.name = name
         if "$id" in schema:
             self.name = schema["$id"]

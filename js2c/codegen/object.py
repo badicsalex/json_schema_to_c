@@ -31,15 +31,21 @@ class ObjectGenerator(Generator):
     required: List[int] = []
     additionalProperties: bool = True
 
-    def __init__(self, schema, name, generator_factory):
-        super().__init__(schema, name, generator_factory)
+    def __init__(self, schema, name, args, generator_factory):
+        super().__init__(schema, name, args, generator_factory)
         self.fields = {}
         for field_name, field_schema in schema['properties'].items():
             self.fields[field_name] = generator_factory.get_generator_for(
                 field_schema,
                 "{}_{}".format(name, field_name),
+                args,
             )
         self.c_type = "{}_t".format(self.name)
+        if self.additionalProperties and not self.args.additional_properties_allowed:
+            raise ValueError(
+                "Either use the --allow-additional-properties command line argument, or set "
+                "additionalProperties to false on all object types."
+            )
 
     @classmethod
     def can_parse_schema(cls, schema):
@@ -112,14 +118,13 @@ class ObjectGenerator(Generator):
                 )
             out_file.print("else")
         with out_file.code_block():
-            self.generate_logged_error(["Unknown field in {}: %.*s".format(self.name), "CURRENT_STRING_FOR_ERROR(parse_state)"], out_file)
+            if self.args.additional_properties_allowed:
+                out_file.print("parse_state->current_token += 1;")
+                out_file.print("builtin_skip(parse_state);")
+            else:
+                self.generate_logged_error(["Unknown field in {}: %.*s".format(self.name), "CURRENT_STRING_FOR_ERROR(parse_state)"], out_file)
 
     def generate_parser_bodies(self, out_file):
-        if self.additionalProperties:
-            raise ValueError(
-                "Object types must have additionalProperties set to false"
-            )
-
         for field_generator in self.fields.values():
             field_generator.generate_parser_bodies(out_file)
 

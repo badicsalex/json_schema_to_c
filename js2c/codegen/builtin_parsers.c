@@ -177,6 +177,54 @@ static inline bool builtin_parse_unsigned(parse_state_t* parse_state, bool numbe
     return false;
 }
 
+static inline bool builtin_skip(parse_state_t* parse_state);
+
+static inline bool builtin_skip_array(parse_state_t* parse_state){
+    int token_num = CURRENT_TOKEN(parse_state).size;
+    parse_state->current_token += 1;
+    for (int i=0; i < token_num; ++i){
+        if (builtin_skip(parse_state))
+            return true;
+    }
+    return false;
+}
+
+static inline bool builtin_skip_object(parse_state_t* parse_state){
+    int token_num = CURRENT_TOKEN(parse_state).size;
+    parse_state->current_token += 1;
+    for (int i=0; i < token_num; ++i){
+        /* Skip key. This is not a simple current_token += 1,
+         * because key might be a complex object if loose parsing is used. */
+        if (builtin_skip(parse_state))
+            return true;
+        /* Skip value */
+        if (builtin_skip(parse_state))
+            return true;
+    }
+    return false;
+}
+
+static inline bool builtin_skip(parse_state_t* parse_state){
+    switch(CURRENT_TOKEN(parse_state).type){
+        case JSMN_OBJECT:
+            return builtin_skip_object(parse_state);
+
+        case JSMN_ARRAY:
+            return builtin_skip_array(parse_state);
+
+        case JSMN_STRING:
+        case JSMN_PRIMITIVE:
+            parse_state->current_token += 1;
+            return false;
+
+        case JSMN_UNDEFINED:
+        default:
+            /* Should never happen */
+            LOG_ERROR(CURRENT_TOKEN(parse_state).start, "Internal error during token skipping");
+            return true;
+    }
+}
+
 static inline bool builtin_parse_json_string(parse_state_t* parse_state, const char* json_string){
     jsmn_parser parser;
     parse_state->json_string = json_string;

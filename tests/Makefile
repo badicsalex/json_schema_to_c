@@ -58,6 +58,13 @@ other/custom_parser.parser.c other/custom_parser.parser.h &: \
 		--c-prefix other/custom_parser_c_prefix.inc \
 		other/custom_parser.schema.json other/custom_parser.parser.c other/custom_parser.parser.h
 
+object/allow_additional.parser.c object/allow_additional.parser.h &: \
+		object/allow_additional.schema.json $(PARSER_SOURCE_FILES)
+	echo "object/allow_additional: generating schema"
+	../json_schema_to_c.py \
+		--allow-additional-properties 20 \
+		object/allow_additional.schema.json object/allow_additional.parser.c object/allow_additional.parser.h
+
 # === General test running and compilation rules ===
 %.parser.c %.parser.h: %.schema.json $(PARSER_SOURCE_FILES)
 	echo "$*: generating schema"
