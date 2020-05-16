@@ -28,7 +28,7 @@ from abc import abstractmethod
 from .base import Generator
 
 
-class NumberGeneratorBase(Generator):
+class IntegerGeneratorBase(Generator):
     minimum: Optional[int] = None
     maximum: Optional[int] = None
     exclusiveMinimum: Optional[int] = None
@@ -104,7 +104,7 @@ class NumberGeneratorBase(Generator):
         return 1
 
 
-class NumberGenerator(NumberGeneratorBase):
+class IntegerGenerator(IntegerGeneratorBase):
     def __init__(self, schema, name, args, generator_factory):
         super().__init__(schema, name, args, generator_factory)
         self.radix = 10
@@ -122,7 +122,7 @@ class NumberGenerator(NumberGeneratorBase):
         return schema.get('type') == 'integer'
 
 
-class NumericStringGenerator(NumberGenerator):
+class NumericStringGenerator(IntegerGenerator):
     UNSIGNED_PATTERNS = {
         '[0-9]+': 10,
         '[0-9a-fA-F]+': 16,
@@ -134,7 +134,7 @@ class NumericStringGenerator(NumberGenerator):
     pattern: Optional[str] = None
 
     def __init__(self, schema, name, args, generator_factory):
-        # minimum might be in the schema if this constructor is called by NumberStringAnyOfGenerator
+        # minimum might be in the schema if this constructor is called by IntegerStringAnyOfGenerator
         if 'minimum' not in schema and schema['pattern'] in self.UNSIGNED_PATTERNS:
             schema['minimum'] = 0
         super().__init__(schema, name, args, generator_factory)
@@ -168,7 +168,7 @@ class NumericStringGenerator(NumberGenerator):
         return schema.get('pattern') in cls.UNSIGNED_PATTERNS or schema.get('pattern') in cls.SIGNED_PATTERNS
 
 
-class NumberStringAnyOfGenerator(NumericStringGenerator):
+class IntegerStringAnyOfGenerator(NumericStringGenerator):
     def __init__(self, schema, name, args, generator_factory):
         combined_schema = schema['anyOf'][0]
         combined_schema.update(schema['anyOf'][1])

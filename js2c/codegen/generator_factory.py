@@ -23,7 +23,7 @@
 # SOFTWARE.
 #
 from .array import ArrayGenerator
-from .number import NumberGenerator, NumericStringGenerator, NumberStringAnyOfGenerator
+from .integer import IntegerGenerator, NumericStringGenerator, IntegerStringAnyOfGenerator
 from .bool import BoolGenerator
 from .object import ObjectGenerator
 from .string import StringGenerator
@@ -35,9 +35,9 @@ class GeneratorFactory:
     GENERATORS = [
         EnumGenerator,
         NumericStringGenerator,
-        NumberStringAnyOfGenerator,
+        IntegerStringAnyOfGenerator,
         StringGenerator,
-        NumberGenerator,
+        IntegerGenerator,
         BoolGenerator,
         ObjectGenerator,
         ArrayGenerator,
