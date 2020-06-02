@@ -22,18 +22,25 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from typing import Optional
 from abc import abstractmethod
 
 from .base import Generator
 
 
 class IntegerGeneratorBase(Generator):
-    minimum: Optional[int] = None
-    maximum: Optional[int] = None
-    exclusiveMinimum: Optional[int] = None
-    exclusiveMaximum: Optional[int] = None
-    default: Optional[int] = None
+    JSON_FIELDS = Generator.JSON_FIELDS + (
+        "minimum",
+        "maximum",
+        "exclusiveMinimum",
+        "exclusiveMaximum",
+        "default",
+    )
+
+    minimum = None
+    maximum = None
+    exclusiveMinimum = None
+    exclusiveMaximum = None
+    default = None
 
     def __init__(self, schema, name, args, generator_factory):
         super().__init__(schema, name, args, generator_factory)
@@ -123,6 +130,11 @@ class IntegerGenerator(IntegerGeneratorBase):
 
 
 class NumericStringGenerator(IntegerGenerator):
+    JSON_FIELDS = IntegerGenerator.JSON_FIELDS + (
+        "pattern",
+    )
+    pattern = None
+
     UNSIGNED_PATTERNS = {
         '[0-9]+': 10,
         '[0-9a-fA-F]+': 16,
@@ -130,8 +142,6 @@ class NumericStringGenerator(IntegerGenerator):
         '(0[0-7]+|[0-9]+|0[xX][0-9a-fA-F]+)': 0,
     }
     SIGNED_PATTERNS = {'[+-]?' + k: v for k, v in UNSIGNED_PATTERNS.items()}
-
-    pattern: Optional[str] = None
 
     def __init__(self, schema, name, args, generator_factory):
         # minimum might be in the schema if this constructor is called by IntegerStringAnyOfGenerator

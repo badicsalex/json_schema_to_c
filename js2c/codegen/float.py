@@ -22,17 +22,23 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from typing import Optional
-
 from .base import Generator
 
 
 class FloatGenerator(Generator):
-    minimum: Optional[int] = None
-    maximum: Optional[int] = None
-    exclusiveMinimum: Optional[int] = None
-    exclusiveMaximum: Optional[int] = None
-    default: Optional[int] = None
+    JSON_FIELDS = Generator.JSON_FIELDS + (
+        "minimum",
+        "maximum",
+        "exclusiveMinimum",
+        "exclusiveMaximum",
+        "default",
+    )
+
+    minimum = None
+    maximum = None
+    exclusiveMinimum = None
+    exclusiveMaximum = None
+    default = None
 
     def __init__(self, schema, name, args, generator_factory):
         super().__init__(schema, name, args, generator_factory)

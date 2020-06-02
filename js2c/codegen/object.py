@@ -22,14 +22,16 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from typing import List
-
 from .base import Generator
 
 
 class ObjectGenerator(Generator):
-    required: List[int] = []
-    additionalProperties: bool = True
+    JSON_FIELDS = Generator.JSON_FIELDS + (
+        "required",
+        "additionalProperties",
+    )
+    required = ()
+    additionalProperties = True
 
     def __init__(self, schema, name, args, generator_factory):
         super().__init__(schema, name, args, generator_factory)

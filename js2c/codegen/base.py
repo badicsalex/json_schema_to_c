@@ -22,7 +22,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from typing import get_type_hints
 from collections import namedtuple
 from abc import ABC, abstractmethod
 
@@ -41,9 +40,12 @@ GeneratorArgs = namedtuple(
 
 
 class Generator(ABC):
-    description: str = ''
+    JSON_FIELDS = (
+        "description",
+    )
 
-    c_type: str = None  # Not meant to be overridden from schema
+    c_type = None
+    description = None
 
     def __init__(self, schema, name, args, generator_factory):
         _ = generator_factory  # used only by subclasses
@@ -51,9 +53,7 @@ class Generator(ABC):
         self.name = name
         if "$id" in schema:
             self.name = schema["$id"]
-        for attr in get_type_hints(self.__class__):
-            if attr == "c_type":
-                continue
+        for attr in self.JSON_FIELDS:
             if attr in schema:
                 setattr(self, attr, schema[attr])
 

@@ -22,13 +22,16 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from typing import Optional
 from .base import Generator
 
 
 class ArrayGenerator(Generator):
-    minItems: int = 0
-    maxItems: Optional[int] = None
+    JSON_FIELDS = Generator.JSON_FIELDS + (
+        "minItems",
+        "maxItems",
+    )
+    minItems = 0
+    maxItems = None
 
     def __init__(self, schema, name, args, generator_factory):
         super().__init__(schema, name, args, generator_factory)

@@ -22,15 +22,19 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from typing import List, Optional
 import re
 
 from .base import Generator
 
 
 class EnumGenerator(Generator):
-    enum: List[str]
-    default: Optional[str]
+    JSON_FIELDS = Generator.JSON_FIELDS + (
+        "enum",
+        "default",
+    )
+    enum = None
+    default = None
+
     SANITIZE_RE = re.compile("[^A-Z0-9_]")
 
     def __init__(self, schema, name, args, generator_factory):

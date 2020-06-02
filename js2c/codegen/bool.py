@@ -22,14 +22,15 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from typing import Optional
-
 from .base import Generator
 
 
 class BoolGenerator(Generator):
-    default: Optional[bool] = None
-    c_type: str = "bool"
+    JSON_FIELDS = Generator.JSON_FIELDS + (
+        "default",
+    )
+    default = None
+    c_type = "bool"
 
     @classmethod
     def can_parse_schema(cls, schema):

@@ -22,17 +22,23 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from typing import Optional
-
 from .base import Generator
 
 
 class StringGenerator(Generator):
-    minLength: int = 0
-    maxLength: Optional[int] = None
-    default: Optional[str] = None
-    cType: Optional[str] = None
-    cParseFunction: Optional[str] = None
+    JSON_FIELDS = Generator.JSON_FIELDS + (
+        "minLength",
+        "maxLength",
+        "default",
+        "cType",
+        "cParseFunction",
+    )
+
+    minLength = 0
+    maxLength = None
+    default = None
+    cType = None
+    cParseFunction = None
 
     def __init__(self, schema, name, args, generator_factory):
         super().__init__(schema, name, args, generator_factory)
