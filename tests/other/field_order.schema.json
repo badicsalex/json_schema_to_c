@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "root",
+  "description": "Some demo structure for demoing.",
+  "type": "object",
+  "required": [ "desc1", "desc2", "desc3", "subobj", "desc4", "desc5" ],
+  "additionalProperties": false,
+  "properties": {
+    "desc1": {
+      "type": "integer"
+    },
+    "desc2": {
+      "type": "integer"
+    },
+    "desc3": {
+      "type": "integer"
+    },
+    "subobj": {
+      "type": "object",
+      "required": ["a", "b", "c"],
+      "additionalProperties": false,
+      "properties": {
+        "a": {
+          "type": "string",
+          "maxLength": 5
+        },
+        "b": {
+          "type": "boolean"
+        },
+        "c": {
+          "type": "array",
+          "maxItems": 5,
+          "items": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "desc4": {
+      "type": "integer"
+    },
+    "desc5": {
+      "type": "integer"
+    }
+  }
+}

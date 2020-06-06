@@ -22,6 +22,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
+import collections
+
 from .base import Generator
 
 
@@ -35,7 +37,7 @@ class ObjectGenerator(Generator):
 
     def __init__(self, schema, name, args, generator_factory):
         super().__init__(schema, name, args, generator_factory)
-        self.fields = {}
+        self.fields = collections.OrderedDict()
         for field_name, field_schema in schema['properties'].items():
             self.fields[field_name] = generator_factory.get_generator_for(
                 field_schema,

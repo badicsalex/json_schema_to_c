@@ -23,6 +23,7 @@
 # SOFTWARE.
 #
 import json
+import collections
 
 
 # WARNING: reviewing the following algorithm might cause brain damage
@@ -66,7 +67,7 @@ def resolve_ref(full_schema, part_to_resolve):
 
 
 def load_schema(schema_file):
-    schema = json.load(schema_file)
+    schema = json.load(schema_file, object_pairs_hook=collections.OrderedDict)
     assert '$id' in schema, "All schemas must have an ID (a field named '$id')"
     resolve_children(schema, schema)
     return schema
