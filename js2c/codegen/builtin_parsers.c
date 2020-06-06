@@ -203,52 +203,27 @@ static inline bool builtin_parse_double(parse_state_t* parse_state, double *out)
     return false;
 }
 
-static inline bool builtin_skip(parse_state_t* parse_state);
-
-static inline bool builtin_skip_array(parse_state_t* parse_state){
-    int token_num = CURRENT_TOKEN(parse_state).size;
-    parse_state->current_token += 1;
-    for (int i=0; i < token_num; ++i){
-        if (builtin_skip(parse_state))
-            return true;
-    }
-    return false;
-}
-
-static inline bool builtin_skip_object(parse_state_t* parse_state){
-    int token_num = CURRENT_TOKEN(parse_state).size;
-    parse_state->current_token += 1;
-    for (int i=0; i < token_num; ++i){
-        /* Skip key. This is not a simple current_token += 1,
-         * because key might be a complex object if loose parsing is used. */
-        if (builtin_skip(parse_state))
-            return true;
-        /* Skip value */
-        if (builtin_skip(parse_state))
-            return true;
-    }
-    return false;
-}
-
 static inline bool builtin_skip(parse_state_t* parse_state){
-    switch(CURRENT_TOKEN(parse_state).type){
-        case JSMN_OBJECT:
-            return builtin_skip_object(parse_state);
-
-        case JSMN_ARRAY:
-            return builtin_skip_array(parse_state);
-
-        case JSMN_STRING:
-        case JSMN_PRIMITIVE:
-            parse_state->current_token += 1;
-            return false;
-
-        case JSMN_UNDEFINED:
-        default:
+    /* The algorithm works, because of how .size behaves on JSMN tokens:
+     *   - Arrays have size = number of elements
+     *   - Objects have size = number of fields
+     *   - Object keys have a size of 1. This is important, because {"a": "b"} is 3 tokens this way:
+     *       - An object of size 1,
+     *       - A key of size 1
+     *       - A string of size 0.
+     *   - All other tokens are size 0.
+     */
+    uint32_t skip_tokens = 1 + CURRENT_TOKEN(parse_state).size;
+    while (skip_tokens > 0){
+        if (parse_state->current_token >= MAX_TOKEN_NUM){
             /* Should never happen */
-            LOG_ERROR(CURRENT_TOKEN(parse_state).start, "Internal error during token skipping");
             return true;
+        }
+        parse_state->current_token += 1;
+        skip_tokens -= 1;
+        skip_tokens += CURRENT_TOKEN(parse_state).size;
     }
+    return false;
 }
 
 static inline bool builtin_parse_json_string(parse_state_t* parse_state, const char* json_string){
