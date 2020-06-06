@@ -6,7 +6,7 @@ int main(int argc, char** argv){
     (void)argc;
     (void)argv;
     check_error(
-        "INVALID",
+        "true ",
         "Unexpected token: PRIMITIVE instead of OBJECT",
         0
     );
@@ -20,9 +20,9 @@ int main(int argc, char** argv){
         "JSON syntax error: End-of-file reached (JSON file incomplete)",
         1
     );
-    char many_objects[20001];
-    memset(many_objects, '{', 10000);
-    memset(many_objects + 10000, '}', 10000);
+    char many_objects[20001] = {};
+    memset(many_objects, '[', 10000);
+    memset(many_objects + 10000, ']', 10000);
     check_error(
         many_objects,
         "JSON syntax error: JSON file too complex",
@@ -30,7 +30,7 @@ int main(int argc, char** argv){
     );
 
     check_error(
-        "{\"name\": INVALID}",
+        "{\"name\": true}",
         "Unexpected token: PRIMITIVE instead of STRING",
         9
     );
@@ -46,8 +46,8 @@ int main(int argc, char** argv){
     );
 
     check_error(
-        "{\"is_good\": INVALID}",
-        "Invalid boolean literal: INVALID",
+        "{\"is_good\": 1}",
+        "Invalid boolean literal: 1",
         12
     );
     check_error(
@@ -57,8 +57,8 @@ int main(int argc, char** argv){
     );
 
     check_error(
-        "{\"num\": INVALID}",
-        "Invalid signed integer literal: INVALID",
+        "{\"num\": true}",
+        "Invalid signed integer literal: true",
         8
     );
     check_error(
@@ -77,8 +77,8 @@ int main(int argc, char** argv){
         9
     );
     check_error(
-        "{\"unsigned_num\": INVALID}",
-        "Invalid unsigned integer literal: INVALID",
+        "{\"unsigned_num\": true}",
+        "Invalid unsigned integer literal: true",
         17
     );
     check_error(
@@ -196,7 +196,7 @@ int main(int argc, char** argv){
         15
     );
     check_error(
-        "{\"nonexistent\": INVALID}",
+        "{\"nonexistent\": true}",
         "Unknown field in root: nonexistent",
         2
     );
@@ -229,8 +229,8 @@ int main(int argc, char** argv){
     );
 
     check_error(
-        "{\"fnum\": INVALID}",
-        "Invalid floating point literal: INVALID",
+        "{\"fnum\": true}",
+        "Invalid floating point literal: true",
         9
     );
     check_error(
@@ -244,18 +244,18 @@ int main(int argc, char** argv){
         9
     );
     check_error(
-        "{\"fnum\": INF}",
-        "Invalid floating point literal: INF",
+        "{\"fnum\": inf}",
+        "JSON syntax error: Invalid character",
         9
     );
     check_error(
-        "{\"fnum\": NAN}",
-        "Invalid floating point literal: NAN",
+        "{\"fnum\": nan}",
+        "Invalid floating point literal: nan",
         9
     );
     check_error(
-        "{\"fnum\": NANabcd}",
-        "Invalid floating point literal: NANabcd",
+        "{\"fnum\": nanabcd}",
+        "Invalid floating point literal: nanabcd",
         9
     );
     check_error(

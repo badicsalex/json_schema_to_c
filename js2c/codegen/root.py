@@ -99,6 +99,7 @@ class RootGenerator:
         with open(os.path.join(DIR_OF_THIS_FILE, '..', '..', 'jsmn', 'jsmn.h')) as jsmn_h:
             c_file.print("")
             c_file.print('#define JSMN_STATIC')
+            c_file.print('#define JSMN_STRICT')
             c_file.print("")
             c_file.print_separator("jsmn.h (From https://github.com/zserge/jsmn)")
             c_file.write(jsmn_h.read())
