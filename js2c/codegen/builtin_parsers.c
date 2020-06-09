@@ -41,8 +41,9 @@
 
 typedef struct parse_state_s {
     const char* json_string;
-    jsmntok_t tokens[MAX_TOKEN_NUM];
+    jsmntok_t* tokens;
     uint64_t current_token;
+    uint64_t max_token_num;
 } parse_state_t;
 
 #define CURRENT_TOKEN(parse_state) ((parse_state)->tokens[(parse_state)->current_token])
@@ -215,7 +216,7 @@ static inline bool builtin_skip(parse_state_t* parse_state){
      */
     uint32_t skip_tokens = 1 + CURRENT_TOKEN(parse_state).size;
     while (skip_tokens > 0){
-        if (parse_state->current_token >= MAX_TOKEN_NUM){
+        if (parse_state->current_token >= parse_state->max_token_num){
             /* Should never happen */
             return true;
         }
@@ -226,10 +227,18 @@ static inline bool builtin_skip(parse_state_t* parse_state){
     return false;
 }
 
-static inline bool builtin_parse_json_string(parse_state_t* parse_state, const char* json_string){
-    jsmn_parser parser;
+static inline bool builtin_parse_json_string(
+        parse_state_t* parse_state,
+        jsmntok_t* token_buffer,
+        uint64_t token_buffer_size,
+        const char* json_string
+){
+    jsmn_parser parser = {0};
+
     parse_state->json_string = json_string;
+    parse_state->tokens = token_buffer;
     parse_state->current_token = 0;
+    parse_state->max_token_num = token_buffer_size;
 
     jsmn_init(&parser);
     int token_num = jsmn_parse(
@@ -237,7 +246,7 @@ static inline bool builtin_parse_json_string(parse_state_t* parse_state, const c
         json_string,
         strlen(json_string),
         parse_state->tokens,
-        sizeof(parse_state->tokens) / sizeof(parse_state->tokens[0])
+        token_buffer_size
     );
     if (token_num < 0) {
         LOG_ERROR(parser.pos, "JSON syntax error: %s", jsmn_error_as_string(token_num));

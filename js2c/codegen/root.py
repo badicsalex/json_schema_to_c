@@ -44,12 +44,16 @@ class RootGenerator:
         self.root_generator = GeneratorFactory.get_generator_for(schema, schema['$id'], args)
         self.name = schema['$id']
 
-    def generate_root_parser(self, out_file):
+    def generate_root_parser(self, out_file, max_token_num):
         out_file.print("bool json_parse_{name}(const char* json_string, {name}_t* out)".format(name=self.name))
         with out_file.code_block():
             out_file.print("parse_state_t parse_state_var;")
             out_file.print("parse_state_t* parse_state = &parse_state_var;")
-            out_file.print("if(builtin_parse_json_string(parse_state, json_string))")
+            out_file.print("jsmntok_t token_buffer[{}];".format(max_token_num))
+            out_file.print(
+                "if(builtin_parse_json_string(parse_state, token_buffer, {}, json_string))"
+                .format(max_token_num)
+            )
             with out_file.code_block():
                 out_file.print("return true;")
             self.root_generator.generate_parser_call(
@@ -111,14 +115,13 @@ class RootGenerator:
             max_token_num = self.root_generator.max_token_num()
             if self.args.additional_token_number is not None:
                 max_token_num += self.args.additional_token_number
-            c_file.print("#define MAX_TOKEN_NUM {}\n".format(max_token_num))
             c_file.write(builtins_file.read())
             c_file.print("")
 
         c_file.print_separator("Generated parsers")
         c_file.print("")
         self.root_generator.generate_parser_bodies(c_file)
-        self.generate_root_parser(c_file)
+        self.generate_root_parser(c_file, max_token_num)
 
         if postfix:
             c_file.print_separator("User-added postfix")
