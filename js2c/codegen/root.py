@@ -90,6 +90,31 @@ class RootGenerator:
 
         h_file.print("#endif /* {} */".format(header_guard_name))
 
+    @classmethod
+    def manually_include_jsmn(cls, c_file):
+        with open(os.path.join(DIR_OF_THIS_FILE, '..', '..', 'jsmn', 'jsmn.h')) as jsmn_h:
+            c_file.print("")
+            c_file.print_separator("jsmn.h (From https://github.com/zserge/jsmn)")
+            c_file.write(jsmn_h.read())
+            c_file.print_separator("end of jsmn.h")
+            c_file.print("")
+
+    @classmethod
+    def manually_include_builtins(cls, c_file):
+        with open(os.path.join(DIR_OF_THIS_FILE, 'js2c_builtins.h')) as builtins_file:
+            c_file.print_separator("js2c_builtins.h")
+            builtins_file_contents = builtins_file.read()
+            jsmn_include_string = '#include "jsmn.h"\n'
+            split_pos = builtins_file_contents.index(jsmn_include_string)
+            if split_pos < 0:
+                raise ValueError("{} not found in builtins file".format(jsmn_include_string))
+            c_file.write(builtins_file_contents[:split_pos])
+            cls.manually_include_jsmn(c_file)
+            c_file.write(builtins_file_contents[split_pos + len(jsmn_include_string):])
+
+            c_file.print_separator("end of js2c_builtins.h")
+            c_file.print("")
+
     def generate_parser_c(self, c_file, h_file_name, prefix, postfix):
         c_file = CodeBlockPrinter(c_file)
 
@@ -100,27 +125,14 @@ class RootGenerator:
             c_file.print_separator("User-added prefix")
             c_file.write(prefix)
 
-        with open(os.path.join(DIR_OF_THIS_FILE, '..', '..', 'jsmn', 'jsmn.h')) as jsmn_h:
-            c_file.print("")
-            c_file.print('#define JSMN_STATIC')
-            c_file.print('#define JSMN_STRICT')
-            c_file.print("")
-            c_file.print_separator("jsmn.h (From https://github.com/zserge/jsmn)")
-            c_file.write(jsmn_h.read())
-            c_file.print("")
-
-        with open(os.path.join(DIR_OF_THIS_FILE, 'builtin_parsers.c')) as builtins_file:
-            c_file.print_separator("builtin_parsers.c")
-
-            max_token_num = self.root_generator.max_token_num()
-            if self.args.additional_token_number is not None:
-                max_token_num += self.args.additional_token_number
-            c_file.write(builtins_file.read())
-            c_file.print("")
-
+        self.manually_include_builtins(c_file)
         c_file.print_separator("Generated parsers")
         c_file.print("")
         self.root_generator.generate_parser_bodies(c_file)
+
+        max_token_num = self.root_generator.max_token_num()
+        if self.args.additional_token_number is not None:
+            max_token_num += self.args.additional_token_number
         self.generate_root_parser(c_file, max_token_num)
 
         if postfix:

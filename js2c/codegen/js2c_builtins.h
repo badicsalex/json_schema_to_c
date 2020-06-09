@@ -21,6 +21,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+#ifndef JS2C_BUILTINS_H
+#define JS2C_BUILTINS_H
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -28,12 +30,9 @@
 #include <string.h>
 #include <stdio.h>
 
-/* Hack to let the IDE know that we need JSMN.
- * In a normal situation, it will be included or pasted before this file. */
-#ifndef JSMN_H
-#error "jsmn.h not included"
-#include "../../jsmn/jsmn.h"
-#endif
+#define JSMN_STATIC
+#define JSMN_STRICT
+#include "jsmn.h"
 
 #ifndef LOG_ERROR
 #define LOG_ERROR(position, ...)
@@ -254,3 +253,5 @@ static inline bool builtin_parse_json_string(
     }
     return false;
 }
+
+#endif /* JS2C_BUILTINS_H */
