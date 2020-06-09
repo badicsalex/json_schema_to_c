@@ -40,8 +40,8 @@ class StringGenerator(Generator):
     cType = None
     cParseFunction = None
 
-    def __init__(self, schema, name, args, generator_factory):
-        super().__init__(schema, name, args, generator_factory)
+    def __init__(self, schema, name, settings, generator_factory):
+        super().__init__(schema, name, settings, generator_factory)
         assert 'enum' not in schema, "Enums should be generated with EnumGenerator"
 
         if self.maxLength is None:

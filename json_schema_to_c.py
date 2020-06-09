@@ -28,7 +28,7 @@ import os
 
 from js2c.schema import load_schema
 from js2c.codegen.root import RootGenerator
-from js2c.codegen.base import GeneratorArgs
+from js2c.settings import Settings
 
 
 def parse_args():
@@ -48,52 +48,14 @@ def parse_args():
         type=argparse.FileType('w'),
         help="Filename of the generated parser .h file",
     )
-    parser.add_argument(
-        "--h-prefix-file",
-        metavar="file",
-        type=argparse.FileType('r'),
-        help="Contents of this file will be placed right after the header guard and includes in the generated header.",
-        default=None,
-    )
-    parser.add_argument(
-        "--h-postfix-file",
-        metavar="file",
-        type=argparse.FileType('r'),
-        help="Contents of this file will be placed right before header guard's #endif in the generated header.",
-        default=None,
-    )
-    parser.add_argument(
-        "--c-prefix-file",
-        metavar="file",
-        type=argparse.FileType('r'),
-        help="Contents of this file will be placed right after the includes, before the JSMN code in the generated C file.",
-        default=None,
-    )
-    parser.add_argument(
-        "--c-postfix-file",
-        metavar="file",
-        type=argparse.FileType('r'),
-        help="Contents of this file will be placed at the end of the generated C file.",
-        default=None,
-    )
-    parser.add_argument(
-        "--allow-additional-properties",
-        metavar="token_num",
-        type=int,
-        help="Allow additionalProperties to be true (default for objects), and leave a $token_num amount of space for these "
-             "additional properties during the tokenizing step. (One token is basically one element, e.g. a string literal or a number)",
-        default=None
-    )
+    Settings.fill_argparse(parser)
     return parser.parse_args()
 
 
 def main(args):
     schema = load_schema(args.schema_file)
-    generator_args = GeneratorArgs(
-        additional_properties_allowed=args.allow_additional_properties is not None,
-        additional_token_number=args.allow_additional_properties,
-    )
-    root_generator = RootGenerator(schema, generator_args)
+    settings = Settings(vars(args))
+    root_generator = RootGenerator(schema, settings)
     root_generator.generate_parser_h(
         args.h_file,
         args.h_prefix_file.read() if args.h_prefix_file is not None else None,

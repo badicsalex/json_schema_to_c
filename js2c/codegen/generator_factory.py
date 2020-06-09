@@ -46,8 +46,8 @@ class GeneratorFactory:
     ]
 
     @classmethod
-    def get_generator_for(cls, schema, name, args):
+    def get_generator_for(cls, schema, name, settings):
         for generator_class in cls.GENERATORS:
             if generator_class.can_parse_schema(schema):
-                return generator_class(schema, name, args, cls)
+                return generator_class(schema, name, settings, cls)
         raise ValueError("Could not find any generators to parse schema: {}.".format(schema))

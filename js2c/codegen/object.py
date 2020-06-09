@@ -35,17 +35,17 @@ class ObjectGenerator(Generator):
     required = ()
     additionalProperties = True
 
-    def __init__(self, schema, name, args, generator_factory):
-        super().__init__(schema, name, args, generator_factory)
+    def __init__(self, schema, name, settings, generator_factory):
+        super().__init__(schema, name, settings, generator_factory)
         self.fields = collections.OrderedDict()
         for field_name, field_schema in schema['properties'].items():
             self.fields[field_name] = generator_factory.get_generator_for(
                 field_schema,
                 "{}_{}".format(name, field_name),
-                args,
+                settings,
             )
         self.c_type = "{}_t".format(self.name)
-        if self.additionalProperties and not self.args.additional_properties_allowed:
+        if self.additionalProperties and not self.settings.allow_additional_properties:
             raise ValueError(
                 "Either use the --allow-additional-properties command line argument, or set "
                 "additionalProperties to false on all object types."
@@ -122,7 +122,7 @@ class ObjectGenerator(Generator):
                 )
             out_file.print("else")
         with out_file.code_block():
-            if self.args.additional_properties_allowed:
+            if self.settings.allow_additional_properties:
                 out_file.print("parse_state->current_token += 1;")
                 out_file.print("builtin_skip(parse_state);")
             else:

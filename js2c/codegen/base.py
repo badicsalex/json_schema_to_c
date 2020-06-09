@@ -22,21 +22,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from collections import namedtuple
 from abc import ABC, abstractmethod
 
 
 class NoDefaultValue(Exception):
     pass
-
-
-GeneratorArgs = namedtuple(
-    "GeneratorArgs",
-    [
-        "additional_properties_allowed",
-        "additional_token_number",
-    ]
-)
 
 
 class Generator(ABC):
@@ -47,9 +37,9 @@ class Generator(ABC):
     c_type = None
     description = None
 
-    def __init__(self, schema, name, args, generator_factory):
+    def __init__(self, schema, name, settings, generator_factory):
         _ = generator_factory  # used only by subclasses
-        self.args = args
+        self.settings = settings
         self.name = name
         if "$id" in schema:
             self.name = schema["$id"]

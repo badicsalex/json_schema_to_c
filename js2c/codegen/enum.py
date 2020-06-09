@@ -37,8 +37,8 @@ class EnumGenerator(Generator):
 
     SANITIZE_RE = re.compile("[^A-Z0-9_]")
 
-    def __init__(self, schema, name, args, generator_factory):
-        super().__init__(schema, name, args, generator_factory)
+    def __init__(self, schema, name, settings, generator_factory):
+        super().__init__(schema, name, settings, generator_factory)
         self.c_type = "{}_t".format(self.name)
 
     @classmethod

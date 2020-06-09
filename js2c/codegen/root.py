@@ -39,9 +39,9 @@ NOTE_FOR_GENERATED_FILES = """
 
 
 class RootGenerator:
-    def __init__(self, schema, args):
-        self.args = args
-        self.root_generator = GeneratorFactory.get_generator_for(schema, schema['$id'], args)
+    def __init__(self, schema, settings):
+        self.settings = settings
+        self.root_generator = GeneratorFactory.get_generator_for(schema, schema['$id'], settings)
         self.name = schema['$id']
 
     def generate_root_parser(self, out_file, max_token_num):
@@ -131,8 +131,8 @@ class RootGenerator:
         self.root_generator.generate_parser_bodies(c_file)
 
         max_token_num = self.root_generator.max_token_num()
-        if self.args.additional_token_number is not None:
-            max_token_num += self.args.additional_token_number
+        if self.settings.allow_additional_properties is not None:
+            max_token_num += self.settings.allow_additional_properties
         self.generate_root_parser(c_file, max_token_num)
 
         if postfix:

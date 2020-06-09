@@ -42,8 +42,8 @@ class IntegerGeneratorBase(Generator):
     exclusiveMaximum = None
     default = None
 
-    def __init__(self, schema, name, args, generator_factory):
-        super().__init__(schema, name, args, generator_factory)
+    def __init__(self, schema, name, settings, generator_factory):
+        super().__init__(schema, name, settings, generator_factory)
         if self.minimum is not None and self.minimum >= 0:
             self.c_type = "uint64_t"
             self.parser_fn = "builtin_parse_unsigned"
@@ -112,8 +112,8 @@ class IntegerGeneratorBase(Generator):
 
 
 class IntegerGenerator(IntegerGeneratorBase):
-    def __init__(self, schema, name, args, generator_factory):
-        super().__init__(schema, name, args, generator_factory)
+    def __init__(self, schema, name, settings, generator_factory):
+        super().__init__(schema, name, settings, generator_factory)
         self.radix = 10
 
     @property
@@ -143,11 +143,11 @@ class NumericStringGenerator(IntegerGenerator):
     }
     SIGNED_PATTERNS = {'[+-]?' + k: v for k, v in UNSIGNED_PATTERNS.items()}
 
-    def __init__(self, schema, name, args, generator_factory):
+    def __init__(self, schema, name, settings, generator_factory):
         # minimum might be in the schema if this constructor is called by IntegerStringAnyOfGenerator
         if 'minimum' not in schema and schema['pattern'] in self.UNSIGNED_PATTERNS:
             schema['minimum'] = 0
-        super().__init__(schema, name, args, generator_factory)
+        super().__init__(schema, name, settings, generator_factory)
         if self.c_type == 'uint64_t':
             pattern_set = self.UNSIGNED_PATTERNS
         else:
@@ -179,11 +179,11 @@ class NumericStringGenerator(IntegerGenerator):
 
 
 class IntegerStringAnyOfGenerator(NumericStringGenerator):
-    def __init__(self, schema, name, args, generator_factory):
+    def __init__(self, schema, name, settings, generator_factory):
         combined_schema = schema['anyOf'][0]
         combined_schema.update(schema['anyOf'][1])
         combined_schema['type'] = 'string'
-        super().__init__(combined_schema, name, args, generator_factory)
+        super().__init__(combined_schema, name, settings, generator_factory)
 
     @classmethod
     def can_parse_schema(cls, schema):
