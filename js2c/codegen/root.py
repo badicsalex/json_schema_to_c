@@ -125,7 +125,10 @@ class RootGenerator:
             c_file.print_separator("User-added prefix")
             c_file.write(self.settings.c_prefix_file.read())
 
-        self.manually_include_builtins(c_file)
+        if self.settings.include_external_builtins_file:
+            c_file.print('#include "{}"'.format(self.settings.include_external_builtins_file))
+        else:
+            self.manually_include_builtins(c_file)
         c_file.print_separator("Generated parsers")
         c_file.print("")
         self.root_generator.generate_parser_bodies(c_file)

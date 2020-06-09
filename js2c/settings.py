@@ -67,6 +67,13 @@ class Settings:
             "additional properties during the tokenizing step. (One token is basically one element, e.g. a string literal or a number)",
             metavar="tokens",
         ),
+        SettingsField(
+            "include_external_builtins_file",
+            type=str,
+            help="Instead of manually including the builtin functions to the generated parser, only an include statement \n"
+            "with this path will be generated. Be sure to copy js2c_builtins.h there.",
+            metavar="file",
+        ),
     ]
 
     def __init__(self, args, settings_json):
