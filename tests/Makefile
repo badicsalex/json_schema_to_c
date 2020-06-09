@@ -20,50 +20,14 @@ clean:
 
 # === Special test running and compilation rules ===
 
-other/prefix_postfix.parser.c other/prefix_postfix.parser.h &: \
-		other/prefix_postfix.schema.json $(PARSER_SOURCE_FILES) \
+other/args_and_settings.parser.c other/args_and_settings.parser.h &: \
+		other/args_and_settings.schema.json $(PARSER_SOURCE_FILES) \
 		other/h_prefix.inc other/h_postfix.inc other/c_prefix.inc other/c_postfix.inc
-	echo "other/prefix_postfix: generating schema"
+	echo "other/args_and_settings: generating schema"
 	../json_schema_to_c.py \
-		--h-prefix other/h_prefix.inc \
-		--h-postfix other/h_postfix.inc \
 		--c-prefix other/c_prefix.inc \
 		--c-postfix other/c_postfix.inc \
-		other/prefix_postfix.schema.json other/prefix_postfix.parser.c other/prefix_postfix.parser.h
-
-other/errors.parser.c other/errors.parser.h &: \
-		other/errors.schema.json $(PARSER_SOURCE_FILES) \
-		other/errors_c_prefix.inc other/errors_h_prefix.inc
-	echo "other/errors: generating schema"
-	../json_schema_to_c.py \
-		--h-prefix other/errors_h_prefix.inc \
-		--c-prefix other/errors_c_prefix.inc \
-		other/errors.schema.json other/errors.parser.c other/errors.parser.h
-
-other/max_tokens.parser.c other/max_tokens.parser.h &: \
-		other/max_tokens.schema.json $(PARSER_SOURCE_FILES) \
-		other/errors_c_prefix.inc other/errors_h_prefix.inc
-	echo "other/max_tokens: generating schema"
-	../json_schema_to_c.py \
-		--h-prefix other/errors_h_prefix.inc \
-		--c-prefix other/errors_c_prefix.inc \
-		other/max_tokens.schema.json other/max_tokens.parser.c other/max_tokens.parser.h
-
-other/custom_parser.parser.c other/custom_parser.parser.h &: \
-		other/custom_parser.schema.json $(PARSER_SOURCE_FILES) \
-		other/custom_parser_c_prefix.inc other/custom_parser_h_prefix.inc
-	echo "other/custom_parser: generating schema"
-	../json_schema_to_c.py \
-		--h-prefix other/custom_parser_h_prefix.inc \
-		--c-prefix other/custom_parser_c_prefix.inc \
-		other/custom_parser.schema.json other/custom_parser.parser.c other/custom_parser.parser.h
-
-object/allow_additional.parser.c object/allow_additional.parser.h &: \
-		object/allow_additional.schema.json $(PARSER_SOURCE_FILES)
-	echo "object/allow_additional: generating schema"
-	../json_schema_to_c.py \
-		--allow-additional-properties 20 \
-		object/allow_additional.schema.json object/allow_additional.parser.c object/allow_additional.parser.h
+		other/args_and_settings.schema.json other/args_and_settings.parser.c other/args_and_settings.parser.h
 
 # === General test running and compilation rules ===
 %.parser.c %.parser.h: %.schema.json $(PARSER_SOURCE_FILES)

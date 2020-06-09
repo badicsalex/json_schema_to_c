@@ -63,7 +63,7 @@ class RootGenerator:
             out_file.print("return false;")
         out_file.print("")
 
-    def generate_parser_h(self, h_file, prefix, postfix):
+    def generate_parser_h(self, h_file):
         h_file_name = h_file.name
         h_file = CodeBlockPrinter(h_file)
 
@@ -76,17 +76,17 @@ class RootGenerator:
         h_file.print("#include <stdint.h>")
         h_file.print("#include <stdbool.h>")
 
-        if prefix:
+        if self.settings.h_prefix_file is not None:
             h_file.print_separator("User-added prefix")
-            h_file.write(prefix)
+            h_file.write(self.settings.h_prefix_file.read())
 
         h_file.print_separator("Generated type declarations")
         self.root_generator.generate_type_declaration(h_file, force=True)
         h_file.print("bool json_parse_{name}(const char* json_string, {name}_t* out);".format(name=self.name))
 
-        if postfix:
+        if self.settings.h_postfix_file:
             h_file.print_separator("User-added postfix")
-            h_file.write(postfix)
+            h_file.write(self.settings.h_postfix_file.read())
 
         h_file.print("#endif /* {} */".format(header_guard_name))
 
@@ -115,15 +115,15 @@ class RootGenerator:
             c_file.print_separator("end of js2c_builtins.h")
             c_file.print("")
 
-    def generate_parser_c(self, c_file, h_file_name, prefix, postfix):
+    def generate_parser_c(self, c_file, h_file_name):
         c_file = CodeBlockPrinter(c_file)
 
         c_file.write(NOTE_FOR_GENERATED_FILES)
         c_file.print('#include "{}"'.format(h_file_name))
 
-        if prefix:
+        if self.settings.h_prefix_file is not None:
             c_file.print_separator("User-added prefix")
-            c_file.write(prefix)
+            c_file.write(self.settings.c_prefix_file.read())
 
         self.manually_include_builtins(c_file)
         c_file.print_separator("Generated parsers")
@@ -135,6 +135,6 @@ class RootGenerator:
             max_token_num += self.settings.allow_additional_properties
         self.generate_root_parser(c_file, max_token_num)
 
-        if postfix:
+        if self.settings.h_postfix_file:
             c_file.print_separator("User-added postfix")
-            c_file.write(postfix)
+            c_file.write(self.settings.c_postfix_file.read())

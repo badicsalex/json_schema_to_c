@@ -25,7 +25,12 @@
 from collections import namedtuple
 import argparse
 
-SettingsField = namedtuple("SettingsField", ["name", "type", "help", "default", "metavar"])
+SettingsField = namedtuple("SettingsField", ["name", "type", "help", "metavar"])
+
+
+def snake_to_camel_case(text: str):
+    text = text.replace("_", " ").title().replace(" ", "")
+    return text[0].lower() + text[1:]
 
 
 class Settings:
@@ -35,43 +40,49 @@ class Settings:
             "h_prefix_file",
             type=argparse.FileType('r'),
             help="Contents of this file will be placed right after the header guard and includes in the generated header.",
-            default=None,
             metavar="file",
         ),
         SettingsField(
             "h_postfix_file",
             type=argparse.FileType('r'),
             help="Contents of this file will be placed right before header guard's #endif in the generated header.",
-            default=None,
             metavar="file",
         ),
         SettingsField(
             "c_prefix_file",
             type=argparse.FileType('r'),
             help="Contents of this file will be placed right after the includes, before the JSMN code in the generated C file.",
-            default=None,
             metavar="file",
         ),
         SettingsField(
             "c_postfix_file",
             type=argparse.FileType('r'),
             help="Contents of this file will be placed at the end of the generated C file.",
-            default=None,
             metavar="file",
         ),
         SettingsField(
             "allow_additional_properties",
             type=int,
-            help="Allow additionalProperties to be true (default for objects), and leave a $token_num amount of space for these "
+            help="Allow additionalProperties to be true (default for objects), and leave a $token_num amount of space for these \n"
             "additional properties during the tokenizing step. (One token is basically one element, e.g. a string literal or a number)",
-            default=None,
             metavar="tokens",
         ),
     ]
 
-    def __init__(self, args):
-        for k, v in args.items():
-            setattr(self, k, v)
+    def __init__(self, args, settings_json):
+        for field in self.FIELDS:
+            field_name_in_camel = snake_to_camel_case(field.name)
+            if args.get(field.name, None) is not None:
+                setattr(self, field.name, args[field.name])
+            elif field.name in settings_json:
+                self.parse_field(field, settings_json[field.name])
+            elif field_name_in_camel in settings_json:
+                self.parse_field(field, settings_json[field_name_in_camel])
+            else:
+                setattr(self, field.name, None)
+
+    def parse_field(self, field_desc, field_data):
+        setattr(self, field_desc.name, field_desc.type(field_data))
 
     @classmethod
     def fill_argparse(cls, parser):
@@ -81,5 +92,5 @@ class Settings:
                 metavar=field.metavar,
                 type=field.type,
                 help=field.help,
-                default=field.default,
+                default=None,
             )

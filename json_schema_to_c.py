@@ -30,9 +30,25 @@ from js2c.schema import load_schema
 from js2c.codegen.root import RootGenerator
 from js2c.settings import Settings
 
+HELP = """
+Create a JSON parser in C based on a json schema
+""".strip()
+
+HELP_EPILOG = """
+You can specify arguments in the schema too, under the js2cSettings" key,
+in either snake or camel case. E.g.:
+"js2cSettings": {"cPrefixFile": "my.inc"}
+
+The command line arguments take precedence.
+""".strip()
+
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Create a JSON parser in C based on a json schema")
+    parser = argparse.ArgumentParser(
+        description=HELP,
+        epilog=HELP_EPILOG,
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
     parser.add_argument(
         "schema_file",
         type=argparse.FileType('r'),
@@ -54,19 +70,10 @@ def parse_args():
 
 def main(args):
     schema = load_schema(args.schema_file)
-    settings = Settings(vars(args))
+    settings = Settings(vars(args), schema.get('js2cSettings', {}))
     root_generator = RootGenerator(schema, settings)
-    root_generator.generate_parser_h(
-        args.h_file,
-        args.h_prefix_file.read() if args.h_prefix_file is not None else None,
-        args.h_postfix_file.read() if args.h_postfix_file is not None else None,
-    )
-    root_generator.generate_parser_c(
-        args.c_file,
-        os.path.basename(args.h_file.name),
-        args.c_prefix_file.read() if args.c_prefix_file is not None else None,
-        args.c_postfix_file.read() if args.c_postfix_file is not None else None,
-    )
+    root_generator.generate_parser_h(args.h_file)
+    root_generator.generate_parser_c(args.c_file, os.path.basename(args.h_file.name))
 
 
 if __name__ == "__main__":

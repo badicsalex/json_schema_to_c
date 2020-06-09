@@ -3,9 +3,8 @@
   "$id": "root",
   "type": "boolean",
   "js2cSettings": {
-    "hPrefixFile": "other/h_prefix.inc",
+    "h_prefix_file": "other/h_prefix.inc",
     "hPostfixFile": "other/h_postfix.inc",
-    "cPrefixFile": "other/c_prefix.inc",
-    "cPostfixFile": "other/c_postfix.inc"
+    "cPrefixFile": "invalid"
   }
 }
