@@ -121,7 +121,7 @@ class RootGenerator:
         c_file.write(NOTE_FOR_GENERATED_FILES)
         c_file.print('#include "{}"'.format(h_file_name))
 
-        if self.settings.h_prefix_file is not None:
+        if self.settings.c_prefix_file is not None:
             c_file.print_separator("User-added prefix")
             c_file.write(self.settings.c_prefix_file.read())
 
@@ -135,6 +135,6 @@ class RootGenerator:
             max_token_num += self.settings.allow_additional_properties
         self.generate_root_parser(c_file, max_token_num)
 
-        if self.settings.h_postfix_file:
+        if self.settings.c_postfix_file:
             c_file.print_separator("User-added postfix")
             c_file.write(self.settings.c_postfix_file.read())
