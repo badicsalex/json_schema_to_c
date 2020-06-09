@@ -138,12 +138,11 @@ class ObjectGenerator(Generator):
             with out_file.code_block():
                 out_file.print("return true;")
 
-            out_file.print("uint64_t i;")
             self.generate_seen_flags(out_file)
 
             out_file.print("const uint64_t n = parse_state->tokens[parse_state->current_token].size;")
             out_file.print("parse_state->current_token += 1;")
-            out_file.print("for (i = 0; i < n; ++ i)")
+            out_file.print("for (uint64_t i = 0; i < n; ++ i)")
             with out_file.code_block():
                 self.generate_field_parsers(out_file)
 

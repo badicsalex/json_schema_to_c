@@ -94,12 +94,11 @@ class ArrayGenerator(Generator):
             out_file.print("if(check_type(parse_state, JSMN_ARRAY))")
             with out_file.code_block():
                 out_file.print("return true;")
-            out_file.print("int i;")
             out_file.print("const int n = parse_state->tokens[parse_state->current_token].size;")
             self.generate_range_checks(out_file)
             out_file.print("out->n = n;")
             out_file.print("parse_state->current_token += 1;")
-            out_file.print("for (i = 0; i < n; ++ i)")
+            out_file.print("for (int i = 0; i < n; ++ i)")
             with out_file.code_block():
                 self.item_generator.generate_parser_call(
                     "&out->items[i]",
