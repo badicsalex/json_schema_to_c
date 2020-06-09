@@ -43,6 +43,8 @@ class Generator(ABC):
         self.name = name
         if "$id" in schema:
             self.name = schema["$id"]
+            if self.name[0] == '#':
+                self.name = self.name[1:]
         for attr in self.JSON_FIELDS:
             if attr in schema:
                 setattr(self, attr, schema[attr])

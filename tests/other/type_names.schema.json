@@ -7,7 +7,7 @@
   "required": ["vegetable"],
   "properties": {
     "vegetable": {
-      "$id": "vegetable",
+      "$id": "#vegetable",
       "type": "object",
       "required": [ "name", "is_good" ],
       "additionalProperties": false,
