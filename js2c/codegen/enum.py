@@ -31,11 +31,14 @@ class EnumGenerator(Generator):
     JSON_FIELDS = Generator.JSON_FIELDS + (
         "enum",
         "default",
+        "convertLabelsToSnakeCase",
     )
     enum = None
     default = None
+    convertLabelsToSnakeCase = True
 
-    SANITIZE_RE = re.compile("[^A-Z0-9_]")
+    SANITIZE_RE = re.compile("[^A-Za-z0-9_]")
+    CAMEL_CASE_RE = re.compile("([A-Z]+)")
 
     def __init__(self, schema, name, settings, generator_factory):
         super().__init__(schema, name, settings, generator_factory)
@@ -46,7 +49,12 @@ class EnumGenerator(Generator):
         return schema.get('type') == 'string' and 'enum' in schema
 
     def convert_enum_name(self, enum_name):
-        return self.SANITIZE_RE.sub("_", "{}_{}".format(self.name, enum_name).upper())
+        if self.convertLabelsToSnakeCase:
+            enum_name = enum_name[0] + self.CAMEL_CASE_RE.sub("_\\1", enum_name[1:])
+            enum_name = enum_name.upper()
+        prefixed = "{}_{}".format(self.name.upper(), enum_name)
+        sanitized = self.SANITIZE_RE.sub("_", prefixed)
+        return sanitized
 
     def generate_parser_call(self, out_var_name, out_file):
         out_file.print(

@@ -3,5 +3,6 @@
   "$id": "the_enum",
   "description": "Some demo structure for demoing.",
   "type": "string",
+  "convertLabelsToSnakeCase": false,
   "enum": ["value1", "value to s@nitize", "last", "num", "number", "size", "camelCased1", "camel_andUnderscore", "TitleCased"]
 }
