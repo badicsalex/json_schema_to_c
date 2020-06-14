@@ -74,6 +74,12 @@ Usage
 
 Run the `json_schema_to_c.py --help` command, and go from there. Also see the example directory. You can test it by running `make run`.
 
+Extensions to JSON Schema
+-------------------------
+
+The following extra features are implemented:
+* The `js2cDefault` field. It is the same as `default`, and has higher precedence, if both are present. Mostly usable to have a 'secret' or 'internal' default value that shouldn't be exposed to UI's. Especially good for cases where you want to signify the nonexistence of a field to the C code, but don't want UIs to display 18446744073709551616 in gray.
+
 Contribution
 ------------
 

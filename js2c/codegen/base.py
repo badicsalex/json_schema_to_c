@@ -32,10 +32,12 @@ class NoDefaultValue(Exception):
 class Generator(ABC):
     JSON_FIELDS = (
         "description",
+        "js2cDefault",
     )
 
     c_type = None
     description = None
+    js2cDefault = None
 
     def __init__(self, schema, name, settings, generator_factory):
         _ = generator_factory  # used only by subclasses
@@ -48,6 +50,9 @@ class Generator(ABC):
         for attr in self.JSON_FIELDS:
             if attr in schema:
                 setattr(self, attr, schema[attr])
+        # The 'secret' default takes precedence over the proper one.
+        if self.js2cDefault is not None:
+            self.default = self.js2cDefault
 
     @abstractmethod
     def generate_parser_call(self, out_var_name, out_file):
