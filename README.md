@@ -78,7 +78,7 @@ Extensions to JSON Schema
 -------------------------
 
 The following extra features are implemented:
-* The `js2cDefault` field. It is the same as `default`, and has higher precedence, if both are present. Mostly usable to have a 'secret' or 'internal' default value that shouldn't be exposed to UI's. Especially good for cases where you want to signify the nonexistence of a field to the C code, but don't want UIs to display 18446744073709551616 in gray.
+* The `js2cDefault` field on data fields. It is the same as `default`, and has higher precedence, if both are present. Mostly usable to have a 'secret' or 'internal' default value that shouldn't be exposed to UI's. Especially good for cases where you want to signify the nonexistence of a field to the C code, but don't want UIs to display 18446744073709551616 in gray.
 
 Contribution
 ------------
