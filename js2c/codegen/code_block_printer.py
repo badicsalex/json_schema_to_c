@@ -74,6 +74,7 @@ class CodeBlockPrinter:
 
     def write(self, data):
         """ Write raw data to the file """
+        self.file.write("\n")
         self.file.write(data)
 
     def code_block(self, indent_level=4):

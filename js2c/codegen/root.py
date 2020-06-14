@@ -89,6 +89,7 @@ class RootGenerator:
             h_file.write(self.settings.h_postfix_file.read())
 
         h_file.print("#endif /* {} */".format(header_guard_name))
+        h_file.print("")
 
     @classmethod
     def manually_include_jsmn(cls, c_file):
