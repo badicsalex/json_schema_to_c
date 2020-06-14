@@ -57,7 +57,7 @@ class ObjectGenerator(Generator):
 
     def generate_parser_call(self, out_var_name, out_file):
         out_file.print(
-            "if(parse_{}(parse_state, {}))"
+            "if (parse_{}(parse_state, {}))"
             .format(self.name, out_var_name)
         )
         with out_file.code_block():
@@ -103,7 +103,7 @@ class ObjectGenerator(Generator):
                     "All fields must either be required or have a default value ({})"
                     .format(field_name)
                 )
-            out_file.print("if (!seen_{}) ".format(field_name))
+            out_file.print("if (!seen_{})".format(field_name))
             with out_file.code_block():
                 self.generate_logged_error("Missing required field in {}: {}".format(self.name, field_name), out_file)
 
@@ -111,7 +111,7 @@ class ObjectGenerator(Generator):
         for field_name, field_generator in self.fields.items():
             out_file.print('if (current_string_is(parse_state, "{}"))'.format(field_name))
             with out_file.code_block():
-                out_file.print("if(seen_{}) ".format(field_name))
+                out_file.print("if (seen_{})".format(field_name))
                 with out_file.code_block():
                     self.generate_logged_error("Duplicate field definition in {}: {}".format(self.name, field_name), out_file)
                 out_file.print("seen_{} = true;".format(field_name))
@@ -132,9 +132,9 @@ class ObjectGenerator(Generator):
         for field_generator in self.fields.values():
             field_generator.generate_parser_bodies(out_file)
 
-        out_file.print("static bool parse_{}(parse_state_t* parse_state, {}* out)".format(self.name, self.c_type))
+        out_file.print("static bool parse_{}(parse_state_t *parse_state, {} *out)".format(self.name, self.c_type))
         with out_file.code_block():
-            out_file.print("if(check_type(parse_state, JSMN_OBJECT))")
+            out_file.print("if (check_type(parse_state, JSMN_OBJECT))")
             with out_file.code_block():
                 out_file.print("return true;")
 
@@ -142,7 +142,7 @@ class ObjectGenerator(Generator):
 
             out_file.print("const uint64_t n = parse_state->tokens[parse_state->current_token].size;")
             out_file.print("parse_state->current_token += 1;")
-            out_file.print("for (uint64_t i = 0; i < n; ++ i)")
+            out_file.print("for (uint64_t i = 0; i < n; ++i)")
             with out_file.code_block():
                 self.generate_field_parsers(out_file)
 

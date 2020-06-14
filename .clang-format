@@ -1,0 +1,9 @@
+IndentWidth: 4
+ColumnLimit: 120
+BinPackParameters: false
+BinPackArguments: false
+AlignAfterOpenBracket: Align
+AllowAllParametersOfDeclarationOnNextLine: false
+AlignAfterOpenBracket: AlwaysBreak
+PenaltyReturnTypeOnItsOwnLine: 1000
+PenaltyBreakBeforeFirstCallParameter: 1000

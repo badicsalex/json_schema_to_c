@@ -38,7 +38,7 @@ class BoolGenerator(Generator):
 
     def generate_parser_call(self, out_var_name, out_file):
         out_file.print(
-            "if(builtin_parse_bool(parse_state, {}))"
+            "if (builtin_parse_bool(parse_state, {}))"
             .format(out_var_name)
         )
         with out_file.code_block():

@@ -58,7 +58,7 @@ class EnumGenerator(Generator):
 
     def generate_parser_call(self, out_var_name, out_file):
         out_file.print(
-            "if(parse_{}(parse_state, {}))"
+            "if (parse_{}(parse_state, {}))"
             .format(self.name, out_var_name)
         )
         with out_file.code_block():
@@ -76,9 +76,9 @@ class EnumGenerator(Generator):
         out_file.print("")
 
     def generate_parser_bodies(self, out_file):
-        out_file.print("static bool parse_{}(parse_state_t* parse_state, {}* out)".format(self.name, self.c_type))
+        out_file.print("static bool parse_{}(parse_state_t *parse_state, {} *out)".format(self.name, self.c_type))
         with out_file.code_block():
-            out_file.print("if(check_type(parse_state, JSMN_STRING))")
+            out_file.print("if (check_type(parse_state, JSMN_STRING))")
             with out_file.code_block():
                 out_file.print("return true;")
 

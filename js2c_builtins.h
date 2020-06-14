@@ -26,9 +26,9 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 
 #define JSMN_STATIC
 #define JSMN_STRICT
@@ -39,8 +39,8 @@
 #endif
 
 typedef struct parse_state_s {
-    const char* json_string;
-    jsmntok_t* tokens;
+    const char *json_string;
+    jsmntok_t *tokens;
     uint64_t current_token;
     uint64_t max_token_num;
 } parse_state_t;
@@ -50,58 +50,70 @@ typedef struct parse_state_s {
 #define CURRENT_STRING_LENGTH(parse_state) (CURRENT_TOKEN(parse_state).end - CURRENT_TOKEN(parse_state).start)
 #define CURRENT_STRING_FOR_ERROR(parse_state) CURRENT_STRING_LENGTH(parse_state), CURRENT_STRING(parse_state)
 
-static inline const char* token_type_as_string(jsmntype_t type){
-    switch(type){
-        case JSMN_UNDEFINED: return "UNDEFINED";
-        case JSMN_OBJECT: return "OBJECT";
-        case JSMN_ARRAY: return "ARRAY";
-        case JSMN_STRING: return "STRING";
-        case JSMN_PRIMITIVE: return "PRIMITIVE";
-        default: return "UNKNOWN";
+static inline const char *token_type_as_string(jsmntype_t type) {
+    switch (type) {
+    case JSMN_UNDEFINED:
+        return "UNDEFINED";
+    case JSMN_OBJECT:
+        return "OBJECT";
+    case JSMN_ARRAY:
+        return "ARRAY";
+    case JSMN_STRING:
+        return "STRING";
+    case JSMN_PRIMITIVE:
+        return "PRIMITIVE";
+    default:
+        return "UNKNOWN";
     }
 }
 
-static inline const char* jsmn_error_as_string(int err){
-    switch(err){
-        case JSMN_ERROR_INVAL: return "Invalid character";
-        case JSMN_ERROR_NOMEM: return "JSON file too complex";
-        case JSMN_ERROR_PART: return "End-of-file reached (JSON file incomplete)";
-        default: return "Internal error";
+static inline const char *jsmn_error_as_string(int err) {
+    switch (err) {
+    case JSMN_ERROR_INVAL:
+        return "Invalid character";
+    case JSMN_ERROR_NOMEM:
+        return "JSON file too complex";
+    case JSMN_ERROR_PART:
+        return "End-of-file reached (JSON file incomplete)";
+    default:
+        return "Internal error";
     }
 }
 
-static inline bool check_type(const parse_state_t* parse_state, jsmntype_t type){
-    const jsmntok_t* token = &parse_state->tokens[parse_state->current_token];
-    if (token->type != type){
+static inline bool check_type(const parse_state_t *parse_state, jsmntype_t type) {
+    const jsmntok_t *token = &parse_state->tokens[parse_state->current_token];
+    if (token->type != type) {
         LOG_ERROR(
             token->start,
             "Unexpected token: %s instead of %s",
             token_type_as_string(token->type),
-            token_type_as_string(type)
-        )
+            token_type_as_string(type))
         return true;
     }
     return false;
 }
 
-static inline bool current_string_is(const parse_state_t* parse_state, const char *s) {
-    const jsmntok_t* token = &parse_state->tokens[parse_state->current_token];
-    return 
-        (token->type == JSMN_STRING) &&
-        (strlen(s) == (size_t)(token->end - token->start)) &&
-        (memcmp(parse_state->json_string + token->start, s, token->end - token->start) == 0);
+static inline bool current_string_is(const parse_state_t *parse_state, const char *s) {
+    const jsmntok_t *token = &parse_state->tokens[parse_state->current_token];
+    if (token->type != JSMN_STRING) {
+        return false;
+    }
+    if (strlen(s) != (size_t)(token->end - token->start)) {
+        return false;
+    }
+    return memcmp(parse_state->json_string + token->start, s, token->end - token->start) == 0;
 }
 
-static inline bool builtin_parse_string(parse_state_t* parse_state, char *out, int min_len, int max_len){
-    if (check_type(parse_state, JSMN_STRING)){
+static inline bool builtin_parse_string(parse_state_t *parse_state, char *out, int min_len, int max_len) {
+    if (check_type(parse_state, JSMN_STRING)) {
         return true;
     }
-    const jsmntok_t* token = &parse_state->tokens[parse_state->current_token];
-    if (token->end - token->start > max_len){
+    const jsmntok_t *token = &parse_state->tokens[parse_state->current_token];
+    if (token->end - token->start > max_len) {
         LOG_ERROR(token->start, "String too large. Length: %i. Maximum length: %i.", token->end - token->start, max_len);
         return true;
     }
-    if (token->end - token->start < min_len){
+    if (token->end - token->start < min_len) {
         LOG_ERROR(token->start, "String too short. Length: %i. Minimum length: %i.", token->end - token->start, min_len);
         return true;
     }
@@ -111,13 +123,13 @@ static inline bool builtin_parse_string(parse_state_t* parse_state, char *out, i
     return false;
 }
 
-static inline bool builtin_parse_bool(parse_state_t* parse_state, bool *out){
-    if (check_type(parse_state, JSMN_PRIMITIVE)){
+static inline bool builtin_parse_bool(parse_state_t *parse_state, bool *out) {
+    if (check_type(parse_state, JSMN_PRIMITIVE)) {
         return true;
     }
-    const jsmntok_t* token = &parse_state->tokens[parse_state->current_token];
+    const jsmntok_t *token = &parse_state->tokens[parse_state->current_token];
     const char first_char = parse_state->json_string[token->start];
-    if (first_char != 't' && first_char != 'f'){
+    if (first_char != 't' && first_char != 'f') {
         LOG_ERROR(token->start, "Invalid boolean literal: %.*s", CURRENT_STRING_FOR_ERROR(parse_state));
         return true;
     }
@@ -126,22 +138,23 @@ static inline bool builtin_parse_bool(parse_state_t* parse_state, bool *out){
     return false;
 }
 
-static inline bool builtin_parse_signed(parse_state_t* parse_state, bool number_allowed, bool string_allowed, int radix, int64_t *out){
-    const jsmntok_t* token = &parse_state->tokens[parse_state->current_token];
-    if (!((number_allowed && token->type == JSMN_PRIMITIVE) || (string_allowed && token->type == JSMN_STRING))){
-        LOG_ERROR(
-            token->start,
-            "Unexpected token: %s",
-            token_type_as_string(token->type)
-        )
+static inline bool builtin_parse_signed(
+    parse_state_t *parse_state,
+    bool number_allowed,
+    bool string_allowed,
+    int radix,
+    int64_t *out) {
+    const jsmntok_t *token = &parse_state->tokens[parse_state->current_token];
+    if (!((number_allowed && token->type == JSMN_PRIMITIVE) || (string_allowed && token->type == JSMN_STRING))) {
+        LOG_ERROR(token->start, "Unexpected token: %s", token_type_as_string(token->type))
         return true;
     }
-    if (token->type == JSMN_PRIMITIVE){
+    if (token->type == JSMN_PRIMITIVE) {
         radix = 10;
     }
-    char * end_char = NULL;
+    char *end_char = NULL;
     *out = strtoll(parse_state->json_string + token->start, &end_char, radix);
-    if (end_char != parse_state->json_string + token->end){
+    if (end_char != parse_state->json_string + token->end) {
         LOG_ERROR(token->start, "Invalid signed integer literal: %.*s", CURRENT_STRING_FOR_ERROR(parse_state));
         return true;
     }
@@ -149,27 +162,29 @@ static inline bool builtin_parse_signed(parse_state_t* parse_state, bool number_
     return false;
 }
 
-static inline bool builtin_parse_unsigned(parse_state_t* parse_state, bool number_allowed, bool string_allowed, int radix, uint64_t *out){
-    const jsmntok_t* token = &parse_state->tokens[parse_state->current_token];
-    if (!((number_allowed && token->type == JSMN_PRIMITIVE) || (string_allowed && token->type == JSMN_STRING))){
-        LOG_ERROR(
-            token->start,
-            "Unexpected token: %s",
-            token_type_as_string(token->type)
-        )
+static inline bool builtin_parse_unsigned(
+    parse_state_t *parse_state,
+    bool number_allowed,
+    bool string_allowed,
+    int radix,
+    uint64_t *out
+) {
+    const jsmntok_t *token = &parse_state->tokens[parse_state->current_token];
+    if (!((number_allowed && token->type == JSMN_PRIMITIVE) || (string_allowed && token->type == JSMN_STRING))) {
+        LOG_ERROR(token->start, "Unexpected token: %s", token_type_as_string(token->type))
         return true;
     }
-    if (token->type == JSMN_PRIMITIVE){
+    if (token->type == JSMN_PRIMITIVE) {
         radix = 10;
     }
-    const char * start_char = parse_state->json_string + token->start;
-    char * end_char = NULL;
-    if (*start_char == '-'){
+    const char *start_char = parse_state->json_string + token->start;
+    char *end_char = NULL;
+    if (*start_char == '-') {
         LOG_ERROR(token->start, "Invalid unsigned integer literal: %.*s", CURRENT_STRING_FOR_ERROR(parse_state));
         return true;
     }
     *out = strtoull(start_char, &end_char, radix);
-    if (end_char != parse_state->json_string + token->end){
+    if (end_char != parse_state->json_string + token->end) {
         LOG_ERROR(token->start, "Invalid unsigned integer literal: %.*s", CURRENT_STRING_FOR_ERROR(parse_state));
         return true;
     }
@@ -177,25 +192,22 @@ static inline bool builtin_parse_unsigned(parse_state_t* parse_state, bool numbe
     return false;
 }
 
-static inline bool builtin_parse_double(parse_state_t* parse_state, double *out){
-    const jsmntok_t* token = &parse_state->tokens[parse_state->current_token];
-    if (check_type(parse_state, JSMN_PRIMITIVE)){
+static inline bool builtin_parse_double(parse_state_t *parse_state, double *out) {
+    const jsmntok_t *token = &parse_state->tokens[parse_state->current_token];
+    if (check_type(parse_state, JSMN_PRIMITIVE)) {
         return true;
     }
-    const char * start_char = parse_state->json_string + token->start;
-    if (token->end - token->start >= 2){
-        if (
-            start_char[1] != '.' &&
-            start_char[1] != 'e' && start_char[1] != 'E' &&
-            !(start_char[1] >= '0' && start_char[1] <= '9')
-        ){
+    const char *start_char = parse_state->json_string + token->start;
+    if (token->end - token->start >= 2) {
+        if (start_char[1] != '.' && start_char[1] != 'e' && start_char[1] != 'E' &&
+            !(start_char[1] >= '0' && start_char[1] <= '9')) {
             LOG_ERROR(token->start, "Invalid floating point literal: %.*s", CURRENT_STRING_FOR_ERROR(parse_state));
             return true;
         }
     }
-    char * end_char = NULL;
+    char *end_char = NULL;
     *out = strtod(start_char, &end_char);
-    if (end_char != parse_state->json_string + token->end){
+    if (end_char != parse_state->json_string + token->end) {
         LOG_ERROR(token->start, "Invalid floating point literal: %.*s", CURRENT_STRING_FOR_ERROR(parse_state));
         return true;
     }
@@ -203,7 +215,7 @@ static inline bool builtin_parse_double(parse_state_t* parse_state, double *out)
     return false;
 }
 
-static inline bool builtin_skip(parse_state_t* parse_state){
+static inline bool builtin_skip(parse_state_t *parse_state) {
     /* The algorithm works, because of how .size behaves on JSMN tokens:
      *   - Arrays have size = number of elements
      *   - Objects have size = number of fields
@@ -214,8 +226,8 @@ static inline bool builtin_skip(parse_state_t* parse_state){
      *   - All other tokens are size 0.
      */
     uint32_t skip_tokens = 1 + CURRENT_TOKEN(parse_state).size;
-    while (skip_tokens > 0){
-        if (parse_state->current_token >= parse_state->max_token_num){
+    while (skip_tokens > 0) {
+        if (parse_state->current_token >= parse_state->max_token_num) {
             /* Should never happen */
             return true;
         }
@@ -227,11 +239,11 @@ static inline bool builtin_skip(parse_state_t* parse_state){
 }
 
 static inline bool builtin_parse_json_string(
-        parse_state_t* parse_state,
-        jsmntok_t* token_buffer,
-        uint64_t token_buffer_size,
-        const char* json_string
-){
+    parse_state_t *parse_state,
+    jsmntok_t *token_buffer,
+    uint64_t token_buffer_size,
+    const char *json_string
+) {
     jsmn_parser parser = {0};
 
     parse_state->json_string = json_string;
@@ -240,13 +252,7 @@ static inline bool builtin_parse_json_string(
     parse_state->max_token_num = token_buffer_size;
 
     jsmn_init(&parser);
-    int token_num = jsmn_parse(
-        &parser,
-        json_string,
-        strlen(json_string),
-        parse_state->tokens,
-        token_buffer_size
-    );
+    int token_num = jsmn_parse(&parser, json_string, strlen(json_string), parse_state->tokens, token_buffer_size);
     if (token_num < 0) {
         LOG_ERROR(parser.pos, "JSON syntax error: %s", jsmn_error_as_string(token_num));
         return true;

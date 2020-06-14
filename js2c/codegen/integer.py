@@ -73,7 +73,7 @@ class IntegerGeneratorBase(Generator):
         out_file.print("if (!((*{}) {} {}))".format(out_var_name, check_operator, check_number))
         with out_file.code_block():
             # Roll back the token, as the value was not actually correct
-            out_file.print("parse_state->current_token -=1;")
+            out_file.print("parse_state->current_token -= 1;")
             cls.generate_logged_error(
                 [
                     "Integer %li out of range. It must be {} {}.".format(check_operator, check_number),
@@ -84,7 +84,7 @@ class IntegerGeneratorBase(Generator):
 
     def generate_parser_call(self, out_var_name, out_file):
         out_file.print(
-            "if({}(parse_state, {}, {}, {}, {}))"
+            "if ({}(parse_state, {}, {}, {}, {}))"
             .format(
                 self.parser_fn,
                 'true' if self.number_allowed else 'false',

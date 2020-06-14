@@ -53,7 +53,10 @@ class CodeBlockPrinter:
         if line == "else":
             self.file.write(" else ")
         elif line == "{":
-            self.file.write("{")
+            if self.last_was_else:
+                self.file.write("{")
+            else:
+                self.file.write(" {")
         elif not line:
             self.file.write("\n")
         elif self.last_was_else:

@@ -51,7 +51,7 @@ class ArrayGenerator(Generator):
 
     def generate_parser_call(self, out_var_name, out_file):
         out_file.print(
-            "if(parse_{}(parse_state, {}))"
+            "if (parse_{}(parse_state, {}))"
             .format(self.name, out_var_name)
         )
         with out_file.code_block():
@@ -89,16 +89,16 @@ class ArrayGenerator(Generator):
     def generate_parser_bodies(self, out_file):
         self.item_generator.generate_parser_bodies(out_file)
 
-        out_file.print("static bool parse_{}(parse_state_t* parse_state, {}* out)".format(self.name, self.c_type))
+        out_file.print("static bool parse_{}(parse_state_t *parse_state, {} *out)".format(self.name, self.c_type))
         with out_file.code_block():
-            out_file.print("if(check_type(parse_state, JSMN_ARRAY))")
+            out_file.print("if (check_type(parse_state, JSMN_ARRAY))")
             with out_file.code_block():
                 out_file.print("return true;")
             out_file.print("const int n = parse_state->tokens[parse_state->current_token].size;")
             self.generate_range_checks(out_file)
             out_file.print("out->n = n;")
             out_file.print("parse_state->current_token += 1;")
-            out_file.print("for (int i = 0; i < n; ++ i)")
+            out_file.print("for (int i = 0; i < n; ++i)")
             with out_file.code_block():
                 self.item_generator.generate_parser_call(
                     "&out->items[i]",
