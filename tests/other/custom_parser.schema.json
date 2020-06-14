@@ -11,16 +11,16 @@
   "properties": {
     "id": {
       "type": "string",
-      "cType": "int64_t",
-      "cParseFunction": "hex_parser",
+      "js2cType": "int64_t",
+      "js2cParseFunction": "hex_parser",
       "description": "The Identifier",
       "default": "0xABCDEF",
       "maxLength": 8
     },
     "point": {
       "type": "string",
-      "cType": "custom_point_t",
-      "cParseFunction": "pt_prsr",
+      "js2cType": "custom_point_t",
+      "js2cParseFunction": "pt_prsr",
       "description": "The coordinates",
       "default": "ab",
       "maxLength": 2

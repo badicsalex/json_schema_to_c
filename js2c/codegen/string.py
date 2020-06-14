@@ -30,15 +30,15 @@ class StringGenerator(Generator):
         "minLength",
         "maxLength",
         "default",
-        "cType",
-        "cParseFunction",
+        "js2cType",
+        "js2cParseFunction",
     )
 
     minLength = 0
     maxLength = None
     default = None
-    cType = None
-    cParseFunction = None
+    js2cType = None
+    js2cParseFunction = None
 
     def __init__(self, schema, name, settings, generator_factory):
         super().__init__(schema, name, settings, generator_factory)
@@ -54,10 +54,10 @@ class StringGenerator(Generator):
             print("MinLength", self.minLength)
             raise ValueError("String default value shorter than minLength")
 
-        if self.cType is not None:
-            if self.cParseFunction is None:
-                raise ValueError("cParseFunction must be set if cType is set")
-            self.c_type = self.cType
+        if self.js2cType is not None:
+            if self.js2cParseFunction is None:
+                raise ValueError("js2cParseFunction must be set if js2cType is set")
+            self.c_type = self.js2cType
         else:
             self.c_type = "{}_t".format(self.name)
 
@@ -70,19 +70,19 @@ class StringGenerator(Generator):
             out_file.print("const char* error=NULL;")
             out_file.print(
                 "if({}({}, {}, {}, &error))"
-                .format(self.cParseFunction, src, src_length, out_var_name)
+                .format(self.js2cParseFunction, src, src_length, out_var_name)
             )
             with out_file.code_block():
                 self.generate_logged_error([
                     "Error parsing {}, value=\\\"%.*s\\\": %s".format(self.name),
                     src_length,
                     src,
-                    "error ? error : \"error calling {}\"".format(self.cParseFunction),
+                    "error ? error : \"error calling {}\"".format(self.js2cParseFunction),
                 ], out_file)
             out_file.print("parse_state->current_token += 1;")
 
     def generate_parser_call(self, out_var_name, out_file):
-        if self.cParseFunction is not None:
+        if self.js2cParseFunction is not None:
             self.generate_custom_parser_call(
                 "CURRENT_STRING(parse_state)",
                 "CURRENT_STRING_LENGTH(parse_state)",
@@ -100,7 +100,7 @@ class StringGenerator(Generator):
     def generate_type_declaration(self, out_file, *, force=False):
         _ = force  # basically (void)force
 
-        if self.cType is not None:
+        if self.js2cType is not None:
             return
 
         out_file.print_with_docstring(
@@ -113,7 +113,7 @@ class StringGenerator(Generator):
 
     def generate_set_default_value(self, out_var_name, out_file):
         assert self.has_default_value(), "Caller is responsible for checking this."
-        if self.cParseFunction is not None:
+        if self.js2cParseFunction is not None:
             self.generate_custom_parser_call(
                 '"{}"'.format(self.default),
                 str(len(self.default)),

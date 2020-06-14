@@ -93,8 +93,8 @@
             "$id": "THE ERRORER",
             "type": "string",
             "maxLength": 15,
-            "cType": "int",
-            "cParseFunction": "error_creating_parser",
+            "js2cType": "int",
+            "js2cParseFunction": "error_creating_parser",
             "default": "INVALID DEFAULT"
           }
         }
