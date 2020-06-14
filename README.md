@@ -72,7 +72,7 @@ You can access the fields like this:
 Usage
 -----
 
-Run the `json_schema_to_c.py --help` command, and go from there. Also see the example directory. You can test it by running `make run`.
+Run the `json_schema_to_c.py --help` command, and go from there. Also see the example directory. You can test it by running `make run`. For more advanced functionality, check tests.
 
 Extensions to JSON Schema
 -------------------------
