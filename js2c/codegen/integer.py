@@ -175,6 +175,8 @@ class NumericStringGenerator(IntegerGenerator):
     def can_parse_schema(cls, schema):
         if schema.get('type') != 'string':
             return False
+        if schema.get('js2cParseFunction') is not None:
+            return False
         return schema.get('pattern') in cls.UNSIGNED_PATTERNS or schema.get('pattern') in cls.SIGNED_PATTERNS
 
 

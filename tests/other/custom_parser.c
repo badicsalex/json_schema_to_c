@@ -11,12 +11,12 @@ int main(int argc, char** argv){
     (void)argv;
     root_t root = {};
     assert(!json_parse_root("{}", &root));
-    assert(root.id == 0xABCDEF);
+    assert(root.id == 0x01EFCDAB01EFCDAB);
     assert(root.point.x == 'a');
     assert(root.point.y == 'b');
 
     assert(!json_parse_root("{\"id\": \"1234\", \"point\": \"xy\"}", &root));
-    assert(root.id == 0x1234);
+    assert(root.id == 0x3412000000000000);
     assert(root.point.x == 'x');
     assert(root.point.y == 'y');
 

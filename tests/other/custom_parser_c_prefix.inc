@@ -1,8 +1,9 @@
 #include <stdlib.h> 
+#include <byteswap.h>
 
-bool hex_parser(const char* src, int size, int64_t* out, const char** error){
+bool big_endian_hex(const char* src, int size, uint64_t* out, const char** error){
     char * end_char = NULL;
-    *out = strtoll(src, &end_char, 16);
+    *out = bswap_64(strtoull(src, &end_char, 16));
     if (end_char != (src + size)){
         *error = "Invalid int literal";
         return true;

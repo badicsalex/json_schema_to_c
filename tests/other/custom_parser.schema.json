@@ -11,11 +11,12 @@
   "properties": {
     "id": {
       "type": "string",
-      "js2cType": "int64_t",
-      "js2cParseFunction": "hex_parser",
+      "js2cType": "uint64_t",
+      "js2cParseFunction": "big_endian_hex",
       "description": "The Identifier",
-      "default": "0xABCDEF",
-      "maxLength": 8
+      "default": "ABCDEF01ABCDEF01",
+      "pattern": "(0x|0X)?[0-9a-fA-F]+",
+      "maxLength": 16
     },
     "point": {
       "type": "string",
