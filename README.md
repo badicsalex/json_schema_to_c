@@ -7,7 +7,7 @@ It generates a single, self-contained .c file, and a .h interface file, which ca
 
 The following schema features are supported:
 
-* Types: `integer`, `bool`, `string`, `array`, `object`
+* Types: `integer`, `number`, `bool`, `string`, `array`, `object`
 * Min and max length for arrays and strings
 * Min and max values for integers
 * In-document path-like `$ref` resoltion
@@ -24,7 +24,7 @@ Important limitations:
 * All object fields must either be required or have a default value
 * Complex default values for objects and arrays are not supported
 * All object property names must be valid C tokens
-* Floats and `null` are not supported
+* `null` are is not supported
 * More advanced `$ref` declarations (especially pointing to another file) are not supported
 
 Example
