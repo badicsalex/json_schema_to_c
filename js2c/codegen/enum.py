@@ -48,11 +48,11 @@ class EnumGenerator(Generator):
     def can_parse_schema(cls, schema):
         return schema.get('type') == 'string' and 'enum' in schema
 
-    def convert_enum_name(self, enum_name):
+    def convert_enum_label(self, enum_label):
         if self.convertLabelsToSnakeCase:
-            enum_name = enum_name[0] + self.CAMEL_CASE_RE.sub("_\\1", enum_name[1:])
-            enum_name = enum_name.upper()
-        prefixed = "{}_{}".format(self.name.upper(), enum_name)
+            enum_label = enum_label[0] + self.CAMEL_CASE_RE.sub("_\\1", enum_label[1:])
+            enum_label = enum_label.upper()
+        prefixed = "{}_{}".format(self.name.upper(), enum_label)
         sanitized = self.SANITIZE_RE.sub("_", prefixed)
         return sanitized
 
@@ -69,9 +69,9 @@ class EnumGenerator(Generator):
 
         out_file.print("typedef enum {}_e".format(self.name) + "{")
         with out_file.indent():
-            for enum_name in self.enum[:-1]:
-                out_file.print("{},".format(self.convert_enum_name(enum_name)))
-            out_file.print("{}".format(self.convert_enum_name(self.enum[-1])))
+            for enum_label in self.enum[:-1]:
+                out_file.print("{},".format(self.convert_enum_label(enum_label)))
+            out_file.print("{}".format(self.convert_enum_label(self.enum[-1])))
         out_file.print("}} {};".format(self.c_type))
         out_file.print("")
 
@@ -82,10 +82,10 @@ class EnumGenerator(Generator):
             with out_file.code_block():
                 out_file.print("return true;")
 
-            for enum_name in self.enum:
-                out_file.print('if (current_string_is(parse_state, "{}"))'.format(enum_name))
+            for enum_label in self.enum:
+                out_file.print('if (current_string_is(parse_state, "{}"))'.format(enum_label))
                 with out_file.code_block():
-                    out_file.print("*out = {};".format(self.convert_enum_name(enum_name)))
+                    out_file.print("*out = {};".format(self.convert_enum_label(enum_label)))
                 out_file.print("else")
             with out_file.code_block():
                 self.generate_logged_error(["Unknown enum value in {}: %.*s".format(self.name), "CURRENT_STRING_FOR_ERROR(parse_state)"], out_file)
@@ -99,7 +99,7 @@ class EnumGenerator(Generator):
 
     def generate_set_default_value(self, out_var_name, out_file):
         assert self.has_default_value(), "Caller is responsible for checking this."
-        out_file.print("{} = {};".format(out_var_name, self.convert_enum_name(self.default)))
+        out_file.print("{} = {};".format(out_var_name, self.convert_enum_label(self.default)))
 
     def max_token_num(self):
         return 1
