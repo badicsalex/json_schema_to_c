@@ -108,10 +108,11 @@ class ArrayGenerator(Generator):
         out_file.print("")
 
     def has_default_value(self):
-        return self.minItems == 0
+        return super().has_default_value() or self.minItems == 0
 
     def generate_set_default_value(self, out_var_name, out_file):
-        assert self.has_default_value(), "Caller is responsible for checking this."
+        if super().generate_set_default_value(out_var_name, out_file):
+            return
         out_file.print("{}.n = 0;".format(out_var_name))
 
     def max_token_num(self):

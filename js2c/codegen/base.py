@@ -50,9 +50,6 @@ class Generator(ABC):
         for attr in self.JSON_FIELDS:
             if attr in schema:
                 setattr(self, attr, schema[attr])
-        # The 'secret' default takes precedence over the proper one.
-        if self.js2cDefault is not None:
-            self.default = self.js2cDefault
 
     @abstractmethod
     def generate_parser_call(self, out_var_name, out_file):
@@ -80,12 +77,15 @@ class Generator(ABC):
     def generate_parser_bodies(self, out_file):
         pass
 
-    @classmethod
-    def has_default_value(cls):
-        return False
+    def has_default_value(self):
+        return self.js2cDefault is not None
 
     def generate_set_default_value(self, out_var_name, out_file):
-        raise NoDefaultValue("Default values not supported for {}".format(self.__class__.__name__))
+        assert self.has_default_value(), "Caller is responsible for checking this."
+        if self.js2cDefault is None:
+            return False
+        out_file.print("{} = {};".format(out_var_name, self.js2cDefault))
+        return True
 
     @classmethod
     def generate_logged_error(cls, log_message, out_file):

@@ -115,11 +115,19 @@ class StringGenerator(Generator):
         out_file.print("")
 
     def has_default_value(self):
-        return self.default is not None
+        return super().has_default_value() or self.default is not None
 
     def generate_set_default_value(self, out_var_name, out_file):
         assert self.has_default_value(), "Caller is responsible for checking this."
-        if self.js2cParseFunction is not None:
+        if self.js2cDefault is not None:
+            out_file.print(
+                'strncpy({dst}, {src}, {size});'.format(
+                    dst=out_var_name,
+                    src=self.js2cDefault,
+                    size=self.maxLength + 1,
+                )
+            )
+        elif self.js2cParseFunction is not None:
             self.generate_custom_parser_call(
                 '"{}"'.format(self.default),
                 str(len(self.default)),

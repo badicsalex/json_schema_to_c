@@ -14,22 +14,18 @@ int main(int argc, char** argv){
     memset(&got, 0, sizeof(root_t));
     memset(&expected, 0, sizeof(root_t));
 
-    /* Now that padding bytes are take care of, set fields */
-    expected = (root_t){
-        .name="cauliflower",
-        .is_good=true,
-        .number=1337,
-        .id="xxxx",
-        .mass=1338,
-        .sub_obj={
-            .number=1339,
-            .mass=1330
-        }
-    };
     assert(!json_parse_root("{}", &got));
-
-    /* This is actually UB because of the padding bytes. We should compare field-by-field */
-    assert(!memcmp(&got, &expected, sizeof(root_t)));
+    assert(strcmp(got.name, "cauliflower") == 0);
+    assert(got.is_good == true);
+    assert(got.number == 1337);
+    assert(strcmp(got.id, "xxxx") == 0);
+    assert(got.mass == 1338);
+    assert(got.sub_obj.number == 1339);
+    assert(got.sub_obj.mass == 1330);
+    assert(got.the_enum == ROOT_THE_ENUM_ENUM_VAL_3);
+    assert(got.def_obj.number == 5432);
+    assert(got.def_arr.n == 3);
+    assert(got.def_arr.items[2] == 3);
 
     return 0;
 }

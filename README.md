@@ -22,7 +22,6 @@ Important limitations:
 
 * Strings and arrays must have a `maxLength` or `maxItems` field
 * All object fields must either be required or have a default value
-* Complex default values for objects and arrays are not supported
 * All object property names must be valid C tokens
 * `null` are is not supported
 * More advanced `$ref` declarations (especially pointing to another file) are not supported
@@ -78,7 +77,7 @@ Extensions to JSON Schema
 -------------------------
 
 The following extra features are implemented:
-* The `js2cDefault` field on data fields. It is the same as `default`, and has higher precedence, if both are present. Mostly usable to have a 'secret' or 'internal' default value that shouldn't be exposed to UI's. Especially good for cases where you want to signify the nonexistence of a field to the C code, but don't want UIs to display 18446744073709551616 in gray.
+* The `js2cDefault` field on data fields. It is similar to `default`, but it is pasted into the parser C code as-is, so it can be any C expression. It is recommended to still set `default` for interoperability, but it will be ignored by js2c. This is the only way to set non-trivial default values for arrays and objects.
 * The `js2cType` and `js2cParseFunction` on `string` fields. `js2cType` specifies a forces a specific C type in the struct, and `js2cParseFunction` specifies a custom function (probably included with `c-parser-prefix`) which takes a string and outputs this custom type. Useful for something like base64 decoding a string and storing the bytes.
 * The `js2cType` on `integer` fields. `js2cType` specifies a forces a specific C type in the struct (can only be `u?int(8|16|32|64)_t`). The integer will be parsed as a full 64 bit variable and truncated after range checks.
 * `js2cSettings` in the schema root. Can be used to specify parameters that are normally command line parameters. Both camelCase and snake_case forms are accepted. If the same parameters are given through command line arguments, the settings in the schema take precedence.

@@ -8,13 +8,13 @@
     "name": {
       "type": "string",
       "description": "The name of the vegetable.",
-      "js2cDefault": "cauliflower",
+      "js2cDefault": "\"cauliflower\"",
       "maxLength": 11
     },
     "is_good": {
       "type": "boolean",
       "description": "Is the vegetable any good?",
-      "js2cDefault": true
+      "js2cDefault": "2 == 2"
     },
     "number": {
       "type": "integer",
@@ -25,12 +25,12 @@
       "type": "string",
       "maxLength": 4,
       "default": "abcd",
-      "js2cDefault": "xxxx"
+      "js2cDefault": "\"xx\" \"xx\""
     },
     "mass": {
       "type": "integer",
       "default": 5,
-      "js2cDefault": 1338
+      "js2cDefault": "1336 + 2"
     },
     "sub_obj": {
       "type": "object",
@@ -45,6 +45,36 @@
           "type": "integer",
           "js2cDefault": 1330
         }
+      }
+    },
+    "the_enum": {
+      "type": "string",
+      "enum": ["enum_val_1", "enum_val_2", "enum_val_3"],
+      "default": "enum_val_2",
+      "js2cDefault": "ROOT_THE_ENUM_ENUM_VAL_3"
+    },
+    "def_obj": {
+      "type": "object",
+      "$id": "#def_obj",
+      "default": {"number": 5432},
+      "js2cDefault": "(def_obj_t){.number=5432}",
+      "additionalProperties": false,
+      "properties": {
+        "number": {
+          "type": "integer",
+          "description": "How many?",
+          "default": 1339
+        }
+      }
+    },
+    "def_arr": {
+      "type": "array",
+      "$id": "#def_arr",
+      "default": [1,2,3],
+      "js2cDefault": "(def_arr_t){.n=3, .items={1,2,3}}",
+      "maxItems": 5,
+      "items": {
+          "type": "integer"
       }
     }
   }

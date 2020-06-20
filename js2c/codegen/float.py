@@ -79,10 +79,11 @@ class FloatGenerator(Generator):
         self.generate_range_check(self.exclusiveMaximum, out_var_name, "<", out_file)
 
     def has_default_value(self):
-        return self.default is not None
+        return super().has_default_value() or self.default is not None
 
     def generate_set_default_value(self, out_var_name, out_file):
-        assert self.has_default_value(), "Caller is responsible for checking this."
+        if super().generate_set_default_value(out_var_name, out_file):
+            return
         out_file.print("{} = {};".format(out_var_name, self.default))
 
     def max_token_num(self):
