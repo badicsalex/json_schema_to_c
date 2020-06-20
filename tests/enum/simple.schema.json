@@ -3,5 +3,19 @@
   "$id": "the_enum",
   "description": "Some demo structure for demoing.",
   "type": "string",
-  "enum": ["value1", "value to s@nitize", "last", "num", "number", "size", "camelCased1", "camel_andUnderscore", "TitleCased"]
+  "enum": [
+      "value1",
+      "value to s@nitize",
+      "last",
+      "num",
+      "number",
+      "size",
+      "camelCased1",
+      "camel_andUnderscore",
+      "TitleCased",
+      "js2c",
+      "js1337c",
+      "iHateJScript",
+      "AaAaAAaAAaa"
+  ]
 }

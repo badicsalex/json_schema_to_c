@@ -38,7 +38,13 @@ class EnumGenerator(Generator):
     convertLabelsToSnakeCase = True
 
     SANITIZE_RE = re.compile("[^A-Za-z0-9_]")
-    CAMEL_CASE_RE = re.compile("([A-Z]+)")
+    CAMEL_CASE_RE = re.compile(
+        "("
+        "(?<=[a-z])(?=[A-Z])|"
+        "(?<=[0-9])(?=[a-zA-Z])|"
+        "(?<=[a-zA-Z])(?=[0-9])"
+        ")"
+    )
 
     def __init__(self, schema, name, settings, generator_factory):
         super().__init__(schema, name, settings, generator_factory)
@@ -50,7 +56,7 @@ class EnumGenerator(Generator):
 
     def convert_enum_label(self, enum_label):
         if self.convertLabelsToSnakeCase:
-            enum_label = enum_label[0] + self.CAMEL_CASE_RE.sub("_\\1", enum_label[1:])
+            enum_label = self.CAMEL_CASE_RE.sub(r"_", enum_label)
             enum_label = enum_label.upper()
         prefixed = "{}_{}".format(self.name.upper(), enum_label)
         sanitized = self.SANITIZE_RE.sub("_", prefixed)
