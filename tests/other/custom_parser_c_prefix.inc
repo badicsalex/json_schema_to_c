@@ -20,3 +20,4 @@ bool pt_prsr(const char* src, int size, custom_point_t* pt, const char** error){
     pt->y = src[1];
     return false;
 }
+

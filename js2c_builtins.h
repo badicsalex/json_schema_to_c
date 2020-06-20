@@ -30,8 +30,14 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifndef JSMN_STATIC
 #define JSMN_STATIC
+#endif
+
+#ifndef JSMN_STRICT
 #define JSMN_STRICT
+#endif
+
 #include "jsmn.h"
 
 #ifndef LOG_ERROR
