@@ -225,15 +225,15 @@ static inline bool builtin_skip(parse_state_t *parse_state) {
      *       - A string of size 0.
      *   - All other tokens are size 0.
      */
-    uint32_t skip_tokens = 1 + CURRENT_TOKEN(parse_state).size;
+    uint32_t skip_tokens = 1;
     while (skip_tokens > 0) {
+        skip_tokens += CURRENT_TOKEN(parse_state).size;
         if (parse_state->current_token >= parse_state->max_token_num) {
             /* Should never happen */
             return true;
         }
         parse_state->current_token += 1;
         skip_tokens -= 1;
-        skip_tokens += CURRENT_TOKEN(parse_state).size;
     }
     return false;
 }
