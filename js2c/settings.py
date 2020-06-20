@@ -79,12 +79,12 @@ class Settings:
     def __init__(self, args, settings_json):
         for field in self.FIELDS:
             field_name_in_camel = snake_to_camel_case(field.name)
-            if args.get(field.name, None) is not None:
-                setattr(self, field.name, args[field.name])
-            elif field.name in settings_json:
+            if field.name in settings_json:
                 self.parse_field(field, settings_json[field.name])
             elif field_name_in_camel in settings_json:
                 self.parse_field(field, settings_json[field_name_in_camel])
+            elif args.get(field.name, None) is not None:
+                setattr(self, field.name, args[field.name])
             else:
                 setattr(self, field.name, None)
 

@@ -5,6 +5,6 @@
   "js2cSettings": {
     "h_prefix_file": "other/h_prefix.inc",
     "hPostfixFile": "other/h_postfix.inc",
-    "cPrefixFile": "invalid"
+    "cPrefixFile": "other/c_prefix.inc"
   }
 }

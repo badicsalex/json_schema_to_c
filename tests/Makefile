@@ -25,7 +25,7 @@ other/args_and_settings.parser.c other/args_and_settings.parser.h &: \
 		other/h_prefix.inc other/h_postfix.inc other/c_prefix.inc other/c_postfix.inc
 	echo "other/args_and_settings: generating schema"
 	../json_schema_to_c.py \
-		--c-prefix other/c_prefix.inc \
+		--c-prefix /dev/null \
 		--c-postfix other/c_postfix.inc \
 		other/args_and_settings.schema.json other/args_and_settings.parser.c other/args_and_settings.parser.h
 

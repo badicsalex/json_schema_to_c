@@ -39,7 +39,7 @@ You can specify arguments in the schema too, under the js2cSettings" key,
 in either snake or camel case. E.g.:
 "js2cSettings": {"cPrefixFile": "my.inc"}
 
-The command line arguments take precedence.
+The settings in the schema take precedence.
 """.strip()
 
 
