@@ -107,7 +107,29 @@ class ObjectGenerator(Generator):
             with out_file.code_block():
                 self.generate_logged_error("Missing required field in {}: {}".format(self.name, field_name), out_file)
 
+    def generate_key_children_check(self, out_file):
+        out_file.print("if (CURRENT_TOKEN(parse_state).size > 1)")
+        with out_file.code_block():
+            self.generate_logged_error(
+                [
+                    'Missing separator between values in {}, after key: %.*s'.format(self.name),
+                    "CURRENT_STRING_FOR_ERROR(parse_state)"
+                ],
+                out_file
+            )
+
+        out_file.print("if (CURRENT_TOKEN(parse_state).size < 1)")
+        with out_file.code_block():
+            self.generate_logged_error(
+                [
+                    'Missing value in {}, after key: %.*s'.format(self.name),
+                    "CURRENT_STRING_FOR_ERROR(parse_state)"
+                ],
+                out_file
+            )
+
     def generate_field_parsers(self, out_file):
+        self.generate_key_children_check(out_file)
         for field_name, field_generator in self.fields.items():
             out_file.print('if (current_string_is(parse_state, "{}"))'.format(field_name))
             with out_file.code_block():

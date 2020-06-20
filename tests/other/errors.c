@@ -283,5 +283,16 @@ int main(int argc, char** argv){
         "Floating point value -1000 out of range. It must be > -1000.",
         25
     );
+
+    check_error(
+        "{\"the_array\": [1, 2], \"fnum2\": }",
+        "Missing value in root, after key: fnum2",
+        23
+    );
+    check_error(
+        "{\"the_array\": [1, 2], \"name\": \"\"  \"fnum2\": 0}",
+        "Missing separator between values in root, after key: name",
+        23
+    );
     return 0;
 }
