@@ -18,6 +18,16 @@
       "pattern": "(0x|0X)?[0-9a-fA-F]+",
       "maxLength": 16
     },
+    "short_id": {
+      "type": "string",
+      "js2cType": "uint64_t",
+      "js2cParseFunction": "big_endian_hex",
+      "description": "Short identifier",
+      "default": "ABCDEF",
+      "pattern": "(0x|0X)?[0-9a-fA-F]+",
+      "minLength": 3,
+      "maxLength": 6
+    },
     "point": {
       "type": "string",
       "js2cType": "custom_point_t",

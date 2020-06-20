@@ -110,11 +110,11 @@ static inline bool current_string_is(const parse_state_t *parse_state, const cha
     return memcmp(parse_state->json_string + token->start, s, token->end - token->start) == 0;
 }
 
-static inline bool builtin_parse_string(parse_state_t *parse_state, char *out, int min_len, int max_len) {
+static inline bool builtin_check_current_string(parse_state_t *parse_state, int min_len, int max_len) {
     if (check_type(parse_state, JSMN_STRING)) {
         return true;
     }
-    const jsmntok_t *token = &parse_state->tokens[parse_state->current_token];
+    const jsmntok_t *token = &CURRENT_TOKEN(parse_state);
     if (token->end - token->start > max_len) {
         LOG_ERROR(token->start, "String too large. Length: %i. Maximum length: %i.", token->end - token->start, max_len);
         return true;
@@ -123,6 +123,14 @@ static inline bool builtin_parse_string(parse_state_t *parse_state, char *out, i
         LOG_ERROR(token->start, "String too short. Length: %i. Minimum length: %i.", token->end - token->start, min_len);
         return true;
     }
+    return false;
+}
+
+static inline bool builtin_parse_string(parse_state_t *parse_state, char *out, int min_len, int max_len) {
+    if (builtin_check_current_string(parse_state, min_len, max_len)){
+        return true;
+    }
+    const jsmntok_t *token = &CURRENT_TOKEN(parse_state);
     memcpy(out, parse_state->json_string + token->start, token->end - token->start);
     out[token->end - token->start] = 0;
     parse_state->current_token += 1;

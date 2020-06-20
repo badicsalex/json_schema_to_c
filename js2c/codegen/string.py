@@ -82,6 +82,13 @@ class StringGenerator(Generator):
 
     def generate_parser_call(self, out_var_name, out_file):
         if self.js2cParseFunction is not None:
+            out_file.print(
+                "if (builtin_check_current_string(parse_state, {}, {}))"
+                .format(self.minLength, self.maxLength)
+            )
+            with out_file.code_block():
+                out_file.print("return true;")
+
             self.generate_custom_parser_call(
                 "CURRENT_STRING(parse_state)",
                 "CURRENT_STRING_LENGTH(parse_state)",
