@@ -6,6 +6,7 @@ CFLAGS= \
 	-Wall \
 	-Werror \
 	-Wextra \
+	-fsanitize=address \
 	-g
 
 ALL_TESTS =  $(patsubst %.c,%.run,$(filter-out %.parser.c, $(wildcard */*.c)))
