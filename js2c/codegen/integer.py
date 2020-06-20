@@ -34,26 +34,41 @@ class IntegerGeneratorBase(Generator):
         "exclusiveMinimum",
         "exclusiveMaximum",
         "default",
+        "js2cType",
     )
+
+    SIGNED_TYPES = ["int64_t", "int32_t", "int16_t", "int8_t"]
+    UNSIGNED_TYPES = ["uint64_t", "uint32_t", "uint16_t", "uint8_t"]
 
     minimum = None
     maximum = None
     exclusiveMinimum = None
     exclusiveMaximum = None
     default = None
+    js2cType = None
 
     def __init__(self, schema, name, settings, generator_factory):
         super().__init__(schema, name, settings, generator_factory)
-        if self.minimum is not None and self.minimum >= 0:
-            self.c_type = "uint64_t"
+        if self.js2cType is not None:
+            self.c_type = self.js2cType
+        else:
+            if self.minimum is not None and self.minimum >= 0:
+                self.c_type = "uint64_t"
+            else:
+                self.c_type = "int64_t"
+
+        if self.c_type in self.UNSIGNED_TYPES:
             self.parser_fn = "builtin_parse_unsigned"
+            self.parsed_type = "uint64_t"
             self.default_suffix = "ULL"
             if self.minimum == 0:
                 self.minimum = None
-        else:
-            self.c_type = "int64_t"
+        elif self.c_type in self.SIGNED_TYPES:
             self.parser_fn = "builtin_parse_signed"
+            self.parsed_type = "int64_t"
             self.default_suffix = "LL"
+        else:
+            raise ValueError("Unsupported integer type: {}".format(self.c_type))
         self.radix = None
 
     @property
@@ -70,35 +85,36 @@ class IntegerGeneratorBase(Generator):
     def generate_range_check(cls, check_number, out_var_name, check_operator, out_file):
         if check_number is None:
             return
-        out_file.print("if (!((*{}) {} {}))".format(out_var_name, check_operator, check_number))
+        out_file.print("if (!(({}) {} {}))".format(out_var_name, check_operator, check_number))
         with out_file.code_block():
             # Roll back the token, as the value was not actually correct
             out_file.print("parse_state->current_token -= 1;")
             cls.generate_logged_error(
                 [
                     "Integer %li out of range. It must be {} {}.".format(check_operator, check_number),
-                    "(*{})".format(out_var_name)
+                    "({})".format(out_var_name)
                 ],
                 out_file
             )
 
     def generate_parser_call(self, out_var_name, out_file):
+        out_file.print("{} int_parse_tmp;".format(self.parsed_type))
         out_file.print(
-            "if ({}(parse_state, {}, {}, {}, {}))"
+            "if ({}(parse_state, {}, {}, {}, &int_parse_tmp))"
             .format(
                 self.parser_fn,
                 'true' if self.number_allowed else 'false',
                 'true' if self.string_allowed else 'false',
-                self.radix,
-                out_var_name
+                self.radix
             )
         )
         with out_file.code_block():
             out_file.print("return true;")
-        self.generate_range_check(self.minimum, out_var_name, ">=", out_file)
-        self.generate_range_check(self.maximum, out_var_name, "<=", out_file)
-        self.generate_range_check(self.exclusiveMinimum, out_var_name, ">", out_file)
-        self.generate_range_check(self.exclusiveMaximum, out_var_name, "<", out_file)
+        self.generate_range_check(self.minimum, "int_parse_tmp", ">=", out_file)
+        self.generate_range_check(self.maximum, "int_parse_tmp", "<=", out_file)
+        self.generate_range_check(self.exclusiveMinimum, "int_parse_tmp", ">", out_file)
+        self.generate_range_check(self.exclusiveMaximum, "int_parse_tmp", "<", out_file)
+        out_file.print("*{} = int_parse_tmp;".format(out_var_name))
 
     def has_default_value(self):
         return self.default is not None
