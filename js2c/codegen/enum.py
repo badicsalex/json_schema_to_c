@@ -94,7 +94,7 @@ class EnumGenerator(Generator):
                     out_file.print("*out = {};".format(self.convert_enum_label(enum_label)))
                 out_file.print("else")
             with out_file.code_block():
-                self.generate_logged_error(["Unknown enum value in {}: %.*s".format(self.name), "CURRENT_STRING_FOR_ERROR(parse_state)"], out_file)
+                self.generate_logged_error(["Unknown enum value in '%s': %.*s", "parse_state->current_key", "CURRENT_STRING_FOR_ERROR(parse_state)"], out_file)
 
             out_file.print("parse_state->current_token += 1;")
             out_file.print("return false;")

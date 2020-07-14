@@ -105,14 +105,15 @@ class ObjectGenerator(Generator):
                 )
             out_file.print("if (!seen_{})".format(field_name))
             with out_file.code_block():
-                self.generate_logged_error("Missing required field in {}: {}".format(self.name, field_name), out_file)
+                self.generate_logged_error("Missing required field in '%s': {}".format(field_name), out_file)
 
     def generate_key_children_check(self, out_file):
         out_file.print("if (CURRENT_TOKEN(parse_state).size > 1)")
         with out_file.code_block():
             self.generate_logged_error(
                 [
-                    'Missing separator between values in {}, after key: %.*s'.format(self.name),
+                    "Missing separator between values in '%s', after key: %.*s",
+                    "parse_state->current_key",
                     "CURRENT_STRING_FOR_ERROR(parse_state)"
                 ],
                 out_file
@@ -122,7 +123,8 @@ class ObjectGenerator(Generator):
         with out_file.code_block():
             self.generate_logged_error(
                 [
-                    'Missing value in {}, after key: %.*s'.format(self.name),
+                    "Missing value in '%s', after key: %.*s",
+                    "parse_state->current_key",
                     "CURRENT_STRING_FOR_ERROR(parse_state)"
                 ],
                 out_file
@@ -135,20 +137,23 @@ class ObjectGenerator(Generator):
             with out_file.code_block():
                 out_file.print("if (seen_{})".format(field_name))
                 with out_file.code_block():
-                    self.generate_logged_error("Duplicate field definition in {}: {}".format(self.name, field_name), out_file)
+                    self.generate_logged_error("Duplicate field definition in '%s': {}".format(field_name), out_file)
                 out_file.print("seen_{} = true;".format(field_name))
                 out_file.print("parse_state->current_token += 1;")
+                out_file.print("const char* saved_key = parse_state->current_key;")
+                out_file.print("parse_state->current_key = \"{}\";".format(field_name))
                 field_generator.generate_parser_call(
                     "&out->{}".format(field_name),
                     out_file
                 )
+                out_file.print("parse_state->current_key = saved_key;")
             out_file.print("else")
         with out_file.code_block():
             if self.settings.allow_additional_properties:
                 out_file.print("parse_state->current_token += 1;")
                 out_file.print("builtin_skip(parse_state);")
             else:
-                self.generate_logged_error(["Unknown field in {}: %.*s".format(self.name), "CURRENT_STRING_FOR_ERROR(parse_state)"], out_file)
+                self.generate_logged_error(["Unknown field in '%s': %.*s", "parse_state->current_key", "CURRENT_STRING_FOR_ERROR(parse_state)"], out_file)
 
     def generate_parser_bodies(self, out_file):
         for field_generator in self.fields.values():

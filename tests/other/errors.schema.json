@@ -104,6 +104,22 @@
       "type": "string",
       "enum": ["a", "b"],
       "default": "a"
+    },
+    "obj_with_subobj": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "a": { "type": "integer", "default": 0},
+        "subsub": { 
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "x": {"type": "integer", "default": 0},
+            "y": {"type": "integer", "default": 0}
+          }
+        },
+        "b": { "type": "integer" , "default": 0}
+      }
     }
   }
 }

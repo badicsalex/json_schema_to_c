@@ -58,8 +58,9 @@ class FloatGenerator(Generator):
             out_file.print("parse_state->current_token -= 1;")
             cls.generate_logged_error(
                 [
-                    "Floating point value %.15g out of range. It must be {} {}.".format(check_operator, check_number),
-                    "(*{})".format(out_var_name)
+                    "Floating point value %.15g in '%s' out of range. It must be {} {}.".format(check_operator, check_number),
+                    "(*{})".format(out_var_name),
+                    "parse_state->current_key",
                 ],
                 out_file
             )

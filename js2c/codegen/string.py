@@ -73,7 +73,8 @@ class StringGenerator(Generator):
         )
         with out_file.code_block():
             self.generate_logged_error([
-                "Error parsing {}, value=\\\"%.*s\\\": %s".format(self.name),
+                "Error parsing '%s', value=\\\"%.*s\\\": %s",
+                "parse_state->current_key",
                 src_length,
                 src,
                 "error ? error : \"error calling {}\"".format(self.js2cParseFunction),

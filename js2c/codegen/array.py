@@ -75,14 +75,14 @@ class ArrayGenerator(Generator):
         out_file.print("if (n > {})".format(self.maxItems))
         with out_file.code_block():
             self.generate_logged_error(
-                ["Array {} too large. Length: %i. Maximum length: {}.".format(self.name, self.maxItems), "n"],
+                ["Array '%s' too large. Length: %i. Maximum length: {}.".format(self.maxItems), "parse_state->current_key", "n"],
                 out_file
             )
         if self.minItems:
             out_file.print("if (n < {})".format(self.minItems))
             with out_file.code_block():
                 self.generate_logged_error(
-                    ["Array {} too small. Length: %i. Minimum length: {}.".format(self.name, self.minItems), "n"],
+                    ["Array '%s' too small. Length: %i. Minimum length: {}.".format(self.minItems), "parse_state->current_key", "n"],
                     out_file
                 )
 
