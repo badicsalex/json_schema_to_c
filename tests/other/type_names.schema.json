@@ -1,31 +1,38 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "root",
-  "description": "Some demo structure for demoing.",
-  "type": "object",
-  "additionalProperties": false,
-  "required": ["vegetable"],
-  "properties": {
-    "vegetable": {
-      "$id": "#vegetable",
-      "type": "object",
-      "required": [ "name", "is_good" ],
-      "additionalProperties": false,
-      "properties": {
-        "name": {"$ref": "#/definitions/name" },
-        "is_good": {
-          "type": "boolean",
-          "description": "Is the vegetable any good?"
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "root",
+    "description": "Some demo structure for demoing.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "vegetable"
+    ],
+    "properties": {
+        "vegetable": {
+            "$id": "#vegetable",
+            "type": "object",
+            "required": [
+                "name",
+                "is_good"
+            ],
+            "additionalProperties": false,
+            "properties": {
+                "name": {
+                    "$ref": "#/definitions/name"
+                },
+                "is_good": {
+                    "type": "boolean",
+                    "description": "Is the vegetable any good?"
+                }
+            }
         }
-      }
+    },
+    "definitions": {
+        "name": {
+            "$id": "name",
+            "type": "string",
+            "description": "The name of the vegetable.",
+            "maxLength": 8
+        }
     }
-  },
-  "definitions": {
-    "name": {
-      "$id": "name",
-      "type": "string",
-      "description": "The name of the vegetable.",
-      "maxLength": 8
-    }
-  }
 }

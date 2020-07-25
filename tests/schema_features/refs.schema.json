@@ -1,31 +1,43 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "root",
-  "description": "Some demo structure for demoing.",
-  "type": "object",
-  "additionalProperties": false,
-  "required": ["veggie1", "veggie2"],
-  "properties": {
-    "veggie1": { "$ref": "#/definitions/object_type" },
-    "veggie2": { "$ref": "#/definitions/object_type" }
-  },
-  "definitions": {
-    "name_type": {
-      "type": "string",
-      "description": "The name of the vegetable.",
-      "maxLength": 8
-    },
-    "object_type": {
-      "type": "object",
-      "required": [ "name", "is_good" ],
-      "additionalProperties": false,
-      "properties": {
-        "name": { "$ref": "#/definitions/name_type"},
-        "is_good": {
-          "type": "boolean",
-          "description": "Is the vegetable any good?"
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "root",
+    "description": "Some demo structure for demoing.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "veggie1",
+        "veggie2"
+    ],
+    "properties": {
+        "veggie1": {
+            "$ref": "#/definitions/object_type"
+        },
+        "veggie2": {
+            "$ref": "#/definitions/object_type"
         }
-      }
+    },
+    "definitions": {
+        "name_type": {
+            "type": "string",
+            "description": "The name of the vegetable.",
+            "maxLength": 8
+        },
+        "object_type": {
+            "type": "object",
+            "required": [
+                "name",
+                "is_good"
+            ],
+            "additionalProperties": false,
+            "properties": {
+                "name": {
+                    "$ref": "#/definitions/name_type"
+                },
+                "is_good": {
+                    "type": "boolean",
+                    "description": "Is the vegetable any good?"
+                }
+            }
+        }
     }
-  }
 }

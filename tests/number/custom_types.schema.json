@@ -1,55 +1,55 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "root",
-  "description": "Some demo structure for demoing.",
-  "type": "object",
-  "additionalProperties": false,
-  "properties": {
-      "u8": {
-          "type": "integer",
-          "default": "123",
-          "js2cType": "uint8_t"
-      },
-      "u16": {
-          "type": "integer",
-          "default": "123",
-          "js2cType": "uint16_t"
-      },
-      "u32": {
-          "type": "integer",
-          "default": "123",
-          "js2cType": "uint32_t"
-      },
-      "u64": {
-          "type": "integer",
-          "default": "18446744073709551614",
-          "js2cType": "uint64_t"
-      },
-      "s8": {
-          "type": "integer",
-          "default": "123",
-          "js2cType": "int8_t"
-      },
-      "s16": {
-          "type": "integer",
-          "default": "123",
-          "js2cType": "int16_t"
-      },
-      "s32": {
-          "type": "integer",
-          "default": "123",
-          "js2cType": "int32_t"
-      },
-      "s64": {
-          "type": "integer",
-          "default": "-9223372036854775806",
-          "js2cType": "int64_t"
-      },
-      "min0": {
-          "type": "integer",
-          "minimum": 0,
-          "default": "-9223372036854775806",
-          "js2cType": "int64_t"
-      }
-   }
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "root",
+    "description": "Some demo structure for demoing.",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "u8": {
+            "type": "integer",
+            "default": "123",
+            "js2cType": "uint8_t"
+        },
+        "u16": {
+            "type": "integer",
+            "default": "123",
+            "js2cType": "uint16_t"
+        },
+        "u32": {
+            "type": "integer",
+            "default": "123",
+            "js2cType": "uint32_t"
+        },
+        "u64": {
+            "type": "integer",
+            "default": "18446744073709551614",
+            "js2cType": "uint64_t"
+        },
+        "s8": {
+            "type": "integer",
+            "default": "123",
+            "js2cType": "int8_t"
+        },
+        "s16": {
+            "type": "integer",
+            "default": "123",
+            "js2cType": "int16_t"
+        },
+        "s32": {
+            "type": "integer",
+            "default": "123",
+            "js2cType": "int32_t"
+        },
+        "s64": {
+            "type": "integer",
+            "default": "-9223372036854775806",
+            "js2cType": "int64_t"
+        },
+        "min0": {
+            "type": "integer",
+            "minimum": 0,
+            "default": "-9223372036854775806",
+            "js2cType": "int64_t"
+        }
+    }
 }

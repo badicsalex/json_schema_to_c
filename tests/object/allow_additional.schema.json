@@ -1,23 +1,22 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "root",
-  "description": "Some demo structure for demoing.",
-  "js2cSettings": {
-    "allowAdditionalProperties": 20
-  },
-  "type": "object",
-  "type": "object",
-  "properties": {
-    "name": {
-      "type": "string",
-      "description": "The name of the vegetable.",
-      "maxLength": 8,
-      "default": "potato"
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "root",
+    "description": "Some demo structure for demoing.",
+    "js2cSettings": {
+        "allowAdditionalProperties": 20
     },
-    "is_good": {
-      "type": "boolean",
-      "description": "Is the vegetable any good?",
-      "default": false
+    "type": "object",
+    "properties": {
+        "name": {
+            "type": "string",
+            "description": "The name of the vegetable.",
+            "maxLength": 8,
+            "default": "potato"
+        },
+        "is_good": {
+            "type": "boolean",
+            "description": "Is the vegetable any good?",
+            "default": false
+        }
     }
-  }
 }

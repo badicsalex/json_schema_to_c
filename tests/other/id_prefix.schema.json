@@ -1,6 +1,6 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "AnInteresting_schema1d",
-  "description": "Some demo structure for demoing.",
-  "type": "integer"
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "AnInteresting_schema1d",
+    "description": "Some demo structure for demoing.",
+    "type": "integer"
 }

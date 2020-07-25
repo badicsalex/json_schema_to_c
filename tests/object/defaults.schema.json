@@ -1,85 +1,93 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "root",
-  "description": "Some demo structure for demoing.",
-  "type": "object",
-  "required": [ "id", "exists", "mass" ],
-  "additionalProperties": false,
-  "properties": {
-    "name": {
-      "type": "string",
-      "description": "The name of the vegetable.",
-      "default": "cauliflower",
-      "maxLength": 11
-    },
-    "is_good": {
-      "type": "boolean",
-      "description": "Is the vegetable any good?",
-      "default": true
-    },
-    "number": {
-      "type": "integer",
-      "description": "How many?",
-      "default": 1337
-    },
-    "width": {
-      "type": "number",
-      "default": 567.12345
-    },
-    "id": {
-      "type": "string",
-      "maxLength": 4
-    },
-    "exists": {
-      "type": "boolean"
-    },
-    "mass": {
-      "type": "integer"
-    },
-    "attributes": {
-      "type": "array",
-      "maxItems": 4,
-      "items": {
-        "type": "string",
-        "maxLength": 4
-      }
-    },
-    "sub_obj": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "root",
+    "description": "Some demo structure for demoing.",
+    "type": "object",
+    "required": [
+        "id",
+        "exists",
+        "mass"
+    ],
+    "additionalProperties": false,
+    "properties": {
+        "name": {
+            "type": "string",
+            "description": "The name of the vegetable.",
+            "default": "cauliflower",
+            "maxLength": 11
+        },
         "is_good": {
-          "type": "boolean",
-          "description": "Is the vegetable any good?",
-          "default": true
+            "type": "boolean",
+            "description": "Is the vegetable any good?",
+            "default": true
         },
         "number": {
-          "type": "integer",
-          "description": "How many?",
-          "default": 1337
+            "type": "integer",
+            "description": "How many?",
+            "default": 1337
+        },
+        "width": {
+            "type": "number",
+            "default": 567.12345
+        },
+        "id": {
+            "type": "string",
+            "maxLength": 4
+        },
+        "exists": {
+            "type": "boolean"
+        },
+        "mass": {
+            "type": "integer"
+        },
+        "attributes": {
+            "type": "array",
+            "maxItems": 4,
+            "items": {
+                "type": "string",
+                "maxLength": 4
+            }
         },
         "sub_obj": {
-          "type": "object",
-          "additionalProperties": false,
-          "properties": {
-            "is_good": {
-              "type": "boolean",
-              "description": "Is the vegetable any good?",
-              "default": true
-            },
-            "number": {
-              "type": "integer",
-              "description": "How many?",
-              "default": 1337
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "is_good": {
+                    "type": "boolean",
+                    "description": "Is the vegetable any good?",
+                    "default": true
+                },
+                "number": {
+                    "type": "integer",
+                    "description": "How many?",
+                    "default": 1337
+                },
+                "sub_obj": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "is_good": {
+                            "type": "boolean",
+                            "description": "Is the vegetable any good?",
+                            "default": true
+                        },
+                        "number": {
+                            "type": "integer",
+                            "description": "How many?",
+                            "default": 1337
+                        }
+                    }
+                }
             }
-          }
+        },
+        "the_enum": {
+            "type": "string",
+            "enum": [
+                "enum_val_1",
+                "enum_val_2",
+                "enum_val_3"
+            ],
+            "default": "enum_val_2"
         }
-      }
-    },
-    "the_enum": {
-      "type": "string",
-      "enum": ["enum_val_1", "enum_val_2", "enum_val_3"],
-      "default": "enum_val_2"
     }
-  }
 }

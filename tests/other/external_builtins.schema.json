@@ -1,9 +1,9 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "root",
-  "type": "boolean",
-  "js2cSettings": {
-    "includeExternalBuiltinsFile": "external_builtins_proxy.h",
-    "cPostfixFile": "other/external_builtins_postfix.inc"
-  }
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "root",
+    "type": "boolean",
+    "js2cSettings": {
+        "includeExternalBuiltinsFile": "external_builtins_proxy.h",
+        "cPostfixFile": "other/external_builtins_postfix.inc"
+    }
 }

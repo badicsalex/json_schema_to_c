@@ -1,63 +1,63 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "root",
-  "description": "Some demo structure for demoing.",
-  "type": "object",
-  "additionalProperties": false,
-  "properties": {
-      "decimal": {
-          "type": "string",
-          "default": "1234",
-          "pattern": "[+-]?[0-9]+"
-      },
-      "hex1": {
-          "type": "string",
-          "default": "1234",
-          "pattern": "[+-]?[0-9a-fA-F]+"
-      },
-      "hex2": {
-          "type": "string",
-          "default": "0x1234",
-          "pattern": "[+-]?[0-9a-fA-F]+"
-      },
-      "autonum": {
-          "type": "string",
-          "default": "0x1234",
-          "pattern": "[+-]?(0[0-7]+|[0-9]+|0[xX][0-9a-fA-F]+)"
-      },
-      "u_decimal": {
-          "type": "string",
-          "default": "1234",
-          "pattern": "[0-9]+"
-      },
-      "u_hex1": {
-          "type": "string",
-          "default": "1234",
-          "pattern": "[0-9a-fA-F]+"
-      },
-      "u_hex2": {
-          "type": "string",
-          "default": "0x1234",
-          "pattern": "[0-9a-fA-F]+"
-      },
-      "u_autonum": {
-          "type": "string",
-          "default": "0x1234",
-          "pattern": "(0[0-7]+|[0-9]+|0[xX][0-9a-fA-F]+)"
-      },
-      "anyof_hex": {
-        "anyOf": [
-          {
-            "type": "integer",
-            "default": 1234,
-            "minimum": 123,
-            "maximum": 1000000
-          },
-          {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "root",
+    "description": "Some demo structure for demoing.",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "decimal": {
             "type": "string",
+            "default": "1234",
+            "pattern": "[+-]?[0-9]+"
+        },
+        "hex1": {
+            "type": "string",
+            "default": "1234",
+            "pattern": "[+-]?[0-9a-fA-F]+"
+        },
+        "hex2": {
+            "type": "string",
+            "default": "0x1234",
+            "pattern": "[+-]?[0-9a-fA-F]+"
+        },
+        "autonum": {
+            "type": "string",
+            "default": "0x1234",
+            "pattern": "[+-]?(0[0-7]+|[0-9]+|0[xX][0-9a-fA-F]+)"
+        },
+        "u_decimal": {
+            "type": "string",
+            "default": "1234",
+            "pattern": "[0-9]+"
+        },
+        "u_hex1": {
+            "type": "string",
+            "default": "1234",
             "pattern": "[0-9a-fA-F]+"
-          }
-        ]
-      }
-   }
+        },
+        "u_hex2": {
+            "type": "string",
+            "default": "0x1234",
+            "pattern": "[0-9a-fA-F]+"
+        },
+        "u_autonum": {
+            "type": "string",
+            "default": "0x1234",
+            "pattern": "(0[0-7]+|[0-9]+|0[xX][0-9a-fA-F]+)"
+        },
+        "anyof_hex": {
+            "anyOf": [
+                {
+                    "type": "integer",
+                    "default": 1234,
+                    "minimum": 123,
+                    "maximum": 1000000
+                },
+                {
+                    "type": "string",
+                    "pattern": "[0-9a-fA-F]+"
+                }
+            ]
+        }
+    }
 }

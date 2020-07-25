@@ -1,125 +1,142 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "root",
-  "description": "Some demo structure for demoing.",
-  "js2cSettings": {
-    "hPrefixFile": "other/errors_h_prefix.inc",
-    "cPrefixFile": "other/errors_c_prefix.inc"
-  },
-  "type": "object",
-  "additionalProperties": false,
-  "required": ["the_array"],
-  "properties": {
-    "name": {
-      "type": "string",
-      "maxLength": 8,
-      "minLength": 4,
-      "default":"abcd"
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "root",
+    "description": "Some demo structure for demoing.",
+    "js2cSettings": {
+        "hPrefixFile": "other/errors_h_prefix.inc",
+        "cPrefixFile": "other/errors_c_prefix.inc"
     },
-    "is_good": {
-      "type": "boolean",
-      "default": false
-    },
-    "num": {
-      "type": "integer",
-      "default": 1337,
-      "minimum": -5000,
-      "maximum": 5000
-    },
-    "num2": {
-      "type": "integer",
-      "default": 420,
-      "exclusiveMinimum": -1000,
-      "exclusiveMaximum": 1000
-    },
-    "fnum": {
-      "type": "number",
-      "default": 1337,
-      "minimum": -5000,
-      "maximum": 5000
-    },
-    "fnum2": {
-      "type": "number",
-      "default": 420,
-      "exclusiveMinimum": -1000,
-      "exclusiveMaximum": 1000
-    },
-    "numeric_string": {
-      "type": "string",
-      "default": "1234",
-      "pattern": "[0-9]+"
-    },
-    "anyof_hex": {
-      "anyOf": [
-        {
-          "type": "integer",
-          "default": 1234,
-          "minimum": 123,
-          "maximum": 1000000
-        },
-        {
-          "type": "string",
-          "pattern": "[0-9a-fA-F]+"
-        }
-      ]
-    },
-    "unsigned_num": {
-      "type": "integer",
-      "default": 420,
-      "minimum": 0
-    },
-    "unsigned_num2": {
-      "type": "integer",
-      "default": 420,
-      "minimum": 123,
-      "maximum": 456
-    },
-    "the_array": {
-      "type": "array",
-      "maxItems": 3,
-      "minItems": 2,
-      "items": {
-          "type": "integer"
-      }
-    },
-    "error_arr": {
-      "type": "array",
-      "maxItems": 1,
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "trigger": {
-            "$id": "THE ERRORER",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "the_array"
+    ],
+    "properties": {
+        "name": {
             "type": "string",
-            "maxLength": 15,
-            "js2cType": "int",
-            "js2cParseFunction": "error_creating_parser",
-            "default": "INVALID DEFAULT"
-          }
-        }
-      }
-    },
-    "the_enum": {
-      "type": "string",
-      "enum": ["a", "b"],
-      "default": "a"
-    },
-    "obj_with_subobj": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "a": { "type": "integer", "default": 0},
-        "subsub": { 
-          "type": "object",
-          "additionalProperties": false,
-          "properties": {
-            "x": {"type": "integer", "default": 0},
-            "y": {"type": "integer", "default": 0}
-          }
+            "maxLength": 8,
+            "minLength": 4,
+            "default": "abcd"
         },
-        "b": { "type": "integer" , "default": 0}
-      }
+        "is_good": {
+            "type": "boolean",
+            "default": false
+        },
+        "num": {
+            "type": "integer",
+            "default": 1337,
+            "minimum": -5000,
+            "maximum": 5000
+        },
+        "num2": {
+            "type": "integer",
+            "default": 420,
+            "exclusiveMinimum": -1000,
+            "exclusiveMaximum": 1000
+        },
+        "fnum": {
+            "type": "number",
+            "default": 1337,
+            "minimum": -5000,
+            "maximum": 5000
+        },
+        "fnum2": {
+            "type": "number",
+            "default": 420,
+            "exclusiveMinimum": -1000,
+            "exclusiveMaximum": 1000
+        },
+        "numeric_string": {
+            "type": "string",
+            "default": "1234",
+            "pattern": "[0-9]+"
+        },
+        "anyof_hex": {
+            "anyOf": [
+                {
+                    "type": "integer",
+                    "default": 1234,
+                    "minimum": 123,
+                    "maximum": 1000000
+                },
+                {
+                    "type": "string",
+                    "pattern": "[0-9a-fA-F]+"
+                }
+            ]
+        },
+        "unsigned_num": {
+            "type": "integer",
+            "default": 420,
+            "minimum": 0
+        },
+        "unsigned_num2": {
+            "type": "integer",
+            "default": 420,
+            "minimum": 123,
+            "maximum": 456
+        },
+        "the_array": {
+            "type": "array",
+            "maxItems": 3,
+            "minItems": 2,
+            "items": {
+                "type": "integer"
+            }
+        },
+        "error_arr": {
+            "type": "array",
+            "maxItems": 1,
+            "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "trigger": {
+                        "$id": "THE ERRORER",
+                        "type": "string",
+                        "maxLength": 15,
+                        "js2cType": "int",
+                        "js2cParseFunction": "error_creating_parser",
+                        "default": "INVALID DEFAULT"
+                    }
+                }
+            }
+        },
+        "the_enum": {
+            "type": "string",
+            "enum": [
+                "a",
+                "b"
+            ],
+            "default": "a"
+        },
+        "obj_with_subobj": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "a": {
+                    "type": "integer",
+                    "default": 0
+                },
+                "subsub": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "x": {
+                            "type": "integer",
+                            "default": 0
+                        },
+                        "y": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    }
+                },
+                "b": {
+                    "type": "integer",
+                    "default": 0
+                }
+            }
+        }
     }
-  }
 }

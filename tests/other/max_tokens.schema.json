@@ -1,38 +1,44 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "root",
-  "description": "Some demo structure for demoing.",
-  "js2cSettings": {
-    "hPrefixFile": "other/errors_h_prefix.inc",
-    "cPrefixFile": "other/errors_c_prefix.inc"
-  },
-  "type": "object",
-  "required": [ "things", "is_good" ],
-  "additionalProperties": false,
-  "properties": {
-     "things": {
-        "type": "array",
-        "maxItems": 3,
-        "items": {
-          "type": "object",
-          "required": [ "name", "coordinate" ],
-          "additionalProperties": false,
-          "properties": {
-            "name": {
-              "type": "string",
-              "description": "The name of the vegetable.",
-              "maxLength": 8
-            },
-            "coordinate": {
-              "type": "integer",
-              "minimum": 0
-            }
-         }
-       }
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "root",
+    "description": "Some demo structure for demoing.",
+    "js2cSettings": {
+        "hPrefixFile": "other/errors_h_prefix.inc",
+        "cPrefixFile": "other/errors_c_prefix.inc"
     },
-    "is_good": {
-      "type": "boolean",
-      "description": "Is the thing any good?"
+    "type": "object",
+    "required": [
+        "things",
+        "is_good"
+    ],
+    "additionalProperties": false,
+    "properties": {
+        "things": {
+            "type": "array",
+            "maxItems": 3,
+            "items": {
+                "type": "object",
+                "required": [
+                    "name",
+                    "coordinate"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "The name of the vegetable.",
+                        "maxLength": 8
+                    },
+                    "coordinate": {
+                        "type": "integer",
+                        "minimum": 0
+                    }
+                }
+            }
+        },
+        "is_good": {
+            "type": "boolean",
+            "description": "Is the thing any good?"
+        }
     }
-  }
 }
