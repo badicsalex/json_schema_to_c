@@ -66,8 +66,51 @@ def resolve_ref(full_schema, part_to_resolve):
 # WARNING OVER
 
 
+def all_of_merge_single_pair(element1, element2):
+    if type(element1) is not type(element2):
+        raise TypeError(
+            "Field types are different in allOf declaration: '{}' vs. '{}'"
+            .format(element1, element2)
+        )
+    if isinstance(element1, dict):
+        return all_of_merge_dict(element1, element2)
+    if isinstance(element1, list):
+        return element1 + [item for item in element2 if item not in element1]
+    if element1 == element2:
+        return element1
+    raise ValueError(
+        "Could not merge fields for allOf declaration: '{}' and '{}'"
+        .format(element1, element2)
+    )
+
+
+def all_of_merge_dict(schema1, schema2):
+    result = schema1.copy()
+    for key, value in schema2.items():
+        if key in result:
+            result[key] = all_of_merge_single_pair(result[key], value)
+        else:
+            result[key] = value
+    return result
+
+
+def resolve_all_of(schema):
+    if not isinstance(schema, dict):
+        # TODO: Also process arrays in the schema. I'm not sure it's needed though, there are not many arrays
+        #       in schema definitions, and I think none of them need allOf expansion.
+        return schema
+
+    result = {k: resolve_all_of(v) for k, v in schema.items() if k != "allOf"}
+    if "allOf" in schema:
+        for schema_to_process in schema["allOf"]:
+            schema_to_process = resolve_all_of(schema_to_process)
+            result = all_of_merge_dict(result, schema_to_process)
+    return result
+
+
 def load_schema(schema_file):
     schema = json.load(schema_file, object_pairs_hook=collections.OrderedDict)
     assert '$id' in schema, "All schemas must have an ID (a field named '$id')"
     resolve_children(schema, schema)
+    schema = resolve_all_of(schema)
     return schema

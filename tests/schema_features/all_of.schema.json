@@ -1,0 +1,75 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "root",
+    "description": "Some demo structure for demoing.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "veggie1",
+        "veggie2"
+    ],
+    "properties": {
+        "veggie1": {
+            "allOf": [
+                {
+                    "$ref": "#/definitions/object_type"
+                }
+            ],
+            "required": [
+                "name"
+            ]
+        },
+        "veggie2": {
+            "allOf": [
+                {
+                    "$ref": "#/definitions/object_type"
+                },
+                {
+                    "properties": {
+                        "name": {
+                            "default": "ayaya"
+                        }
+                    }
+                }
+            ]
+        }
+    },
+    "definitions": {
+        "name_type": {
+            "type": "string",
+            "description": "The name of the vegetable."
+        },
+        "object_type": {
+            "type": "object",
+            "required": [
+                "is_good"
+            ],
+            "additionalProperties": false,
+            "properties": {
+                "name": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/name_type"
+                        },
+                        {
+                            "maxLength": 8
+                        }
+                    ]
+                },
+                "name2": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/name_type"
+                        }
+                    ],
+                    "default": "lel",
+                    "maxLength": 5
+                },
+                "is_good": {
+                    "type": "boolean",
+                    "description": "Is the vegetable any good?"
+                }
+            }
+        }
+    }
+}
