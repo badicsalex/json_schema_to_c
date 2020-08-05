@@ -23,7 +23,7 @@
 # SOFTWARE.
 #
 import json
-import collections
+from collections import OrderedDict
 
 
 # WARNING: reviewing the following algorithm might cause brain damage
@@ -100,7 +100,7 @@ def resolve_all_of(schema):
         #       in schema definitions, and I think none of them need allOf expansion.
         return schema
 
-    result = {k: resolve_all_of(v) for k, v in schema.items() if k != "allOf"}
+    result = OrderedDict((k, resolve_all_of(v)) for k, v in schema.items() if k != "allOf")
     if "allOf" in schema:
         for schema_to_process in schema["allOf"]:
             schema_to_process = resolve_all_of(schema_to_process)
@@ -109,7 +109,7 @@ def resolve_all_of(schema):
 
 
 def load_schema(schema_file):
-    schema = json.load(schema_file, object_pairs_hook=collections.OrderedDict)
+    schema = json.load(schema_file, object_pairs_hook=OrderedDict)
     assert '$id' in schema, "All schemas must have an ID (a field named '$id')"
     resolve_children(schema, schema)
     schema = resolve_all_of(schema)
