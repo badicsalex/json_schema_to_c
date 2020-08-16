@@ -22,7 +22,26 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from .base import Generator
+from .base import Generator, CType
+
+
+class ArrayType(CType):
+    def __init__(self, type_name, description, item_type, max_items):
+        super().__init__(type_name, description)
+        self.item_type = item_type
+        self.max_items = max_items
+
+    def generate_type_declaration(self, out_file):
+        self.item_type.generate_type_declaration(out_file)
+
+        out_file.print("typedef struct {}_s ".format(self.type_name) + "{")
+        with out_file.indent():
+            out_file.print_with_docstring("uint64_t n;", "The number of elements in the array")
+            self.item_type.generate_field_declaration(
+                "items[{}]".format(self.max_items), out_file
+            )
+        out_file.print("}} {};".format(self.type_name))
+        out_file.print("")
 
 
 class ArrayGenerator(Generator):
@@ -42,7 +61,12 @@ class ArrayGenerator(Generator):
             schema["items"],
             parameters.with_suffix("item"),
         )
-        self.c_type = "{}_t".format(self.name)
+        self.c_type = ArrayType(
+            self.name + "_t",
+            self.description,
+            self.item_generator.c_type,
+            self.maxItems
+        )
 
     @classmethod
     def can_parse_schema(cls, schema):
@@ -55,20 +79,6 @@ class ArrayGenerator(Generator):
         )
         with out_file.code_block():
             out_file.print("return true;")
-
-    def generate_type_declaration(self, out_file, *, force=False):
-        _ = force  # basically (void)force
-
-        self.item_generator.generate_type_declaration(out_file)
-
-        out_file.print("typedef struct {}_s ".format(self.name) + "{")
-        with out_file.indent():
-            out_file.print_with_docstring("uint64_t n;", "The number of elements in the array")
-            self.item_generator.generate_field_declaration(
-                "items[{}]".format(self.maxItems), out_file
-            )
-        out_file.print("}} {};".format(self.c_type))
-        out_file.print("")
 
     def generate_range_checks(self, out_file):
         out_file.print("if (n > {})".format(self.maxItems))

@@ -24,7 +24,21 @@
 #
 from abc import abstractmethod
 
-from .base import Generator
+from .base import Generator, CType
+
+
+class IntegerType(CType):
+    __slots__ = ()
+    SIGNED_TYPES = ["int64_t", "int32_t", "int16_t", "int8_t"]
+    UNSIGNED_TYPES = ["uint64_t", "uint32_t", "uint16_t", "uint8_t"]
+
+    def __init__(self, type_name, description):
+        if type_name not in self.SIGNED_TYPES + self.UNSIGNED_TYPES:
+            raise ValueError("Unsupported integer type: {}".format(type_name))
+        super().__init__(type_name, description)
+
+    def is_unsigned(self):
+        return self.type_name in self.UNSIGNED_TYPES
 
 
 class IntegerGeneratorBase(Generator):
@@ -37,9 +51,6 @@ class IntegerGeneratorBase(Generator):
         "js2cType",
     )
 
-    SIGNED_TYPES = ["int64_t", "int32_t", "int16_t", "int8_t"]
-    UNSIGNED_TYPES = ["uint64_t", "uint32_t", "uint16_t", "uint8_t"]
-
     minimum = None
     maximum = None
     exclusiveMinimum = None
@@ -50,25 +61,24 @@ class IntegerGeneratorBase(Generator):
     def __init__(self, schema, parameters):
         super().__init__(schema, parameters)
         if self.js2cType is not None:
-            self.c_type = self.js2cType
+            c_type_name = self.js2cType
         else:
             if self.minimum is not None and self.minimum >= 0:
-                self.c_type = "uint64_t"
+                c_type_name = "uint64_t"
             else:
-                self.c_type = "int64_t"
+                c_type_name = "int64_t"
 
-        if self.c_type in self.UNSIGNED_TYPES:
+        self.c_type = IntegerType(c_type_name, self.description)
+        if self.c_type.is_unsigned():
             self.parser_fn = "builtin_parse_unsigned"
             self.parsed_type = "uint64_t"
             self.default_suffix = "ULL"
             if self.minimum == 0:
                 self.minimum = None
-        elif self.c_type in self.SIGNED_TYPES:
+        else:
             self.parser_fn = "builtin_parse_signed"
             self.parsed_type = "int64_t"
             self.default_suffix = "LL"
-        else:
-            raise ValueError("Unsupported integer type: {}".format(self.c_type))
         self.radix = None
 
     @property
@@ -166,7 +176,7 @@ class NumericStringGenerator(IntegerGenerator):
         if 'minimum' not in schema and schema['pattern'] in self.UNSIGNED_PATTERNS:
             schema['minimum'] = 0
         super().__init__(schema, parameters)
-        if self.c_type in self.UNSIGNED_TYPES:
+        if self.c_type.is_unsigned():
             pattern_set = self.UNSIGNED_PATTERNS
         else:
             pattern_set = self.SIGNED_PATTERNS

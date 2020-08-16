@@ -24,7 +24,22 @@
 #
 import re
 
-from .base import Generator
+from .base import Generator, CType
+
+
+class EnumType(CType):
+    def __init__(self, type_name, description, enum_labels):
+        super().__init__(type_name, description)
+        self.enum_labels = enum_labels
+
+    def generate_type_declaration(self, out_file):
+        out_file.print("typedef enum {}_e".format(self.type_name) + "{")
+        with out_file.indent():
+            for enum_label in self.enum_labels[:-1]:
+                out_file.print("{},".format(enum_label))
+            out_file.print("{}".format(self.enum_labels[-1]))
+        out_file.print("}} {};".format(self.type_name))
+        out_file.print("")
 
 
 class EnumGenerator(Generator):
@@ -48,7 +63,7 @@ class EnumGenerator(Generator):
 
     def __init__(self, schema, parameters):
         super().__init__(schema, parameters)
-        self.c_type = "{}_t".format(self.name)
+        self.c_type = EnumType(self.name + "_t", self.description, [self.convert_enum_label(enum_label) for enum_label in self.enum])
 
     @classmethod
     def can_parse_schema(cls, schema):
@@ -69,17 +84,6 @@ class EnumGenerator(Generator):
         )
         with out_file.code_block():
             out_file.print("return true;")
-
-    def generate_type_declaration(self, out_file, *, force=False):
-        _ = force  # This is python's way of saying (void)force
-
-        out_file.print("typedef enum {}_e".format(self.name) + "{")
-        with out_file.indent():
-            for enum_label in self.enum[:-1]:
-                out_file.print("{},".format(self.convert_enum_label(enum_label)))
-            out_file.print("{}".format(self.convert_enum_label(self.enum[-1])))
-        out_file.print("}} {};".format(self.c_type))
-        out_file.print("")
 
     def generate_parser_bodies(self, out_file):
         out_file.print("static bool parse_{}(parse_state_t *parse_state, {} *out)".format(self.name, self.c_type))

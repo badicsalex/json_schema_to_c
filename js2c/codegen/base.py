@@ -85,16 +85,6 @@ class Generator(ABC):
     def can_parse_schema(cls, schema):
         pass
 
-    def generate_field_declaration(self, field_name, out_file):
-        out_file.print_with_docstring(
-            "{} {};".format(self.c_type, field_name), self.description
-        )
-
-    def generate_type_declaration(self, out_file, *, force=False):
-        if force:
-            out_file.print("typedef ")
-            self.generate_field_declaration(self.name + "_t", out_file)
-
     def generate_parser_bodies(self, out_file):
         pass
 
@@ -122,3 +112,21 @@ class Generator(ABC):
                 )
             )
         out_file.print("return true;")
+
+
+class CType():
+    def __init__(self, type_name, description):
+        self.type_name = type_name
+        self.description = description
+
+    def __str__(self):
+        return self.type_name
+
+    def generate_field_declaration(self, field_name, out_file):
+        out_file.print_with_docstring(
+            "{} {};".format(self.type_name, field_name), self.description
+        )
+
+    def generate_type_declaration(self, out_file):
+        # Simple types (e.g. uint64_t) should already be declared
+        pass

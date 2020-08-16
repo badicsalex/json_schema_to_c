@@ -53,7 +53,7 @@ class RootGenerator:
         self.name = schema['$id']
 
     def generate_root_parser(self, out_file, max_token_num):
-        out_file.print("bool json_parse_{name}(const char *json_string, {name}_t *out)".format(name=self.name))
+        out_file.print("bool json_parse_{}(const char *json_string, {} *out)".format(self.name, self.root_generator.c_type))
         with out_file.code_block():
             out_file.print("parse_state_t parse_state_var;")
             out_file.print("parse_state_t *parse_state = &parse_state_var;")
@@ -89,8 +89,8 @@ class RootGenerator:
             h_file.write(self.settings.h_prefix_file.read())
 
         h_file.print_separator("Generated type declarations")
-        self.root_generator.generate_type_declaration(h_file, force=True)
-        h_file.print("bool json_parse_{name}(const char *json_string, {name}_t *out);".format(name=self.name))
+        self.root_generator.c_type.generate_type_declaration(h_file)
+        h_file.print("bool json_parse_{}(const char *json_string, {} *out);".format(self.name, self.root_generator.c_type))
 
         if self.settings.h_postfix_file:
             h_file.print_separator("User-added postfix")

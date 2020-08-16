@@ -22,7 +22,19 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from .base import Generator
+from .base import Generator, CType
+
+
+class StringType(CType):
+    def __init__(self, type_name, description, max_length):
+        super().__init__(type_name, description)
+        self.max_length = max_length
+
+    def generate_type_declaration(self, out_file):
+        out_file.print_with_docstring(
+            "typedef char {}[{}];".format(self.type_name, self.max_length + 1), self.description
+        )
+        out_file.print("")
 
 
 class StringGenerator(Generator):
@@ -57,9 +69,9 @@ class StringGenerator(Generator):
         if self.js2cType is not None:
             if self.js2cParseFunction is None:
                 raise ValueError("js2cParseFunction must be set if js2cType is set")
-            self.c_type = self.js2cType
+            self.c_type = CType(self.js2cType, self.description)
         else:
-            self.c_type = "{}_t".format(self.name)
+            self.c_type = StringType(self.name + "_t", self.description, self.maxLength)
 
     @classmethod
     def can_parse_schema(cls, schema):
@@ -103,17 +115,6 @@ class StringGenerator(Generator):
             )
             with out_file.code_block():
                 out_file.print("return true;")
-
-    def generate_type_declaration(self, out_file, *, force=False):
-        _ = force  # basically (void)force
-
-        if self.js2cType is not None:
-            return
-
-        out_file.print_with_docstring(
-            "typedef char {}[{}];".format(self.c_type, self.maxLength + 1), self.description
-        )
-        out_file.print("")
 
     def has_default_value(self):
         return super().has_default_value() or self.default is not None

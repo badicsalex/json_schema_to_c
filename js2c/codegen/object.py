@@ -24,7 +24,27 @@
 #
 import collections
 
-from .base import Generator
+from .base import Generator, CType
+
+
+class ObjectType(CType):
+    def __init__(self, type_name, description, fields):
+        super().__init__(type_name, description)
+        self.fields = fields
+
+    def generate_type_declaration(self, out_file):
+        for field_name, field_generator in self.fields.items():
+            field_generator.generate_type_declaration(out_file)
+
+        out_file.print("typedef struct {}_s ".format(self.type_name) + "{")
+        with out_file.indent():
+            for field_name, field_generator in self.fields.items():
+                field_generator.generate_field_declaration(
+                    field_name,
+                    out_file
+                )
+        out_file.print("}} {};".format(self.type_name))
+        out_file.print("")
 
 
 class ObjectGenerator(Generator):
@@ -43,7 +63,12 @@ class ObjectGenerator(Generator):
                 field_schema,
                 parameters.with_suffix(field_name),
             )
-        self.c_type = "{}_t".format(self.name)
+        self.c_type = ObjectType(
+            self.name + "_t",
+            self.description,
+            collections.OrderedDict((k, v.c_type) for k, v in self.fields.items())
+        )
+
         if self.additionalProperties and not self.settings.allow_additional_properties:
             raise ValueError(
                 "Either use the --allow-additional-properties command line argument, or set "
@@ -61,22 +86,6 @@ class ObjectGenerator(Generator):
         )
         with out_file.code_block():
             out_file.print("return true;")
-
-    def generate_type_declaration(self, out_file, *, force=False):
-        _ = force  # This is python's way of saying (void)force
-
-        for field_name, field_generator in self.fields.items():
-            field_generator.generate_type_declaration(out_file)
-
-        out_file.print("typedef struct {}_s ".format(self.name) + "{")
-        with out_file.indent():
-            for field_name, field_generator in self.fields.items():
-                field_generator.generate_field_declaration(
-                    field_name,
-                    out_file
-                )
-        out_file.print("}} {};".format(self.c_type))
-        out_file.print("")
 
     def generate_seen_flags(self, out_file):
         for field_name in self.fields:

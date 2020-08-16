@@ -22,7 +22,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from .base import Generator
+from .base import Generator, CType
 
 
 class FloatGenerator(Generator):
@@ -42,7 +42,7 @@ class FloatGenerator(Generator):
 
     def __init__(self, schema, parameters):
         super().__init__(schema, parameters)
-        self.c_type = "double"
+        self.c_type = CType("double", self.description)
 
     @classmethod
     def can_parse_schema(cls, schema):
