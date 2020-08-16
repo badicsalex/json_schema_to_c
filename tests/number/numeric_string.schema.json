@@ -38,7 +38,8 @@
         "u_hex2": {
             "type": "string",
             "default": "0x1234",
-            "pattern": "[0-9a-fA-F]+"
+            "pattern": "[0-9a-fA-F]+",
+            "js2cType": "uint16_t"
         },
         "u_autonum": {
             "type": "string",

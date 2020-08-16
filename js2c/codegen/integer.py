@@ -166,7 +166,7 @@ class NumericStringGenerator(IntegerGenerator):
         if 'minimum' not in schema and schema['pattern'] in self.UNSIGNED_PATTERNS:
             schema['minimum'] = 0
         super().__init__(schema, name, settings, generator_factory)
-        if self.c_type == 'uint64_t':
+        if self.c_type in self.UNSIGNED_TYPES:
             pattern_set = self.UNSIGNED_PATTERNS
         else:
             pattern_set = self.SIGNED_PATTERNS
