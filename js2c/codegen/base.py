@@ -24,6 +24,7 @@
 #
 from abc import ABC, abstractmethod
 from collections import namedtuple
+import re
 
 
 class NoDefaultValue(Exception):
@@ -33,7 +34,8 @@ class NoDefaultValue(Exception):
 GeneratorInitParametersBase = namedtuple(
     "GeneratorInitParameters",
     (
-        'name',
+        'parser_name',
+        'type_name',
         'settings',
         'generator_factory'
     )
@@ -43,9 +45,12 @@ GeneratorInitParametersBase = namedtuple(
 class GeneratorInitParameters(GeneratorInitParametersBase):
     __slots__ = ()
 
-    def with_suffix(self, suffix):
+    def with_suffix(self, type_name, suffix):
+        # Remove _t suffix if present
+        type_name = re.sub("_t$", "", type_name)
         return GeneratorInitParameters(
-            "{}_{}".format(self.name, suffix),
+            "{}_{}".format(self.parser_name, suffix),
+            "{}_{}_t".format(type_name, suffix),
             self.settings,
             self.generator_factory
         )
@@ -55,22 +60,29 @@ class Generator(ABC):
     JSON_FIELDS = (
         "description",
         "js2cDefault",
+        "js2cType",
     )
 
     c_type = None
     description = None
     js2cDefault = None
+    js2cType = None
 
     def __init__(self, schema, parameters):
-        self.settings = parameters.settings
-        self.name = parameters.name
-        if "$id" in schema:
-            self.name = schema["$id"]
-            if self.name[0] == '#':
-                self.name = self.name[1:]
         for attr in self.JSON_FIELDS:
             if attr in schema:
                 setattr(self, attr, schema[attr])
+
+        self.settings = parameters.settings
+        self.parser_name = parameters.parser_name
+
+        if self.js2cType is not None:
+            self.type_name = self.js2cType
+        elif "$id" in schema:
+            # Remove starting # if present
+            self.type_name = re.sub("^#", "", schema["$id"]) + "_t"
+        else:
+            self.type_name = parameters.type_name
 
     @abstractmethod
     def generate_parser_call(self, out_var_name, out_file):

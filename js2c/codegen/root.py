@@ -46,6 +46,7 @@ class RootGenerator:
             schema,
             GeneratorInitParameters(
                 schema['$id'],
+                schema['$id'] + '_t',
                 settings,
                 GeneratorFactory
             )

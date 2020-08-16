@@ -63,7 +63,7 @@ class EnumGenerator(Generator):
 
     def __init__(self, schema, parameters):
         super().__init__(schema, parameters)
-        self.c_type = EnumType(self.name + "_t", self.description, [self.convert_enum_label(enum_label) for enum_label in self.enum])
+        self.c_type = EnumType(self.type_name, self.description, [self.convert_enum_label(enum_label) for enum_label in self.enum])
 
     @classmethod
     def can_parse_schema(cls, schema):
@@ -73,20 +73,21 @@ class EnumGenerator(Generator):
         if self.convertLabelsToSnakeCase:
             enum_label = self.CAMEL_CASE_RE.sub(r"_", enum_label)
             enum_label = enum_label.upper()
-        prefixed = "{}_{}".format(self.name.upper(), enum_label)
+        prefix = re.sub("_t$", "", self.type_name).upper()
+        prefixed = "{}_{}".format(prefix, enum_label)
         sanitized = self.SANITIZE_RE.sub("_", prefixed)
         return sanitized
 
     def generate_parser_call(self, out_var_name, out_file):
         out_file.print(
             "if (parse_{}(parse_state, {}))"
-            .format(self.name, out_var_name)
+            .format(self.parser_name, out_var_name)
         )
         with out_file.code_block():
             out_file.print("return true;")
 
     def generate_parser_bodies(self, out_file):
-        out_file.print("static bool parse_{}(parse_state_t *parse_state, {} *out)".format(self.name, self.c_type))
+        out_file.print("static bool parse_{}(parse_state_t *parse_state, {} *out)".format(self.parser_name, self.c_type))
         with out_file.code_block():
             out_file.print("if (check_type(parse_state, JSMN_STRING))")
             with out_file.code_block():

@@ -61,10 +61,10 @@ class ObjectGenerator(Generator):
         for field_name, field_schema in schema['properties'].items():
             self.fields[field_name] = parameters.generator_factory.get_generator_for(
                 field_schema,
-                parameters.with_suffix(field_name),
+                parameters.with_suffix(self.type_name, field_name),
             )
         self.c_type = ObjectType(
-            self.name + "_t",
+            self.type_name,
             self.description,
             collections.OrderedDict((k, v.c_type) for k, v in self.fields.items())
         )
@@ -82,7 +82,7 @@ class ObjectGenerator(Generator):
     def generate_parser_call(self, out_var_name, out_file):
         out_file.print(
             "if (parse_{}(parse_state, {}))"
-            .format(self.name, out_var_name)
+            .format(self.parser_name, out_var_name)
         )
         with out_file.code_block():
             out_file.print("return true;")
@@ -167,7 +167,7 @@ class ObjectGenerator(Generator):
         for field_generator in self.fields.values():
             field_generator.generate_parser_bodies(out_file)
 
-        out_file.print("static bool parse_{}(parse_state_t *parse_state, {} *out)".format(self.name, self.c_type))
+        out_file.print("static bool parse_{}(parse_state_t *parse_state, {} *out)".format(self.parser_name, self.c_type))
         with out_file.code_block():
             out_file.print("if (check_type(parse_state, JSMN_OBJECT))")
             with out_file.code_block():

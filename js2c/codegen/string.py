@@ -42,14 +42,12 @@ class StringGenerator(Generator):
         "minLength",
         "maxLength",
         "default",
-        "js2cType",
         "js2cParseFunction",
     )
 
     minLength = 0
     maxLength = None
     default = None
-    js2cType = None
     js2cParseFunction = None
 
     def __init__(self, schema, parameters):
@@ -66,12 +64,10 @@ class StringGenerator(Generator):
             print("MinLength", self.minLength)
             raise ValueError("String default value shorter than minLength")
 
-        if self.js2cType is not None:
-            if self.js2cParseFunction is None:
-                raise ValueError("js2cParseFunction must be set if js2cType is set")
+        if self.js2cParseFunction is not None:
             self.c_type = CType(self.js2cType, self.description)
         else:
-            self.c_type = StringType(self.name + "_t", self.description, self.maxLength)
+            self.c_type = StringType(self.type_name, self.description, self.maxLength)
 
     @classmethod
     def can_parse_schema(cls, schema):

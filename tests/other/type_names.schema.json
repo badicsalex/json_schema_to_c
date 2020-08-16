@@ -13,7 +13,8 @@
             "type": "object",
             "required": [
                 "name",
-                "is_good"
+                "is_good",
+                "origin"
             ],
             "additionalProperties": false,
             "properties": {
@@ -23,8 +24,19 @@
                 "is_good": {
                     "type": "boolean",
                     "description": "Is the vegetable any good?"
+                },
+                "origin": {
+                    "type": "string",
+                    "enum": ["EU", "US", "Other"]
                 }
             }
+        },
+        "report_name": {
+            "type": "string",
+            "$id": "#report_id",
+            "js2cType": "my_report_name_type",
+            "maxLength": 16,
+            "default": "unnamed report"
         }
     },
     "definitions": {

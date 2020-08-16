@@ -48,7 +48,6 @@ class IntegerGeneratorBase(Generator):
         "exclusiveMinimum",
         "exclusiveMaximum",
         "default",
-        "js2cType",
     )
 
     minimum = None
@@ -56,7 +55,6 @@ class IntegerGeneratorBase(Generator):
     exclusiveMinimum = None
     exclusiveMaximum = None
     default = None
-    js2cType = None
 
     def __init__(self, schema, parameters):
         super().__init__(schema, parameters)

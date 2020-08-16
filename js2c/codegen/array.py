@@ -59,10 +59,10 @@ class ArrayGenerator(Generator):
 
         self.item_generator = parameters.generator_factory.get_generator_for(
             schema["items"],
-            parameters.with_suffix("item"),
+            parameters.with_suffix(self.type_name, "item"),
         )
         self.c_type = ArrayType(
-            self.name + "_t",
+            self.type_name,
             self.description,
             self.item_generator.c_type,
             self.maxItems
@@ -75,7 +75,7 @@ class ArrayGenerator(Generator):
     def generate_parser_call(self, out_var_name, out_file):
         out_file.print(
             "if (parse_{}(parse_state, {}))"
-            .format(self.name, out_var_name)
+            .format(self.parser_name, out_var_name)
         )
         with out_file.code_block():
             out_file.print("return true;")
@@ -98,7 +98,7 @@ class ArrayGenerator(Generator):
     def generate_parser_bodies(self, out_file):
         self.item_generator.generate_parser_bodies(out_file)
 
-        out_file.print("static bool parse_{}(parse_state_t *parse_state, {} *out)".format(self.name, self.c_type))
+        out_file.print("static bool parse_{}(parse_state_t *parse_state, {} *out)".format(self.parser_name, self.c_type))
         with out_file.code_block():
             out_file.print("if (check_type(parse_state, JSMN_ARRAY))")
             with out_file.code_block():
