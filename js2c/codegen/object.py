@@ -35,14 +35,13 @@ class ObjectGenerator(Generator):
     required = ()
     additionalProperties = True
 
-    def __init__(self, schema, name, settings, generator_factory):
-        super().__init__(schema, name, settings, generator_factory)
+    def __init__(self, schema, parameters):
+        super().__init__(schema, parameters)
         self.fields = collections.OrderedDict()
         for field_name, field_schema in schema['properties'].items():
-            self.fields[field_name] = generator_factory.get_generator_for(
+            self.fields[field_name] = parameters.generator_factory.get_generator_for(
                 field_schema,
-                "{}_{}".format(name, field_name),
-                settings,
+                parameters.with_suffix(field_name),
             )
         self.c_type = "{}_t".format(self.name)
         if self.additionalProperties and not self.settings.allow_additional_properties:

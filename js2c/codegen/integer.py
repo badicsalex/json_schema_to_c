@@ -47,8 +47,8 @@ class IntegerGeneratorBase(Generator):
     default = None
     js2cType = None
 
-    def __init__(self, schema, name, settings, generator_factory):
-        super().__init__(schema, name, settings, generator_factory)
+    def __init__(self, schema, parameters):
+        super().__init__(schema, parameters)
         if self.js2cType is not None:
             self.c_type = self.js2cType
         else:
@@ -130,8 +130,8 @@ class IntegerGeneratorBase(Generator):
 
 
 class IntegerGenerator(IntegerGeneratorBase):
-    def __init__(self, schema, name, settings, generator_factory):
-        super().__init__(schema, name, settings, generator_factory)
+    def __init__(self, schema, parameters):
+        super().__init__(schema, parameters)
         self.radix = 10
 
     @property
@@ -161,11 +161,11 @@ class NumericStringGenerator(IntegerGenerator):
     }
     SIGNED_PATTERNS = {'[+-]?' + k: v for k, v in UNSIGNED_PATTERNS.items()}
 
-    def __init__(self, schema, name, settings, generator_factory):
+    def __init__(self, schema, parameters):
         # minimum might be in the schema if this constructor is called by IntegerStringAnyOfGenerator
         if 'minimum' not in schema and schema['pattern'] in self.UNSIGNED_PATTERNS:
             schema['minimum'] = 0
-        super().__init__(schema, name, settings, generator_factory)
+        super().__init__(schema, parameters)
         if self.c_type in self.UNSIGNED_TYPES:
             pattern_set = self.UNSIGNED_PATTERNS
         else:
@@ -199,11 +199,11 @@ class NumericStringGenerator(IntegerGenerator):
 
 
 class IntegerStringAnyOfGenerator(NumericStringGenerator):
-    def __init__(self, schema, name, settings, generator_factory):
+    def __init__(self, schema, parameters):
         combined_schema = schema['anyOf'][0]
         combined_schema.update(schema['anyOf'][1])
         combined_schema['type'] = 'string'
-        super().__init__(combined_schema, name, settings, generator_factory)
+        super().__init__(combined_schema, parameters)
 
     @classmethod
     def can_parse_schema(cls, schema):

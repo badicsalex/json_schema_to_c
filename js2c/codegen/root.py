@@ -28,6 +28,7 @@ import re
 from .code_block_printer import CodeBlockPrinter
 
 from .generator_factory import GeneratorFactory
+from .base import GeneratorInitParameters
 
 
 DIR_OF_THIS_FILE = os.path.dirname(__file__)
@@ -41,7 +42,14 @@ NOTE_FOR_GENERATED_FILES = """
 class RootGenerator:
     def __init__(self, schema, settings):
         self.settings = settings
-        self.root_generator = GeneratorFactory.get_generator_for(schema, schema['$id'], settings)
+        self.root_generator = GeneratorFactory.get_generator_for(
+            schema,
+            GeneratorInitParameters(
+                schema['$id'],
+                settings,
+                GeneratorFactory
+            )
+        )
         self.name = schema['$id']
 
     def generate_root_parser(self, out_file, max_token_num):

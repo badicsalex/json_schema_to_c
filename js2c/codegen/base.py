@@ -23,10 +23,32 @@
 # SOFTWARE.
 #
 from abc import ABC, abstractmethod
+from collections import namedtuple
 
 
 class NoDefaultValue(Exception):
     pass
+
+
+GeneratorInitParametersBase = namedtuple(
+    "GeneratorInitParameters",
+    (
+        'name',
+        'settings',
+        'generator_factory'
+    )
+)
+
+
+class GeneratorInitParameters(GeneratorInitParametersBase):
+    __slots__ = ()
+
+    def with_suffix(self, suffix):
+        return GeneratorInitParameters(
+            "{}_{}".format(self.name, suffix),
+            self.settings,
+            self.generator_factory
+        )
 
 
 class Generator(ABC):
@@ -39,10 +61,9 @@ class Generator(ABC):
     description = None
     js2cDefault = None
 
-    def __init__(self, schema, name, settings, generator_factory):
-        _ = generator_factory  # used only by subclasses
-        self.settings = settings
-        self.name = name
+    def __init__(self, schema, parameters):
+        self.settings = parameters.settings
+        self.name = parameters.name
         if "$id" in schema:
             self.name = schema["$id"]
             if self.name[0] == '#':

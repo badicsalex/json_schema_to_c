@@ -46,8 +46,8 @@ class EnumGenerator(Generator):
         ")"
     )
 
-    def __init__(self, schema, name, settings, generator_factory):
-        super().__init__(schema, name, settings, generator_factory)
+    def __init__(self, schema, parameters):
+        super().__init__(schema, parameters)
         self.c_type = "{}_t".format(self.name)
 
     @classmethod
