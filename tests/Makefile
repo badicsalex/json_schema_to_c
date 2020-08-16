@@ -23,7 +23,7 @@ clean:
 
 other/args_and_settings.parser.c other/args_and_settings.parser.h &: \
 		other/args_and_settings.schema.json $(PARSER_SOURCE_FILES) \
-		other/h_prefix.inc other/h_postfix.inc other/c_prefix.inc other/c_postfix.inc
+		other/c_postfix.inc
 	echo "other/args_and_settings: generating schema"
 	../json_schema_to_c.py \
 		--c-prefix /dev/null \
