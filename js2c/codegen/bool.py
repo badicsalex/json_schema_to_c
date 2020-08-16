@@ -32,6 +32,11 @@ class BoolGenerator(Generator):
     default = None
     c_type = "bool"
 
+    def __init__(self, schema, name, settings, generator_factory):
+        super().__init__(schema, name, settings, generator_factory)
+        if self.default is not None and not isinstance(self.default, bool):
+            raise TypeError("Boolean types should have a boolean as a default")
+
     @classmethod
     def can_parse_schema(cls, schema):
         return schema.get('type') == 'boolean'
