@@ -28,6 +28,7 @@ import re
 from .code_block_printer import CodeBlockPrinter
 
 from .generator_factory import GeneratorFactory
+from .type_cache import TypeCache
 from .base import GeneratorInitParameters
 
 
@@ -48,7 +49,8 @@ class RootGenerator:
                 schema['$id'],
                 schema['$id'] + '_t',
                 settings,
-                GeneratorFactory
+                GeneratorFactory,
+                TypeCache(),
             )
         )
         self.name = schema['$id']

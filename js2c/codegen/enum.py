@@ -32,7 +32,7 @@ class EnumType(CType):
         super().__init__(type_name, description)
         self.enum_labels = enum_labels
 
-    def generate_type_declaration(self, out_file):
+    def generate_type_declaration_impl(self, out_file):
         out_file.print("typedef enum {}_e".format(self.type_name) + "{")
         with out_file.indent():
             for enum_label in self.enum_labels[:-1]:
@@ -40,6 +40,12 @@ class EnumType(CType):
             out_file.print("{}".format(self.enum_labels[-1]))
         out_file.print("}} {};".format(self.type_name))
         out_file.print("")
+
+    def __eq__(self, other):
+        return (
+            super().__eq__(other) and
+            self.enum_labels == other.enum_labels
+        )
 
 
 class EnumGenerator(Generator):
@@ -64,6 +70,7 @@ class EnumGenerator(Generator):
     def __init__(self, schema, parameters):
         super().__init__(schema, parameters)
         self.c_type = EnumType(self.type_name, self.description, [self.convert_enum_label(enum_label) for enum_label in self.enum])
+        self.c_type = parameters.type_cache.try_get_cached(self.c_type)
 
     @classmethod
     def can_parse_schema(cls, schema):

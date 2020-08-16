@@ -67,6 +67,7 @@ class IntegerGeneratorBase(Generator):
                 c_type_name = "int64_t"
 
         self.c_type = IntegerType(c_type_name, self.description)
+        self.c_type = parameters.type_cache.try_get_cached(self.c_type)
         if self.c_type.is_unsigned():
             self.parser_fn = "builtin_parse_unsigned"
             self.parsed_type = "uint64_t"

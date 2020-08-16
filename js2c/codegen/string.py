@@ -30,11 +30,17 @@ class StringType(CType):
         super().__init__(type_name, description)
         self.max_length = max_length
 
-    def generate_type_declaration(self, out_file):
+    def generate_type_declaration_impl(self, out_file):
         out_file.print_with_docstring(
             "typedef char {}[{}];".format(self.type_name, self.max_length + 1), self.description
         )
         out_file.print("")
+
+    def __eq__(self, other):
+        return (
+            super().__eq__(other) and
+            self.max_length == other.max_length
+        )
 
 
 class StringGenerator(Generator):
@@ -68,6 +74,7 @@ class StringGenerator(Generator):
             self.c_type = CType(self.js2cType, self.description)
         else:
             self.c_type = StringType(self.type_name, self.description, self.maxLength)
+        self.c_type = parameters.type_cache.try_get_cached(self.c_type)
 
     @classmethod
     def can_parse_schema(cls, schema):

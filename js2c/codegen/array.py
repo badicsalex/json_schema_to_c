@@ -31,7 +31,7 @@ class ArrayType(CType):
         self.item_type = item_type
         self.max_items = max_items
 
-    def generate_type_declaration(self, out_file):
+    def generate_type_declaration_impl(self, out_file):
         self.item_type.generate_type_declaration(out_file)
 
         out_file.print("typedef struct {}_s ".format(self.type_name) + "{")
@@ -42,6 +42,13 @@ class ArrayType(CType):
             )
         out_file.print("}} {};".format(self.type_name))
         out_file.print("")
+
+    def __eq__(self, other):
+        return (
+            super().__eq__(other) and
+            self.max_items == other.max_items and
+            self.item_type == other.item_type
+        )
 
 
 class ArrayGenerator(Generator):
@@ -67,6 +74,7 @@ class ArrayGenerator(Generator):
             self.item_generator.c_type,
             self.maxItems
         )
+        self.c_type = parameters.type_cache.try_get_cached(self.c_type)
 
     @classmethod
     def can_parse_schema(cls, schema):

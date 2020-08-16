@@ -37,7 +37,8 @@ GeneratorInitParametersBase = namedtuple(
         'parser_name',
         'type_name',
         'settings',
-        'generator_factory'
+        'generator_factory',
+        'type_cache'
     )
 )
 
@@ -52,7 +53,8 @@ class GeneratorInitParameters(GeneratorInitParametersBase):
             "{}_{}".format(self.parser_name, suffix),
             "{}_{}_t".format(type_name, suffix),
             self.settings,
-            self.generator_factory
+            self.generator_factory,
+            self.type_cache,
         )
 
 
@@ -130,9 +132,13 @@ class CType():
     def __init__(self, type_name, description):
         self.type_name = type_name
         self.description = description
+        self.declaration_generated = False
 
     def __str__(self):
         return self.type_name
+
+    def __repr__(self):
+        return "{}({})".format(self.__class__.__name__, self.__dict__)
 
     def generate_field_declaration(self, field_name, out_file):
         out_file.print_with_docstring(
@@ -140,5 +146,18 @@ class CType():
         )
 
     def generate_type_declaration(self, out_file):
+        if self.declaration_generated:
+            return
+        self.generate_type_declaration_impl(out_file)
+        self.declaration_generated = True
+
+    def generate_type_declaration_impl(self, out_file):
         # Simple types (e.g. uint64_t) should already be declared
         pass
+
+    def __eq__(self, other):
+        # Description deliberately left out. It will be the same type
+        # The main use-case is documenting a description differently on different
+        # parts of the JSON. The main result here will be a wrong docstring on the type,
+        # which is an OK trade-off.
+        return self.__class__ == other.__class__ and self.type_name == other.type_name

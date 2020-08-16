@@ -1,0 +1,80 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "root",
+    "description": "Some demo structure for demoing.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "good_veggie"
+    ],
+    "properties": {
+        "good_veggie": {
+            "allOf": [
+                {
+                    "$ref": "#/definitions/veggie"
+                },
+                {
+                    "required": ["weight"],
+                    "properties": {
+                        "quality": {
+                            "default": "good",
+                            "description": "Let's hope for good quality"
+                        },
+                        "weight": {
+                            "required": ["max"]
+                        }
+                    }
+                }
+            ]
+        },
+        "ok_veggie": {
+            "allOf": [
+                {
+                    "$ref": "#/definitions/veggie"
+                },
+                {
+                    "properties": {
+                        "quality": {
+                            "default": "ok",
+                            "description": "OK quality is OK."
+                        },
+                        "weight": {
+                            "properties": {
+                                "max": {
+                                    "default": 5,
+                                    "maximum": 15
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    },
+    "definitions": {
+        "veggie": {
+            "$id": "veggie",
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "quality": {
+                    "$id": "veggie_quality",
+                    "type": "string",
+                    "enum": [
+                        "good",
+                        "ok",
+                        "bad"
+                    ]
+                },
+                "weight":{
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "min": {"type": "integer", "default": 0},
+                        "max": {"type": "integer"}
+                    }
+                }
+            }
+        }
+    }
+}

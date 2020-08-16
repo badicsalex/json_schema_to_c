@@ -30,9 +30,11 @@ from .base import Generator, CType
 class ObjectType(CType):
     def __init__(self, type_name, description, fields):
         super().__init__(type_name, description)
+        assert isinstance(fields, collections.OrderedDict), \
+            "fields must be an OrderedDict, as we depend on the field order check of == in __eq__"
         self.fields = fields
 
-    def generate_type_declaration(self, out_file):
+    def generate_type_declaration_impl(self, out_file):
         for field_name, field_generator in self.fields.items():
             field_generator.generate_type_declaration(out_file)
 
@@ -45,6 +47,12 @@ class ObjectType(CType):
                 )
         out_file.print("}} {};".format(self.type_name))
         out_file.print("")
+
+    def __eq__(self, other):
+        return (
+            super().__eq__(other) and
+            self.fields == other.fields
+        )
 
 
 class ObjectGenerator(Generator):
@@ -68,6 +76,7 @@ class ObjectGenerator(Generator):
             self.description,
             collections.OrderedDict((k, v.c_type) for k, v in self.fields.items())
         )
+        self.c_type = parameters.type_cache.try_get_cached(self.c_type)
 
         if self.additionalProperties and not self.settings.allow_additional_properties:
             raise ValueError(
