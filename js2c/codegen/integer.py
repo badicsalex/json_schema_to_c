@@ -71,12 +71,14 @@ class IntegerGeneratorBase(Generator):
         if self.c_type.is_unsigned():
             self.parser_fn = "builtin_parse_unsigned"
             self.parsed_type = "uint64_t"
+            self.parsed_type_printf_macro = "PRIu64"
             self.default_suffix = "ULL"
             if self.minimum == 0:
                 self.minimum = None
         else:
             self.parser_fn = "builtin_parse_signed"
             self.parsed_type = "int64_t"
+            self.parsed_type_printf_macro = "PRIi64"
             self.default_suffix = "LL"
         self.radix = None
 
@@ -91,17 +93,19 @@ class IntegerGeneratorBase(Generator):
         pass
 
     @classmethod
-    def generate_range_check(cls, check_number, out_var_name, check_operator, out_file):
+    def generate_range_check(cls, check_number, out_var_printf_macro, check_operator, out_file):
+        # pylint: disable=too-many-arguments
         if check_number is None:
             return
-        out_file.print("if (!(({}) {} {}))".format(out_var_name, check_operator, check_number))
+        out_file.print("if (!(int_parse_tmp {} {}))".format(check_operator, check_number))
         with out_file.code_block():
             # Roll back the token, as the value was not actually correct
             out_file.print("parse_state->current_token -= 1;")
             cls.generate_logged_error(
                 [
-                    "Integer %li in '%s' out of range. It must be {} {}.".format(check_operator, check_number),
-                    "({})".format(out_var_name),
+                    "Integer %\" {} \" in '%s' out of range. It must be {} {}."
+                    .format(out_var_printf_macro, check_operator, check_number),
+                    "int_parse_tmp",
                     "parse_state->current_key",
                 ],
                 out_file
@@ -120,10 +124,10 @@ class IntegerGeneratorBase(Generator):
         )
         with out_file.code_block():
             out_file.print("return true;")
-        self.generate_range_check(self.minimum, "int_parse_tmp", ">=", out_file)
-        self.generate_range_check(self.maximum, "int_parse_tmp", "<=", out_file)
-        self.generate_range_check(self.exclusiveMinimum, "int_parse_tmp", ">", out_file)
-        self.generate_range_check(self.exclusiveMaximum, "int_parse_tmp", "<", out_file)
+        self.generate_range_check(self.minimum, self.parsed_type_printf_macro, ">=", out_file)
+        self.generate_range_check(self.maximum, self.parsed_type_printf_macro, "<=", out_file)
+        self.generate_range_check(self.exclusiveMinimum, self.parsed_type_printf_macro, ">", out_file)
+        self.generate_range_check(self.exclusiveMaximum, self.parsed_type_printf_macro, "<", out_file)
         out_file.print("*{} = int_parse_tmp;".format(out_var_name))
 
     def has_default_value(self):
