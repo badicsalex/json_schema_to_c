@@ -94,7 +94,6 @@ class StringGenerator(Generator):
                 src,
                 "error ? error : \"error calling {}\"".format(self.js2cParseFunction),
             ], out_file)
-        out_file.print("parse_state->current_token += 1;")
 
     def generate_parser_call(self, out_var_name, out_file):
         if self.js2cParseFunction is not None:
@@ -111,6 +110,7 @@ class StringGenerator(Generator):
                 out_var_name,
                 out_file
             )
+            out_file.print("parse_state->current_token += 1;")
         else:
             out_file.print(
                 "if (builtin_parse_string(parse_state, {}[0], {}, {}))"
