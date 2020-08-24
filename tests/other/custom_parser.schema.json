@@ -9,24 +9,30 @@
     "type": "object",
     "additionalProperties": false,
     "properties": {
-        "id": {
-            "type": "string",
-            "js2cType": "uint64_t",
-            "js2cParseFunction": "big_endian_hex",
-            "description": "The Identifier",
-            "default": "ABCDEF01ABCDEF01",
-            "pattern": "(0x|0X)?[0-9a-fA-F]+",
-            "maxLength": 16
-        },
-        "short_id": {
-            "type": "string",
-            "js2cType": "uint64_t",
-            "js2cParseFunction": "big_endian_hex",
-            "description": "Short identifier",
-            "default": "ABCDEF",
-            "pattern": "(0x|0X)?[0-9a-fA-F]+",
-            "minLength": 3,
-            "maxLength": 6
+        "ids": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "js2cType": "uint64_t",
+                    "js2cParseFunction": "big_endian_hex",
+                    "description": "The Identifier",
+                    "default": "ABCDEF01ABCDEF01",
+                    "pattern": "(0x|0X)?[0-9a-fA-F]+",
+                    "maxLength": 16
+                },
+                "short_id": {
+                    "type": "string",
+                    "js2cType": "uint64_t",
+                    "js2cParseFunction": "big_endian_hex",
+                    "description": "Short identifier",
+                    "default": "ABCDEF",
+                    "pattern": "(0x|0X)?[0-9a-fA-F]+",
+                    "minLength": 3,
+                    "maxLength": 6
+                }
+            }
         },
         "point": {
             "type": "string",
