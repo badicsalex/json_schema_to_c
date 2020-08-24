@@ -133,12 +133,16 @@ class StringGenerator(Generator):
                 )
             )
         elif self.js2cParseFunction is not None:
-            self.generate_custom_parser_call(
-                '"{}"'.format(self.default),
-                str(len(self.default)),
-                "&{}".format(out_var_name),
-                out_file
-            )
+            # The custom parser call has to be in its own code block, because
+            # it declares a variable, and there are places where this is generated
+            # multiple times into the same scope.
+            with out_file.code_block(standalone=True):
+                self.generate_custom_parser_call(
+                    '"{}"'.format(self.default),
+                    str(len(self.default)),
+                    "&{}".format(out_var_name),
+                    out_file
+                )
         else:
             out_file.print(
                 'memcpy({dst}, "{src}", {size});'.format(
