@@ -80,7 +80,11 @@ class CodeBlockPrinter:
         self.file.write("\n")
         self.file.write(data)
 
-    def code_block(self, indent_level=4):
+    def code_block(self, indent_level=4, standalone=False):
+        if standalone:
+            self.file.write("\n{}".format(" "*self.indent_level))
+            # XXX: this is to prevent padding the opening brace that comes next
+            self.last_was_else = True
         return CodeBlockContextManager(self, indent_level)
 
     def indent(self, indent_level=4):
