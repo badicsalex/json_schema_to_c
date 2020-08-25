@@ -3,8 +3,8 @@
     "$id": "root",
     "description": "Some demo structure for demoing.",
     "js2cSettings": {
-        "hPrefixFile": "other/custom_parser_h_prefix.inc",
-        "cPrefixFile": "other/custom_parser_c_prefix.inc"
+        "hPrefixFile": "string/custom_parser_h_prefix.inc",
+        "cPrefixFile": "string/custom_parser_c_prefix.inc"
     },
     "type": "object",
     "additionalProperties": false,
