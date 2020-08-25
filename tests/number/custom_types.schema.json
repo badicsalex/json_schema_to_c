@@ -43,13 +43,15 @@
         "s64": {
             "type": "integer",
             "default": "-9223372036854775806",
-            "js2cType": "int64_t"
+            "js2cType": "int64_t",
+            "description": "The primary i64 type"
         },
         "min0": {
             "type": "integer",
             "minimum": 0,
             "default": "-9223372036854775806",
-            "js2cType": "int64_t"
+            "js2cType": "int64_t",
+            "description": "The secondary i64 type to check descriptions."
         }
     }
 }
