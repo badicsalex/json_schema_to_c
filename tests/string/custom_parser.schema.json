@@ -41,6 +41,12 @@
             "description": "The coordinates",
             "default": "ab",
             "maxLength": 2
+        },
+        "dummy": {
+            "type": "integer",
+            "js2cType": "uint64_t",
+            "default": 0,
+            "description": "The int to check for type caching bugs"
         }
     }
 }

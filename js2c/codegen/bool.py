@@ -36,7 +36,6 @@ class BoolGenerator(Generator):
         if self.default is not None and not isinstance(self.default, bool):
             raise TypeError("Boolean types should have a boolean as a default")
         self.c_type = CType("bool", self.description)
-        self.c_type = parameters.type_cache.try_get_cached(self.c_type)
 
     @classmethod
     def can_parse_schema(cls, schema):

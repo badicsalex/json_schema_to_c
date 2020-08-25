@@ -43,7 +43,6 @@ class FloatGenerator(Generator):
     def __init__(self, schema, parameters):
         super().__init__(schema, parameters)
         self.c_type = CType("double", self.description)
-        self.c_type = parameters.type_cache.try_get_cached(self.c_type)
 
     @classmethod
     def can_parse_schema(cls, schema):
