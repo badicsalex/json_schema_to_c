@@ -186,9 +186,14 @@ int main(int argc, char** argv){
     );
 
     check_error(
+        "{\"num\": 1}",
+        "Missing required field in 'document root': the_array",
+        0
+    );
+    check_error(
         "{}",
         "Missing required field in 'document root': the_array",
-        2
+        0
     );
     check_error(
         "{\"num\": 1234, \"num\": 1234}",
@@ -204,7 +209,7 @@ int main(int argc, char** argv){
     check_error(
         "{\"error_arr\": [{}]}",
         "Error parsing 'error_arr', value=\"INVALID DEFAULT\": error calling error_creating_parser",
-        21
+        15
     );
     check_error(
         "{\"error_arr\": [{\"trigger\": \"ab\"}]}",
