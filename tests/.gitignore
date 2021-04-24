@@ -1,3 +1,4 @@
 *.parser.c
 *.parser.h
 *.compiled
+*.o

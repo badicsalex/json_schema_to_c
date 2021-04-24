@@ -91,9 +91,17 @@ class RootGenerator:
             h_file.print_separator("User-added prefix")
             h_file.write(self.settings.h_prefix_file.read())
 
+        h_file.print("#ifdef __cplusplus")
+        h_file.print("extern \"C\" {")
+        h_file.print("#endif")
+
         h_file.print_separator("Generated type declarations")
         self.root_generator.c_type.generate_type_declaration(h_file)
         h_file.print("bool json_parse_{}(const char *json_string, {} *out);".format(self.name, self.root_generator.c_type))
+
+        h_file.print("#ifdef __cplusplus")
+        h_file.print("}")
+        h_file.print("#endif")
 
         if self.settings.h_postfix_file:
             h_file.print_separator("User-added postfix")

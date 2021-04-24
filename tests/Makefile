@@ -9,7 +9,7 @@ CFLAGS= \
 	-fsanitize=address \
 	-g
 
-ALL_TESTS =  $(patsubst %.c,%.run,$(filter-out %.parser.c, $(wildcard */*.c)))
+ALL_TESTS =  other/cpp.run $(patsubst %.c,%.run,$(filter-out %.parser.c, $(wildcard */*.c)))
 PARSER_SOURCE_FILES = ../json_schema_to_c.py $(wildcard ../js2c/*.py) $(wildcard ../js2c/*/*.py) $(wildcard ../js2c/codegen/*.h) ../jsmn/jsmn.h
 
 all: $(ALL_TESTS)
@@ -29,6 +29,13 @@ other/args_and_settings.parser.c other/args_and_settings.parser.h &: \
 		--c-prefix /dev/null \
 		--c-postfix other/c_postfix.inc \
 		other/args_and_settings.schema.json other/args_and_settings.parser.c other/args_and_settings.parser.h
+
+other/cpp.o: other/cpp.cpp other/cpp.parser.h
+
+other/cpp.compiled: other/cpp.o other/cpp.parser.c
+	echo "other/cpp: compiling and linking"
+	$(CC) $(CPPFLAGS) $(CFLAGS) $^ -o $@
+
 
 # === General test running and compilation rules ===
 %.parser.c %.parser.h: %.schema.json $(PARSER_SOURCE_FILES)
