@@ -10,7 +10,7 @@ The following schema features are supported:
 * Types: `integer`, `number`, `bool`, `string`, `array`, `object`
 * Min and max length for arrays and strings
 * Min and max values for integers
-* In-document path-like `$ref` resoltion
+* In-document path-like `$ref` resolution
 * Default values:
   * Full support for simple types (`int`, `bool`, `string`)
   * Implicit default value for object, where all fields have a default value
@@ -23,7 +23,7 @@ Important limitations:
 * Strings and arrays must have a `maxLength` or `maxItems` field
 * All object fields must either be required or have a default value
 * All object property names must be valid C tokens
-* `null` are is not supported
+* `null` is not supported
 * More advanced `$ref` declarations (especially pointing to another file) are not supported
 
 Example
