@@ -23,7 +23,7 @@ Important limitations:
 * Strings and arrays must have a `maxLength` or `maxItems` field
 * All object fields must either be required or have a default value
 * All object property names must be valid C tokens
-* `null` are is not supported
+* `null` is not supported
 * More advanced `$ref` declarations (especially pointing to another file) are not supported
 
 Example
