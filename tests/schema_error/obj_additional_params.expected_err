@@ -1,0 +1,1 @@
+Schema error in '.properties.vegetable': Either set 'additionalProperties' to false or  use the --allow-additional-properties command line argument for generation.

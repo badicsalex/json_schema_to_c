@@ -110,7 +110,6 @@ def resolve_all_of(schema):
 
 def load_schema(schema_file):
     schema = json.load(schema_file, object_pairs_hook=OrderedDict)
-    assert '$id' in schema, "All schemas must have an ID (a field named '$id')"
     resolve_children(schema, schema)
     schema = resolve_all_of(schema)
     return schema

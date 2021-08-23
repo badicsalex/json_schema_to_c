@@ -9,15 +9,19 @@ CFLAGS= \
 	-fsanitize=address \
 	-g
 
-ALL_TESTS =  other/cpp.run $(patsubst %.c,%.run,$(filter-out %.parser.c, $(wildcard */*.c)))
+ALL_COMPILE_TESTS = $(patsubst %.c,%.run,$(filter-out %.parser.c, $(wildcard */*.c)))
+ALL_SCHEMA_ERROR_TESTS = $(patsubst %.json,%.run_scherr, $(wildcard schema_error/*.json))
 PARSER_SOURCE_FILES = ../json_schema_to_c.py $(wildcard ../js2c/*.py) $(wildcard ../js2c/*/*.py) $(wildcard ../js2c/codegen/*.h) ../jsmn/jsmn.h
 
-all: $(ALL_TESTS)
+all: other/cpp.run $(ALL_COMPILE_TESTS) $(ALL_SCHEMA_ERROR_TESTS)
 	@echo
 	@echo "Tests successful."
 
+schema_errors: $(ALL_SCHEMA_ERROR_TESTS)
+	@echo "Schema error tests successful"
+
 clean:
-	rm -f */*.parser.c */*.parser.h */*.compiled
+	rm -f */*.parser.c */*.parser.h */*.compiled */*.err
 
 # === Special test running and compilation rules ===
 
@@ -51,3 +55,9 @@ other/cpp.compiled: other/cpp.o other/cpp.parser.c
 	./$<
 	@echo "$*: OK"
 
+# === Schema error checking rules ===
+%.run_scherr: %.json %.expected_err
+	echo "$*: generating invalid schema"
+	if ../json_schema_to_c.py $*.json $*.parser.c $*.parser.h 2>$*.err; then echo "Invalid schema was processed. That's a problem."; exit 1; fi
+	if [ "`<$*.err`" != "`<$*.expected_err`" ]; then echo -e "Wrong error.\\n  Got error: `<$*.err`\\n   Expected: `<$*.expected_err`"; exit 1; fi
+	@echo "$*: OK"

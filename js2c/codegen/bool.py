@@ -22,7 +22,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from .base import Generator, CType
+from .base import Generator, CType, SchemaError
 
 
 class BoolGenerator(Generator):
@@ -34,7 +34,7 @@ class BoolGenerator(Generator):
     def __init__(self, schema, parameters):
         super().__init__(schema, parameters)
         if self.default is not None and not isinstance(self.default, bool):
-            raise TypeError("Boolean types should have a boolean as a default")
+            raise SchemaError(self, "Boolean types should have a boolean as a default")
         self.c_type = CType("bool", self.description)
 
     @classmethod

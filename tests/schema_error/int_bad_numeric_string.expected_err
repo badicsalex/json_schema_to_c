@@ -1,0 +1,1 @@
+Schema error in '.properties.unsig': Pattern "[+-]?[0-9]+" is not a valid pattern for this value range. Valid patterns are: "[0-9]+", "[0-9a-fA-F]+", "(0x|0X)?[0-9a-fA-F]+", "(0[0-7]+|[0-9]+|0[xX][0-9a-fA-F]+)"

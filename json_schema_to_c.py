@@ -25,8 +25,10 @@
 
 import argparse
 import os
+import sys
 
 from js2c.schema import load_schema
+from js2c.codegen.base import SchemaError
 from js2c.codegen.root import RootGenerator
 from js2c.settings import Settings
 
@@ -71,9 +73,13 @@ def parse_args():
 def main(args):
     schema = load_schema(args.schema_file)
     settings = Settings(vars(args), schema.get('js2cSettings', {}))
-    root_generator = RootGenerator(schema, settings)
-    root_generator.generate_parser_h(args.h_file)
-    root_generator.generate_parser_c(args.c_file, os.path.basename(args.h_file.name))
+    try:
+        root_generator = RootGenerator(schema, settings)
+        root_generator.generate_parser_h(args.h_file)
+        root_generator.generate_parser_c(args.c_file, os.path.basename(args.h_file.name))
+    except SchemaError as e:
+        print(e, file=sys.stderr)
+        sys.exit(1)
 
 
 if __name__ == "__main__":

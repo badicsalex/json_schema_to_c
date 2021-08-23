@@ -22,7 +22,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from .base import Generator, CType
+from .base import Generator, CType, SchemaError
 
 
 class ArrayType(CType):
@@ -62,11 +62,14 @@ class ArrayGenerator(Generator):
     def __init__(self, schema, parameters):
         super().__init__(schema, parameters)
         if self.maxItems is None:
-            raise ValueError("Arrays must have maxItems")
+            raise SchemaError(self, "Arrays must have 'maxItems'")
 
+        if 'items' not in schema:
+            raise SchemaError(self, "Missing field for array declaration: 'items'")
         self.item_generator = parameters.generator_factory.get_generator_for(
+            self,
             schema["items"],
-            parameters.with_suffix(self.type_name, "item"),
+            parameters.with_suffix("items", self.type_name, "item"),
         )
         self.c_type = ArrayType(
             self.type_name,

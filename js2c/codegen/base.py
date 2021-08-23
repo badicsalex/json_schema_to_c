@@ -27,13 +27,16 @@ from collections import namedtuple
 import re
 
 
-class NoDefaultValue(Exception):
-    pass
+class SchemaError(ValueError):
+    def __init__(self, generator, message):
+        path = generator.path_in_schema or '<root>'
+        super().__init__("Schema error in '{}': {}".format(path, message))
 
 
 GeneratorInitParametersBase = namedtuple(
     "GeneratorInitParameters",
     (
+        'path_in_schema',
         'parser_name',
         'type_name',
         'settings',
@@ -46,10 +49,11 @@ GeneratorInitParametersBase = namedtuple(
 class GeneratorInitParameters(GeneratorInitParametersBase):
     __slots__ = ()
 
-    def with_suffix(self, type_name, suffix):
+    def with_suffix(self, path_in_schema, type_name, suffix):
         # Remove _t suffix if present
         type_name = re.sub("_t$", "", type_name)
         return GeneratorInitParameters(
+            self.path_in_schema + "." + path_in_schema,
             "{}_{}".format(self.parser_name, suffix),
             "{}_{}_t".format(type_name, suffix),
             self.settings,
@@ -75,6 +79,7 @@ class Generator(ABC):
             if attr in schema:
                 setattr(self, attr, schema[attr])
 
+        self.path_in_schema = parameters.path_in_schema
         self.settings = parameters.settings
         self.parser_name = parameters.parser_name
 

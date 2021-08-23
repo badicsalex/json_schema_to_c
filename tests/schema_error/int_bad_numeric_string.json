@@ -1,0 +1,15 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "root",
+    "description": "Some demo structure for demoing.",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "unsig": {
+            "type": "string",
+            "default": "1234",
+            "minimum": 0,
+            "pattern": "[+-]?[0-9]+"
+        }
+    }
+}

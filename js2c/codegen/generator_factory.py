@@ -29,6 +29,7 @@ from .bool import BoolGenerator
 from .object import ObjectGenerator
 from .string import StringGenerator
 from .enum import EnumGenerator
+from .base import SchemaError
 
 
 class GeneratorFactory:
@@ -46,8 +47,10 @@ class GeneratorFactory:
     ]
 
     @classmethod
-    def get_generator_for(cls, schema, parameters):
+    def get_generator_for(cls, parent, schema, parameters):
+        if 'type' not in schema and 'anyOf' not in schema:
+            raise SchemaError(parent, "Missing field: 'type'")
         for generator_class in cls.GENERATORS:
             if generator_class.can_parse_schema(schema):
                 return generator_class(schema, parameters)
-        raise ValueError("Could not find any generators to parse schema: {}.".format(schema))
+        raise SchemaError(parent, "Unsupported type '{}'".format(schema['type']))

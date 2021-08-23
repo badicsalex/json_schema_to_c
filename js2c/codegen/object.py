@@ -24,7 +24,7 @@
 #
 import collections
 
-from .base import Generator, CType
+from .base import Generator, CType, SchemaError
 
 
 class ObjectType(CType):
@@ -66,10 +66,13 @@ class ObjectGenerator(Generator):
     def __init__(self, schema, parameters):
         super().__init__(schema, parameters)
         self.fields = collections.OrderedDict()
+        if 'properties' not in schema:
+            raise SchemaError(self, "Missing field for object declaration: 'properties'")
         for field_name, field_schema in schema['properties'].items():
             self.fields[field_name] = parameters.generator_factory.get_generator_for(
+                self,
                 field_schema,
-                parameters.with_suffix(self.type_name, field_name),
+                parameters.with_suffix("properties." + field_name, self.type_name, field_name),
             )
         self.c_type = ObjectType(
             self.type_name,
@@ -79,9 +82,10 @@ class ObjectGenerator(Generator):
         self.c_type = parameters.type_cache.try_get_cached(self.c_type)
 
         if self.additionalProperties and not self.settings.allow_additional_properties:
-            raise ValueError(
-                "Either use the --allow-additional-properties command line argument, or set "
-                "additionalProperties to false on all object types."
+            raise SchemaError(
+                self,
+                "Either set 'additionalProperties' to false or  use the "
+                "--allow-additional-properties command line argument for generation."
             )
 
     @classmethod
@@ -116,8 +120,9 @@ class ObjectGenerator(Generator):
             if field_generator.has_default_value():
                 continue
             if field_name not in self.required:
-                raise ValueError(
-                    "All fields must either be required or have a default value ({})"
+                raise SchemaError(
+                    self,
+                    "Field '{}' must be required or have a default value"
                     .format(field_name)
                 )
             out_file.print("if (!seen_{})".format(field_name))

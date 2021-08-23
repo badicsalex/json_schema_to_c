@@ -1,0 +1,16 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "root",
+    "description": "Some demo structure for demoing.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "vegetable"
+    ],
+    "properties": {
+        "vegetable": {
+            "type": "object",
+            "additionalProperties": false
+        }
+    }
+}

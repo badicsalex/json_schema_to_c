@@ -29,7 +29,7 @@ from .code_block_printer import CodeBlockPrinter
 
 from .generator_factory import GeneratorFactory
 from .type_cache import TypeCache
-from .base import GeneratorInitParameters
+from .base import GeneratorInitParameters, SchemaError
 
 
 DIR_OF_THIS_FILE = os.path.dirname(__file__)
@@ -43,9 +43,14 @@ NOTE_FOR_GENERATED_FILES = """
 class RootGenerator:
     def __init__(self, schema, settings):
         self.settings = settings
+        self.path_in_schema = ''
+        if '$id' not in schema:
+            raise SchemaError(self, "All schemas must have an ID (a field named '$id')")
         self.root_generator = GeneratorFactory.get_generator_for(
+            self,
             schema,
             GeneratorInitParameters(
+                '',
                 schema['$id'],
                 schema['$id'] + '_t',
                 settings,

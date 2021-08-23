@@ -22,7 +22,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from .base import Generator, CType
+from .base import Generator, CType, SchemaError
 
 
 class StringType(CType):
@@ -61,14 +61,13 @@ class StringGenerator(Generator):
         assert 'enum' not in schema, "Enums should be generated with EnumGenerator"
 
         if self.maxLength is None:
-            raise ValueError("Strings must have maxLength")
+            raise SchemaError(self, "Strings must have maxLength")
 
         if self.default is not None and len(self.default) > self.maxLength:
-            raise ValueError("String default value longer than maxLength")
+            raise SchemaError(self, "String default value longer than maxLength")
 
         if self.default is not None and len(self.default) < self.minLength:
-            print("MinLength", self.minLength)
-            raise ValueError("String default value shorter than minLength")
+            raise SchemaError(self, "String default value shorter than minLength")
 
         if self.js2cParseFunction is not None:
             self.c_type = CType(self.js2cType, self.description)
