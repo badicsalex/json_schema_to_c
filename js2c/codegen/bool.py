@@ -42,11 +42,8 @@ class BoolGenerator(Generator):
         return schema.get('type') == 'boolean'
 
     def generate_parser_call(self, out_var_name, out_file):
-        out_file.print(
-            "if (builtin_parse_bool(parse_state, {}))"
-            .format(out_var_name)
-        )
-        with out_file.code_block():
+        parser_call = "builtin_parse_bool(parse_state, {})".format(out_var_name)
+        with out_file.if_block(parser_call):
             out_file.print("return true;")
 
     def has_default_value(self):

@@ -66,11 +66,9 @@ class RootGenerator:
             out_file.print("parse_state_t parse_state_var;")
             out_file.print("parse_state_t *parse_state = &parse_state_var;")
             out_file.print("jsmntok_t token_buffer[{}];".format(max_token_num))
-            out_file.print(
-                "if (builtin_parse_json_string(parse_state, token_buffer, {}, json_string))"
+            parser_call = "builtin_parse_json_string(parse_state, token_buffer, {}, json_string)" \
                 .format(max_token_num)
-            )
-            with out_file.code_block():
+            with out_file.if_block(parser_call):
                 out_file.print("return true;")
             self.root_generator.generate_parser_call(
                 "out",

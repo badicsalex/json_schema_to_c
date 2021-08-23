@@ -96,8 +96,7 @@ class IntegerGeneratorBase(Generator):
         # pylint: disable=too-many-arguments
         if check_number is None:
             return
-        out_file.print("if (!(int_parse_tmp {} {}))".format(check_operator, check_number))
-        with out_file.code_block():
+        with out_file.if_block("!(int_parse_tmp {} {})".format(check_operator, check_number)):
             # Roll back the token, as the value was not actually correct
             out_file.print("parse_state->current_token -= 1;")
             cls.generate_logged_error(
@@ -112,16 +111,13 @@ class IntegerGeneratorBase(Generator):
 
     def generate_parser_call(self, out_var_name, out_file):
         out_file.print("{} int_parse_tmp;".format(self.parsed_type))
-        out_file.print(
-            "if ({}(parse_state, {}, {}, {}, &int_parse_tmp))"
-            .format(
-                self.parser_fn,
-                'true' if self.number_allowed else 'false',
-                'true' if self.string_allowed else 'false',
-                self.radix
-            )
+        parser_call = "{}(parse_state, {}, {}, {}, &int_parse_tmp)".format(
+            self.parser_fn,
+            'true' if self.number_allowed else 'false',
+            'true' if self.string_allowed else 'false',
+            self.radix
         )
-        with out_file.code_block():
+        with out_file.if_block(parser_call):
             out_file.print("return true;")
         self.generate_range_check(self.minimum, self.parsed_type_printf_macro, ">=", out_file)
         self.generate_range_check(self.maximum, self.parsed_type_printf_macro, "<=", out_file)

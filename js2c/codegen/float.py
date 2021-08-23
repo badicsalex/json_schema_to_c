@@ -52,8 +52,7 @@ class FloatGenerator(Generator):
     def generate_range_check(cls, check_number, out_var_name, check_operator, out_file):
         if check_number is None:
             return
-        out_file.print("if (!((*{}) {} {}))".format(out_var_name, check_operator, check_number))
-        with out_file.code_block():
+        with out_file.if_block("!((*{}) {} {})".format(out_var_name, check_operator, check_number)):
             # Roll back the token, as the value was not actually correct
             out_file.print("parse_state->current_token -= 1;")
             cls.generate_logged_error(
@@ -66,13 +65,7 @@ class FloatGenerator(Generator):
             )
 
     def generate_parser_call(self, out_var_name, out_file):
-        out_file.print(
-            "if (builtin_parse_double(parse_state, {}))"
-            .format(
-                out_var_name
-            )
-        )
-        with out_file.code_block():
+        with out_file.if_block("builtin_parse_double(parse_state, {})".format(out_var_name)):
             out_file.print("return true;")
         self.generate_range_check(self.minimum, out_var_name, ">=", out_file)
         self.generate_range_check(self.maximum, out_var_name, "<=", out_file)

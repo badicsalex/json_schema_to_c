@@ -86,23 +86,18 @@ class EnumGenerator(Generator):
         return sanitized
 
     def generate_parser_call(self, out_var_name, out_file):
-        out_file.print(
-            "if (parse_{}(parse_state, {}))"
-            .format(self.parser_name, out_var_name)
-        )
-        with out_file.code_block():
+        parser_call = "parse_{}(parse_state, {})".format(self.parser_name, out_var_name)
+        with out_file.if_block(parser_call):
             out_file.print("return true;")
 
     def generate_parser_bodies(self, out_file):
         out_file.print("static bool parse_{}(parse_state_t *parse_state, {} *out)".format(self.parser_name, self.c_type))
         with out_file.code_block():
-            out_file.print("if (check_type(parse_state, JSMN_STRING))")
-            with out_file.code_block():
+            with out_file.if_block("check_type(parse_state, JSMN_STRING)"):
                 out_file.print("return true;")
 
             for enum_label in self.enum:
-                out_file.print('if (current_string_is(parse_state, "{}"))'.format(enum_label))
-                with out_file.code_block():
+                with out_file.if_block('current_string_is(parse_state, "{}")'.format(enum_label)):
                     out_file.print("*out = {};".format(self.convert_enum_label(enum_label)))
                 out_file.print("else")
             with out_file.code_block():

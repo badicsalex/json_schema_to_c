@@ -84,23 +84,18 @@ class ArrayGenerator(Generator):
         return schema.get('type') == 'array'
 
     def generate_parser_call(self, out_var_name, out_file):
-        out_file.print(
-            "if (parse_{}(parse_state, {}))"
-            .format(self.parser_name, out_var_name)
-        )
-        with out_file.code_block():
+        parser_call = "parse_{}(parse_state, {})".format(self.parser_name, out_var_name)
+        with out_file.if_block(parser_call):
             out_file.print("return true;")
 
     def generate_range_checks(self, out_file):
-        out_file.print("if (n > {})".format(self.maxItems))
-        with out_file.code_block():
+        with out_file.if_block("n > {}".format(self.maxItems)):
             self.generate_logged_error(
                 ["Array '%s' too large. Length: %i. Maximum length: {}.".format(self.maxItems), "parse_state->current_key", "n"],
                 out_file
             )
         if self.minItems:
-            out_file.print("if (n < {})".format(self.minItems))
-            with out_file.code_block():
+            with out_file.if_block("n < {}".format(self.minItems)):
                 self.generate_logged_error(
                     ["Array '%s' too small. Length: %i. Minimum length: {}.".format(self.minItems), "parse_state->current_key", "n"],
                     out_file
@@ -111,15 +106,13 @@ class ArrayGenerator(Generator):
 
         out_file.print("static bool parse_{}(parse_state_t *parse_state, {} *out)".format(self.parser_name, self.c_type))
         with out_file.code_block():
-            out_file.print("if (check_type(parse_state, JSMN_ARRAY))")
-            with out_file.code_block():
+            with out_file.if_block("check_type(parse_state, JSMN_ARRAY)"):
                 out_file.print("return true;")
             out_file.print("const int n = parse_state->tokens[parse_state->current_token].size;")
             self.generate_range_checks(out_file)
             out_file.print("out->n = n;")
             out_file.print("parse_state->current_token += 1;")
-            out_file.print("for (int i = 0; i < n; ++i)")
-            with out_file.code_block():
+            with out_file.for_block("int i = 0; i < n; ++i"):
                 self.item_generator.generate_parser_call(
                     "&out->items[i]",
                     out_file

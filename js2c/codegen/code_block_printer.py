@@ -87,5 +87,13 @@ class CodeBlockPrinter:
             self.last_was_else = True
         return CodeBlockContextManager(self, indent_level)
 
+    def if_block(self, condition, indent_level=4, standalone=False):
+        self.print("if ({})".format(condition))
+        return self.code_block(indent_level, standalone)
+
+    def for_block(self, for_stuff, indent_level=4, standalone=False):
+        self.print("for ({})".format(for_stuff))
+        return self.code_block(indent_level, standalone)
+
     def indent(self, indent_level=4):
         return CodeBlockContextManager(self, indent_level, indent_only=True)

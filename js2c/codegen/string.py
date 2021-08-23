@@ -81,11 +81,8 @@ class StringGenerator(Generator):
 
     def generate_custom_parser_call(self, src, src_length, out_var_name, out_file):
         out_file.print("const char *error = NULL;")
-        out_file.print(
-            "if ({}({}, {}, {}, &error))"
-            .format(self.js2cParseFunction, src, src_length, out_var_name)
-        )
-        with out_file.code_block():
+        parser_call = "{}({}, {}, {}, &error)".format(self.js2cParseFunction, src, src_length, out_var_name)
+        with out_file.if_block(parser_call):
             self.generate_logged_error([
                 "Error parsing '%s', value=\\\"%.*s\\\": %s",
                 "parse_state->current_key",
@@ -96,11 +93,10 @@ class StringGenerator(Generator):
 
     def generate_parser_call(self, out_var_name, out_file):
         if self.js2cParseFunction is not None:
-            out_file.print(
-                "if (builtin_check_current_string(parse_state, {}, {}))"
+            length_check = \
+                "builtin_check_current_string(parse_state, {}, {})" \
                 .format(self.minLength, self.maxLength)
-            )
-            with out_file.code_block():
+            with out_file.if_block(length_check):
                 out_file.print("return true;")
 
             self.generate_custom_parser_call(
@@ -111,11 +107,10 @@ class StringGenerator(Generator):
             )
             out_file.print("parse_state->current_token += 1;")
         else:
-            out_file.print(
-                "if (builtin_parse_string(parse_state, {}[0], {}, {}))"
+            length_check = \
+                "builtin_parse_string(parse_state, {}[0], {}, {})" \
                 .format(out_var_name, self.minLength, self.maxLength)
-            )
-            with out_file.code_block():
+            with out_file.if_block(length_check):
                 out_file.print("return true;")
 
     def has_default_value(self):
