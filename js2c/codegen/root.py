@@ -117,7 +117,7 @@ class RootGenerator:
 
     @classmethod
     def manually_include_jsmn(cls, c_file):
-        with open(os.path.join(DIR_OF_THIS_FILE, '..', '..', 'jsmn', 'jsmn.h')) as jsmn_h:
+        with open(os.path.join(DIR_OF_THIS_FILE, '..', '..', 'jsmn', 'jsmn.h'), encoding='utf-8') as jsmn_h:
             c_file.print("")
             c_file.print_separator("jsmn.h (From https://github.com/zserge/jsmn)")
             c_file.write(jsmn_h.read())
@@ -126,7 +126,7 @@ class RootGenerator:
 
     @classmethod
     def manually_include_builtins(cls, c_file):
-        with open(os.path.join(DIR_OF_THIS_FILE, 'js2c_builtins.h')) as builtins_file:
+        with open(os.path.join(DIR_OF_THIS_FILE, 'js2c_builtins.h'), encoding='utf-8') as builtins_file:
             c_file.print_separator("js2c_builtins.h")
             builtins_file_contents = builtins_file.read()
             jsmn_include_string = '#include "jsmn.h"\n'
