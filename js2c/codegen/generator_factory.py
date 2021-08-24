@@ -47,10 +47,10 @@ class GeneratorFactory:
     ]
 
     @classmethod
-    def get_generator_for(cls, parent, schema, parameters):
+    def get_generator_for(cls, schema, parameters):
         if 'type' not in schema and 'anyOf' not in schema:
-            raise SchemaError(parent, "Missing field: 'type'")
+            raise SchemaError(parameters.path_in_schema, "Missing field: 'type'")
         for generator_class in cls.GENERATORS:
             if generator_class.can_parse_schema(schema):
                 return generator_class(schema, parameters)
-        raise SchemaError(parent, "Unsupported type '{}'".format(schema['type']))
+        raise SchemaError(parameters.path_in_schema, "Unsupported type '{}'".format(schema['type']))

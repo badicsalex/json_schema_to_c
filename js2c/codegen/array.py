@@ -67,7 +67,6 @@ class ArrayGenerator(Generator):
         if 'items' not in schema:
             raise SchemaError(self, "Missing field for array declaration: 'items'")
         self.item_generator = parameters.generator_factory.get_generator_for(
-            self,
             schema["items"],
             parameters.with_suffix("items", self.type_name, "item"),
         )

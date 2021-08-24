@@ -43,11 +43,9 @@ NOTE_FOR_GENERATED_FILES = """
 class RootGenerator:
     def __init__(self, schema, settings):
         self.settings = settings
-        self.path_in_schema = ''
         if '$id' not in schema:
-            raise SchemaError(self, "All schemas must have an ID (a field named '$id')")
+            raise SchemaError("", "All schemas must have an ID (a field named '$id')")
         self.root_generator = GeneratorFactory.get_generator_for(
-            self,
             schema,
             GeneratorInitParameters(
                 '',

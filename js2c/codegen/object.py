@@ -70,7 +70,6 @@ class ObjectGenerator(Generator):
             raise SchemaError(self, "Missing field for object declaration: 'properties'")
         for field_name, field_schema in schema['properties'].items():
             self.fields[field_name] = parameters.generator_factory.get_generator_for(
-                self,
                 field_schema,
                 parameters.with_suffix("properties." + field_name, self.type_name, field_name),
             )

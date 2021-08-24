@@ -28,8 +28,13 @@ import re
 
 
 class SchemaError(ValueError):
-    def __init__(self, generator, message):
-        path = generator.path_in_schema or '<root>'
+    def __init__(self, generator_or_path, message):
+        if isinstance(generator_or_path, str):
+            path = generator_or_path
+        else:
+            path = generator_or_path.path_in_schema
+        if not path:
+            path = '<root>'
         super().__init__("Schema error in '{}': {}".format(path, message))
 
 

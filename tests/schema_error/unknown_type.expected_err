@@ -1,1 +1,1 @@
-Schema error in '.properties.outer': Unsupported type 'what'
+Schema error in '.properties.outer.properties.inner': Unsupported type 'what'

@@ -1,1 +1,1 @@
-Schema error in '.properties.outer': Missing field: 'type'
+Schema error in '.properties.outer.properties.inner': Missing field: 'type'
