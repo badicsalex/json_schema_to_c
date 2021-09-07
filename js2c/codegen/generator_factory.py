@@ -48,6 +48,13 @@ class GeneratorFactory:
 
     @classmethod
     def get_generator_for(cls, schema, parameters):
+        if not isinstance(schema, dict):
+            raise SchemaError(
+                parameters.path_in_schema,
+                "'{}' is not a type descriptor (dict including the field 'type')"
+                .format(schema)
+            )
+
         if 'type' not in schema and 'anyOf' not in schema:
             raise SchemaError(parameters.path_in_schema, "Missing field: 'type'")
         for generator_class in cls.GENERATORS:

@@ -1,0 +1,1 @@
+Schema error in '.properties.outer.properties.inner': 'False' is not a type descriptor (dict including the field 'type')

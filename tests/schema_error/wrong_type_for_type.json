@@ -1,0 +1,22 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "root",
+    "description": "Some demo structure for demoing.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "outer"
+    ],
+    "properties": {
+        "outer": {
+            "type": "object",
+            "required": [
+                "inner"
+            ],
+            "additionalProperties": false,
+            "properties": {
+                "inner": false
+            }
+        }
+    }
+}
