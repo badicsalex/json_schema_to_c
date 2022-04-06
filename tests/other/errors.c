@@ -320,5 +320,10 @@ int main(int argc, char** argv){
         "Invalid signed integer literal in 'b': true",
         62
     );
+    check_error(
+        "",
+        "String did not contain any JSON tokens",
+        0
+    );
     return 0;
 }

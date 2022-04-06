@@ -275,6 +275,10 @@ static inline bool builtin_parse_json_string(
         LOG_ERROR(parser.pos, "JSON syntax error: %s", jsmn_error_as_string(token_num));
         return true;
     }
+    if (token_num == 0) {
+        LOG_ERROR(parser.pos, "String did not contain any JSON tokens");
+        return true;
+    }
     return false;
 }
 
