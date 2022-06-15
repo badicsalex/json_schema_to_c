@@ -24,7 +24,7 @@
 #
 import re
 
-from .base import Generator, CType
+from .base import Generator, CType, SchemaError
 
 
 class EnumType(CType):
@@ -113,6 +113,8 @@ class EnumGenerator(Generator):
     def generate_set_default_value(self, out_var_name, out_file):
         if super().generate_set_default_value(out_var_name, out_file):
             return
+        if self.default not in self.enum:
+            raise SchemaError(self, "The enum default value '{}' is not in the allowed values {}".format(self.default, self.enum))
         out_file.print("{} = {};".format(out_var_name, self.convert_enum_label(self.default)))
 
     def max_token_num(self):

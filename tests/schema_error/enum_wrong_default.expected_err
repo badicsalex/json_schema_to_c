@@ -1,0 +1,1 @@
+Schema error in '.properties.the_enum': The enum default value 'Disable' is not in the allowed values ['Option1', 'Enable']
