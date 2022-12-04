@@ -24,6 +24,7 @@ Important limitations:
 * All object fields must either be required or have a default value
 * All object property names must be valid C tokens
 * `null` is not supported
+* Tuples (a specific form of array declarations) are not supported
 * More advanced `$ref` declarations (especially pointing to another file) are not supported
 
 Example

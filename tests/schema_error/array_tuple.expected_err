@@ -1,0 +1,1 @@
+Schema error in '<root>': Tuple declarations (when 'items' itself is an array) are not supported

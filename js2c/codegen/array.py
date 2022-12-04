@@ -66,6 +66,8 @@ class ArrayGenerator(Generator):
 
         if 'items' not in schema:
             raise SchemaError(self, "Missing field for array declaration: 'items'")
+        if isinstance(schema['items'], list):
+            raise SchemaError(self, "Tuple declarations (when 'items' itself is an array) are not supported")
         self.item_generator = parameters.generator_factory.get_generator_for(
             schema["items"],
             parameters.with_suffix("items", self.type_name, "item"),
