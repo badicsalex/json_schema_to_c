@@ -22,6 +22,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
+from typing import Type
+
 from .array import ArrayGenerator
 from .integer import IntegerGenerator, NumericStringGenerator, IntegerStringAnyOfGenerator
 from .float import FloatGenerator
@@ -29,12 +31,12 @@ from .bool import BoolGenerator
 from .object import ObjectGenerator
 from .string import StringGenerator
 from .enum import EnumGenerator
-from .base import SchemaError
+from .base import SchemaError, GeneratorInitParameters, Generator
 
 
 class GeneratorFactory:
     #pylint: disable=too-few-public-methods
-    GENERATORS = [
+    GENERATORS: list[Type[Generator]] = [
         EnumGenerator,
         NumericStringGenerator,
         IntegerStringAnyOfGenerator,
@@ -47,7 +49,7 @@ class GeneratorFactory:
     ]
 
     @classmethod
-    def get_generator_for(cls, schema, parameters):
+    def get_generator_for(cls, schema: any, parameters: GeneratorInitParameters) -> Generator:
         if not isinstance(schema, dict):
             raise SchemaError(
                 parameters.path_in_schema,
