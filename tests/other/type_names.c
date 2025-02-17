@@ -13,7 +13,7 @@ int main(int argc, char** argv){
     root_t root = {};
     assert(!json_parse_root(data, &root));
     vegetable_t vegetable = root.vegetable;
-    name_t name;
+    char name[9];
     memcpy(name, vegetable.name, sizeof(name));
     assert(!strcmp(name, "potato"));
     my_report_name_type report_name;

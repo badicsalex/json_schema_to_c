@@ -26,15 +26,26 @@ from .base import Generator, CType, SchemaError
 
 
 class StringType(CType):
-    def __init__(self, type_name, description, max_length):
+    def __init__(self, type_name: str, description: str, max_length: int, has_typedef: bool):
         super().__init__(type_name, description)
         self.max_length = max_length
+        self.has_typedef = has_typedef
+
+    def typed_identifier(self, identifier: str, indirection="") -> str:
+        if self.has_typedef:
+            return super().typed_identifier(identifier, indirection)
+        elif indirection == "":
+            return "char {}[{}]".format(identifier, self.max_length + 1)
+        else:
+            return "char ({}{})[{}]".format(indirection, identifier, self.max_length + 1)
 
     def generate_type_declaration_impl(self, out_file):
-        out_file.print_with_docstring(
-            "typedef char {}[{}];".format(self.type_name, self.max_length + 1), self.description
-        )
-        out_file.print("")
+        if self.has_typedef:
+            out_file.print_with_docstring(
+                "typedef char {}[{}];".format(self.type_name, self.max_length + 1),
+                self.description
+            )
+            out_file.print("")
 
     def __eq__(self, other):
         return (
@@ -72,8 +83,7 @@ class StringGenerator(Generator):
         if self.js2cParseFunction is not None:
             self.c_type = CType(self.js2cType, self.description)
         else:
-            self.c_type = StringType(self.type_name, self.description, self.maxLength)
-        self.c_type = parameters.type_cache.try_get_cached(self.c_type)
+            self.c_type = StringType(self.type_name, self.description, self.maxLength, self.js2cType is not None)
 
     @classmethod
     def can_parse_schema(cls, schema):

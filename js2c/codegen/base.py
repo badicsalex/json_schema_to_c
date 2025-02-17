@@ -138,21 +138,25 @@ class Generator(ABC):
         out_file.print("return true;")
 
 
-class CType():
-    def __init__(self, type_name, description):
+class CType:
+    def __init__(self, type_name: str, description: str):
         self.type_name = type_name
         self.description = description
         self.declaration_generated = False
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.type_name
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "{}({})".format(self.__class__.__name__, self.__dict__)
+
+    def typed_identifier(self, identifier: str, indirection = "") -> str:
+        return "{} {}{}".format(self.type_name, indirection, identifier)
 
     def generate_field_declaration(self, field_name, out_file):
         out_file.print_with_docstring(
-            "{} {};".format(self.type_name, field_name), self.description
+            self.typed_identifier(field_name) + ";",
+            self.description
         )
 
     def generate_type_declaration(self, out_file):

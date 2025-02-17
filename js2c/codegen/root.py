@@ -59,7 +59,7 @@ class RootGenerator:
         self.name = schema['$id']
 
     def generate_root_parser(self, out_file, max_token_num):
-        out_file.print("bool json_parse_{}(const char *json_string, {} *out)".format(self.name, self.root_generator.c_type))
+        out_file.print("bool json_parse_{}(const char *json_string, {})".format(self.name, self.root_generator.c_type.typed_identifier("out", indirection="*")))
         with out_file.code_block():
             out_file.print("parse_state_t parse_state_var;")
             out_file.print("parse_state_t *parse_state = &parse_state_var;")
@@ -98,7 +98,7 @@ class RootGenerator:
 
         h_file.print_separator("Generated type declarations")
         self.root_generator.c_type.generate_type_declaration(h_file)
-        h_file.print("bool json_parse_{}(const char *json_string, {} *out);".format(self.name, self.root_generator.c_type))
+        h_file.print("bool json_parse_{}(const char *json_string, {});".format(self.name, self.root_generator.c_type.typed_identifier("out", indirection="*")))
 
         h_file.print("#ifdef __cplusplus")
         h_file.print("}")
