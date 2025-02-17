@@ -26,12 +26,16 @@ Important limitations:
 * `null` is not supported
 * Tuples (a specific form of array declarations) are not supported
 * More advanced `$ref` declarations (especially pointing to another file) are not supported
+* `anyOf` is not supported
+* `const` is not supported
+* `$id` is required on the root and is used to define the prefix of the generated types name
+* an invalid schema can make json_schema_to_c crash
 
 Example
 -------
 
 Using the [example schema](example/schema.json), and the following data:
-```javascript
+```json
 {
     "fruits": ["apple", "pear", "strawberry"],
     "vegetables": [
@@ -73,6 +77,48 @@ Usage
 -----
 
 Run the `json_schema_to_c.py --help` command, and go from there. Also see the example directory. You can test it by running `make run`. For more advanced functionality, check tests.
+
+Naming
+------
+
+Types name are built by recursively ascending the schema graph and appending the name of the parent until an `$id` field is found.
+
+Example with the following schema:
+
+```json
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "example",
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["foo", "baz"],
+    "properties": {
+        "foo": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["bar", "baz"],
+            "properties": {
+                "bar": {
+                    "type": "string",
+                    "maxLength": 16
+                },
+                "baz": {
+                    "$id": "baz",
+                    "type": "string",
+                    "maxLength": 16
+                }
+            }
+        }
+    }
+}
+```
+
+It will generate the following types:
+
+* `example_t_s`
+* `example_foo_t_s`
+* `example_foo_bar_t`
+* `baz_t`
 
 Extensions to JSON Schema
 -------------------------
