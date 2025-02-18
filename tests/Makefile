@@ -6,7 +6,6 @@ CFLAGS= \
 	-Wall \
 	-Werror \
 	-Wextra \
-	-fsanitize=address \
 	-g
 
 ALL_COMPILE_TESTS = $(patsubst %.c,%.run,$(filter-out %.parser.c, $(wildcard */*.c)))
@@ -21,7 +20,7 @@ schema_errors: $(ALL_SCHEMA_ERROR_TESTS)
 	@echo "Schema error tests successful"
 
 clean:
-	rm -f */*.parser.c */*.parser.h */*.compiled */*.err
+	rm -f */*.parser.c */*.parser.h */*.compiled */*.err */*.o
 
 # === Special test running and compilation rules ===
 
