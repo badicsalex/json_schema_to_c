@@ -57,6 +57,7 @@ class StringGenerator(Generator):
     def __init__(self, schema, parameters):
         super().__init__(schema, parameters)
         assert 'enum' not in schema, "Enums should be generated with EnumGenerator"
+        assert 'const' not in schema, "Consts should be generated with ConstGenerator"
 
         if self.maxLength is None:
             raise SchemaError(self, "Strings must have maxLength")

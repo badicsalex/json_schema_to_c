@@ -25,6 +25,7 @@
 from typing import Type, Any
 
 from .array import ArrayGenerator
+from .const import ConstGenerator
 from .integer import IntegerGenerator, NumericStringGenerator, IntegerStringAnyOfGenerator
 from .float import FloatGenerator
 from .bool import BoolGenerator
@@ -38,6 +39,7 @@ class GeneratorFactory:
     #pylint: disable=too-few-public-methods
     GENERATORS: list[Type[Generator]] = [
         EnumGenerator,
+        ConstGenerator,
         NumericStringGenerator,
         IntegerStringAnyOfGenerator,
         StringGenerator,
@@ -57,7 +59,7 @@ class GeneratorFactory:
                 .format(schema)
             )
 
-        if 'type' not in schema and 'anyOf' not in schema:
+        if 'type' not in schema and 'anyOf' not in schema and 'const' not in schema:
             raise SchemaError(parameters.path_in_schema, "Missing field: 'type'")
         for generator_class in cls.GENERATORS:
             if generator_class.can_parse_schema(schema):
