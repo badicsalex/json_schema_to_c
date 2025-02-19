@@ -36,11 +36,15 @@ class ObjectType(CType):
 
     def generate_type_declaration_impl(self, out_file):
         for field_name, field_generator in self.fields.items():
+            if field_generator is None:
+                continue
             field_generator.generate_type_declaration(out_file)
 
         out_file.print("typedef struct {}_s ".format(self.type_name) + "{")
         with out_file.indent():
             for field_name, field_generator in self.fields.items():
+                if field_generator is None:
+                    continue
                 field_generator.generate_field_declaration(
                     field_name,
                     out_file
