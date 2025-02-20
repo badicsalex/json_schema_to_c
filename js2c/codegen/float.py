@@ -49,7 +49,7 @@ class FloatGenerator(Generator):
         return schema.get('type') == 'number'
 
     @classmethod
-    def generate_range_check(cls, check_number, out_var_name, check_operator, out_file):
+    def generate_range_check(cls, check_number, out_var_name, check_operator, out_file, on_err: str | list[str]):
         if check_number is None:
             return
         with out_file.if_block("!((*{}) {} {})".format(out_var_name, check_operator, check_number)):
@@ -61,16 +61,17 @@ class FloatGenerator(Generator):
                     "(*{})".format(out_var_name),
                     "parse_state->current_key",
                 ],
-                out_file
+                out_file,
+                exit_statement=on_err
             )
 
-    def generate_parser_call(self, out_var_name, out_file):
+    def generate_parser_call(self, out_var_name, out_file, on_err="return true;"):
         with out_file.if_block("builtin_parse_double(parse_state, {})".format(out_var_name)):
-            out_file.print("return true;")
-        self.generate_range_check(self.minimum, out_var_name, ">=", out_file)
-        self.generate_range_check(self.maximum, out_var_name, "<=", out_file)
-        self.generate_range_check(self.exclusiveMinimum, out_var_name, ">", out_file)
-        self.generate_range_check(self.exclusiveMaximum, out_var_name, "<", out_file)
+            out_file.print(on_err)
+        self.generate_range_check(self.minimum, out_var_name, ">=", out_file, on_err)
+        self.generate_range_check(self.maximum, out_var_name, "<=", out_file, on_err)
+        self.generate_range_check(self.exclusiveMinimum, out_var_name, ">", out_file, on_err)
+        self.generate_range_check(self.exclusiveMaximum, out_var_name, "<", out_file, on_err)
 
     def has_default_value(self):
         return super().has_default_value() or self.default is not None

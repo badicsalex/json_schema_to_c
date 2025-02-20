@@ -95,10 +95,10 @@ class ObjectGenerator(Generator):
     def can_parse_schema(cls, schema):
         return schema.get('type') == 'object'
 
-    def generate_parser_call(self, out_var_name, out_file):
+    def generate_parser_call(self, out_var_name, out_file, on_err="return true;"):
         parser_call = "parse_{}(parse_state, {})".format(self.parser_name, out_var_name)
         with out_file.if_block(parser_call):
-            out_file.print("return true;")
+            out_file.print(on_err)
 
     def generate_seen_flags(self, out_file):
         for field_name in self.fields:

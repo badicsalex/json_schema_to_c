@@ -42,6 +42,9 @@ def resolve_children(full_schema, part_to_resolve):
         for k, v in part_to_resolve.items():
             part_to_resolve[k] = resolve_ref(full_schema, v)
             resolve_children(full_schema, v)
+        # terminate by cleaning up $defs
+        if part_to_resolve == full_schema and "$defs" in full_schema:
+            del full_schema["$defs"]
         return
     raise ValueError("Value {} is not supported by the schema loader".format(part_to_resolve))
 
@@ -66,50 +69,85 @@ def resolve_ref(full_schema, part_to_resolve):
 # WARNING OVER
 
 
-def all_of_merge_single_pair(element1, element2):
+def merge_single_pair(element1, element2):
     if type(element1) is not type(element2):
         raise TypeError(
-            "Field types are different in allOf declaration: '{}' vs. '{}'"
+            "Field types are different in allOf/anyOf/oneOf declaration: '{}' vs. '{}'"
             .format(element1, element2)
         )
     if isinstance(element1, dict):
-        return all_of_merge_dict(element1, element2)
+        return merge_dict(element1, element2)
     if isinstance(element1, list):
         return element1 + [item for item in element2 if item not in element1]
     if element1 == element2:
         return element1
     raise ValueError(
-        "Could not merge fields for allOf declaration: '{}' and '{}'"
+        "Could not merge fields for allOf/anyOf/oneOf declaration: '{}' and '{}'"
         .format(element1, element2)
     )
 
 
-def all_of_merge_dict(schema1, schema2):
+def merge_dict(schema1, schema2):
     result = schema1.copy()
     for key, value in schema2.items():
         if key in result:
-            result[key] = all_of_merge_single_pair(result[key], value)
+            result[key] = merge_single_pair(result[key], value)
         else:
             result[key] = value
     return result
 
 
 def resolve_all_of(schema):
-    if not isinstance(schema, dict):
-        # TODO: Also process arrays in the schema. I'm not sure it's needed though, there are not many arrays
-        #       in schema definitions, and I think none of them need allOf expansion.
+    if isinstance(schema, list):
+        return [resolve_all_of(item) for item in schema]
+    elif isinstance(schema, dict):
+        result = OrderedDict((k, resolve_all_of(v)) for k, v in schema.items() if k != "allOf")
+        if "allOf" in schema:
+            for schema_to_process in schema["allOf"]:
+                schema_to_process = resolve_all_of(schema_to_process)
+                result = merge_dict(result, schema_to_process)
+        return result
+    else:
         return schema
 
-    result = OrderedDict((k, resolve_all_of(v)) for k, v in schema.items() if k != "allOf")
-    if "allOf" in schema:
-        for schema_to_process in schema["allOf"]:
-            schema_to_process = resolve_all_of(schema_to_process)
-            result = all_of_merge_dict(result, schema_to_process)
-    return result
+
+# replace all oneOf by anyOf
+def resolve_one_of(schema):
+    if isinstance(schema, dict):
+        if "oneOf" in schema:
+            if "anyOf" in schema:
+                schema["anyOf"] += schema.pop("oneOf")
+            else:
+                schema["anyOf"] = schema.pop("oneOf")
+        for val in schema.values():
+            resolve_one_of(val)
+    elif isinstance(schema, list):
+        for elem in schema:
+            resolve_one_of(elem)
+
+
+def resolve_any_of(schema):
+    if isinstance(schema, list):
+        return [resolve_any_of(item) for item in schema]
+    elif isinstance(schema, dict):
+        if "anyOf" in schema:
+            common_data = OrderedDict((k, resolve_any_of(v)) for k, v in schema.items() if k != "anyOf" and k != "$id")
+            result = OrderedDict((k, resolve_any_of(v)) for k, v in schema.items() if k == "$id")
+            result["anyOf"] = [
+                merge_dict(resolve_any_of(schema_to_process), common_data)
+                for schema_to_process in schema["anyOf"]
+            ]
+            return result
+        else:
+            return OrderedDict((k, resolve_any_of(v)) for k, v in schema.items())
+    else:
+        return schema
 
 
 def load_schema(schema_file):
     schema = json.load(schema_file, object_pairs_hook=OrderedDict)
     resolve_children(schema, schema)
     schema = resolve_all_of(schema)
+    resolve_one_of(schema)
+    schema = resolve_any_of(schema)
     return schema

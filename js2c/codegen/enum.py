@@ -25,14 +25,15 @@
 import re
 
 from .base import Generator, CType, SchemaError
+from .code_block_printer import CodeBlockPrinter
 
 
 class EnumType(CType):
-    def __init__(self, type_name, description, enum_labels):
+    def __init__(self, type_name: str, description: str, enum_labels: list[str]):
         super().__init__(type_name, description)
         self.enum_labels = enum_labels
 
-    def generate_type_declaration_impl(self, out_file):
+    def generate_type_declaration_impl(self, out_file: CodeBlockPrinter):
         out_file.print("typedef enum {}_e".format(self.type_name) + " {")
         with out_file.indent():
             for enum_label in self.enum_labels[:-1]:
@@ -85,10 +86,10 @@ class EnumGenerator(Generator):
         sanitized = self.SANITIZE_RE.sub("_", prefixed)
         return sanitized
 
-    def generate_parser_call(self, out_var_name, out_file):
+    def generate_parser_call(self, out_var_name, out_file, on_err="return true;"):
         parser_call = "parse_{}(parse_state, {})".format(self.parser_name, out_var_name)
         with out_file.if_block(parser_call):
-            out_file.print("return true;")
+            out_file.print(on_err)
 
     def generate_parser_bodies(self, out_file):
         out_file.print("static bool parse_{}(parse_state_t *parse_state, {} *out)".format(self.parser_name, self.c_type))

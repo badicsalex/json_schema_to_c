@@ -48,7 +48,14 @@ class CodeBlockPrinter:
         self.indent_level = 0
         self.last_was_else = False
 
-    def print(self, line):
+    def print(self, lines: str | list[str]):
+        if isinstance(lines, str):
+            self.print_line(lines)
+        else:
+            for line in lines:
+                self.print_line(line)
+
+    def print_line(self, line: str):
         """ Print an indented line """
         if line == "else":
             self.file.write(" else ")

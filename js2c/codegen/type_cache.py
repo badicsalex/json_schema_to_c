@@ -22,14 +22,16 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
+from typing import TypeVar
 
+T = TypeVar('T')
 
 class TypeCache:
     #pylint: disable=too-few-public-methods
     def __init__(self):
         self.types = {}
 
-    def try_get_cached(self, c_type):
+    def try_get_cached(self, c_type: T) -> T:
         if c_type.type_name in self.types:
             cached_type = self.types[c_type.type_name]
             if cached_type != c_type:

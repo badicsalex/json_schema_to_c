@@ -22,9 +22,19 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from abc import ABC, abstractmethod
-from collections import namedtuple
+from __future__ import annotations
 import re
+from abc import ABC, abstractmethod
+from dataclasses import dataclass
+from typing import TYPE_CHECKING
+
+from js2c.codegen.code_block_printer import CodeBlockPrinter
+from js2c.codegen.type_cache import TypeCache
+from js2c.settings import Settings
+
+# condition to avoid circular import
+if TYPE_CHECKING:
+    from js2c.codegen.generator_factory import GeneratorFactory
 
 
 class SchemaError(ValueError):
@@ -38,23 +48,16 @@ class SchemaError(ValueError):
         super().__init__("Schema error in '{}': {}".format(path, message))
 
 
-GeneratorInitParametersBase = namedtuple(
-    "GeneratorInitParameters",
-    (
-        'path_in_schema',
-        'parser_name',
-        'type_name',
-        'settings',
-        'generator_factory',
-        'type_cache'
-    )
-)
+@dataclass
+class GeneratorInitParameters:
+    path_in_schema: str
+    parser_name: str
+    type_name: str
+    settings: Settings
+    generator_factory: GeneratorFactory
+    type_cache: TypeCache
 
-
-class GeneratorInitParameters(GeneratorInitParametersBase):
-    __slots__ = ()
-
-    def with_suffix(self, path_in_schema, type_name, suffix):
+    def with_suffix(self, path_in_schema: str, type_name: str, suffix: str) -> GeneratorInitParameters:
         # Remove _t suffix if present
         type_name = re.sub("_t$", "", type_name)
         return GeneratorInitParameters(
@@ -79,7 +82,7 @@ class Generator(ABC):
     js2cDefault = None
     js2cType = None
 
-    def __init__(self, schema, parameters):
+    def __init__(self, schema, parameters: GeneratorInitParameters):
         for attr in self.JSON_FIELDS:
             if attr in schema:
                 setattr(self, attr, schema[attr])
@@ -97,7 +100,7 @@ class Generator(ABC):
             self.type_name = parameters.type_name
 
     @abstractmethod
-    def generate_parser_call(self, out_var_name, out_file):
+    def generate_parser_call(self, out_var_name: str, out_file: CodeBlockPrinter, on_err="return true;"):
         pass
 
     @abstractmethod
@@ -109,13 +112,13 @@ class Generator(ABC):
     def can_parse_schema(cls, schema):
         pass
 
-    def generate_parser_bodies(self, out_file):
+    def generate_parser_bodies(self, out_file: CodeBlockPrinter):
         pass
 
     def has_default_value(self):
         return self.js2cDefault is not None
 
-    def generate_set_default_value(self, out_var_name, out_file):
+    def generate_set_default_value(self, out_var_name, out_file: CodeBlockPrinter):
         assert self.has_default_value(), "Caller is responsible for checking this."
         if self.js2cDefault is None:
             return False
@@ -123,7 +126,7 @@ class Generator(ABC):
         return True
 
     @classmethod
-    def generate_logged_error(cls, log_message, out_file):
+    def generate_logged_error(cls, log_message: str | list[str], out_file: CodeBlockPrinter, exit_statement="return true;"):
         if isinstance(log_message, str):
             out_file.print("LOG_ERROR(CURRENT_TOKEN(parse_state).start, \"{}\", parse_state->current_key)".format(log_message))
         else:
@@ -135,7 +138,7 @@ class Generator(ABC):
                     ", ".join(log_message[1:]),
                 )
             )
-        out_file.print("return true;")
+        out_file.print(exit_statement)
 
 
 class CType:

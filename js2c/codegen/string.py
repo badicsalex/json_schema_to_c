@@ -90,7 +90,7 @@ class StringGenerator(Generator):
     def can_parse_schema(cls, schema):
         return schema.get('type') == 'string'
 
-    def generate_custom_parser_call(self, src, src_length, out_var_name, out_file):
+    def generate_custom_parser_call(self, src, src_length, out_var_name, out_file, on_err):
         out_file.print("const char *error = NULL;")
         parser_call = "{}({}, {}, {}, &error)".format(self.js2cParseFunction, src, src_length, out_var_name)
         with out_file.if_block(parser_call):
@@ -100,21 +100,22 @@ class StringGenerator(Generator):
                 src_length,
                 src,
                 "error ? error : \"error calling {}\"".format(self.js2cParseFunction),
-            ], out_file)
+            ], out_file, exit_statement=on_err)
 
-    def generate_parser_call(self, out_var_name, out_file):
+    def generate_parser_call(self, out_var_name, out_file, on_err="return true;"):
         if self.js2cParseFunction is not None:
             length_check = \
                 "builtin_check_current_string(parse_state, {}, {})" \
                 .format(self.minLength, self.maxLength)
             with out_file.if_block(length_check):
-                out_file.print("return true;")
+                out_file.print(on_err)
 
             self.generate_custom_parser_call(
                 "CURRENT_STRING(parse_state)",
                 "CURRENT_STRING_LENGTH(parse_state)",
                 out_var_name,
-                out_file
+                out_file,
+                on_err
             )
             out_file.print("parse_state->current_token += 1;")
         else:
@@ -122,7 +123,7 @@ class StringGenerator(Generator):
                 "builtin_parse_string(parse_state, {}[0], {}, {})" \
                 .format(out_var_name, self.minLength, self.maxLength)
             with out_file.if_block(length_check):
-                out_file.print("return true;")
+                out_file.print(on_err)
 
     def has_default_value(self):
         return super().has_default_value() or self.default is not None
@@ -146,7 +147,8 @@ class StringGenerator(Generator):
                     '"{}"'.format(self.default),
                     str(len(self.default)),
                     "&{}".format(out_var_name),
-                    out_file
+                    out_file,
+                    on_err="return true;"
                 )
         else:
             out_file.print(

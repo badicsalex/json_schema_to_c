@@ -33,6 +33,7 @@ from .object import ObjectGenerator
 from .string import StringGenerator
 from .enum import EnumGenerator
 from .base import SchemaError, GeneratorInitParameters, Generator
+from .union import UnionGenerator
 
 
 class GeneratorFactory:
@@ -48,6 +49,7 @@ class GeneratorFactory:
         BoolGenerator,
         ObjectGenerator,
         ArrayGenerator,
+        UnionGenerator,
     ]
 
     @classmethod
@@ -59,7 +61,7 @@ class GeneratorFactory:
                 .format(schema)
             )
 
-        if 'type' not in schema and 'anyOf' not in schema and 'const' not in schema:
+        if all(k not in schema for k in ['type', 'anyOf', 'allOf', 'const']):
             raise SchemaError(parameters.path_in_schema, "Missing field: 'type'")
         for generator_class in cls.GENERATORS:
             if generator_class.can_parse_schema(schema):
