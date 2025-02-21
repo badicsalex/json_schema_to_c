@@ -40,7 +40,7 @@ class ObjectType(CType):
                 continue
             field_generator.generate_type_declaration(out_file)
 
-        out_file.print("typedef struct {}_s ".format(self.type_name) + "{")
+        out_file.print("typedef struct " + self.type_name.removesuffix("_t") + " {")
         with out_file.indent():
             for field_name, field_generator in self.fields.items():
                 if field_generator is None:

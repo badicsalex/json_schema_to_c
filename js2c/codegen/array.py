@@ -34,7 +34,7 @@ class ArrayType(CType):
     def generate_type_declaration_impl(self, out_file):
         self.item_type.generate_type_declaration(out_file)
 
-        out_file.print("typedef struct {}_s ".format(self.type_name) + "{")
+        out_file.print("typedef struct " + self.type_name.removesuffix("_t") + " {")
         with out_file.indent():
             out_file.print_with_docstring("uint64_t n;", "The number of elements in the array")
             self.item_type.generate_field_declaration(

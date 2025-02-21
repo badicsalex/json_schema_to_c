@@ -66,7 +66,7 @@ class UnionType(CType):
 
         self.inner_enum_type.generate_type_declaration_impl(out_file)
 
-        out_file.print("typedef struct {}_s ".format(self.type_name) + "{")
+        out_file.print("typedef struct " + self.type_name.removesuffix("_t") + " {")
         with out_file.indent():
             self.inner_enum_type.generate_field_declaration("type", out_file)
             out_file.print("union {")

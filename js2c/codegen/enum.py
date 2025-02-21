@@ -34,7 +34,7 @@ class EnumType(CType):
         self.enum_labels = enum_labels
 
     def generate_type_declaration_impl(self, out_file: CodeBlockPrinter):
-        out_file.print("typedef enum {}_e".format(self.type_name) + " {")
+        out_file.print("typedef enum " + self.type_name.removesuffix("_t") + " {")
         with out_file.indent():
             for enum_label in self.enum_labels[:-1]:
                 out_file.print("{},".format(enum_label))
