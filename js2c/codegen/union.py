@@ -22,8 +22,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-import re
-
 from .base import Generator, CType, GeneratorInitParameters
 from .code_block_printer import CodeBlockPrinter
 from .enum import EnumType
@@ -49,11 +47,11 @@ class UnionType(CType):
 
         # try to infer nice option names
         prefix_len = len(commonprefix([t.type_name for t in self.option_types]))
-        self.option_names = [re.sub("_t$", "", t.type_name[prefix_len:]) for t in self.option_types]
+        self.option_names = [t.type_name[prefix_len:].removesuffix("_t") for t in self.option_types]
         if any([n[0].isdigit() for n in self.option_names]):
             self.option_names = ["option_" + n for n in self.option_names]
 
-        type_name_base = re.sub("_t$", "", self.type_name)
+        type_name_base = self.type_name.removesuffix("_t")
         self.inner_enum_type = EnumType(
             type_name_base + "_type_t",
             "Key indicating which union option is used",
