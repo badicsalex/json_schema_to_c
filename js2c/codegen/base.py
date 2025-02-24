@@ -25,7 +25,7 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Type
 
 from js2c.codegen.code_block_printer import CodeBlockPrinter
 from js2c.codegen.type_cache import TypeCache
@@ -53,7 +53,7 @@ class GeneratorInitParameters:
     parser_name: str
     type_name: str
     settings: Settings
-    generator_factory: GeneratorFactory
+    generator_factory: Type[GeneratorFactory]
     type_cache: TypeCache
 
     def with_suffix(self, path_in_schema: str, type_name: str, suffix: str) -> GeneratorInitParameters:

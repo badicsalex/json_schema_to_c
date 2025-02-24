@@ -25,6 +25,8 @@
 from collections import namedtuple
 import argparse
 
+from typing_extensions import TextIO
+
 SettingsField = namedtuple("SettingsField", ["name", "type", "help", "metavar"])
 
 
@@ -75,6 +77,13 @@ class Settings:
             metavar="file",
         ),
     ]
+
+    h_prefix_file: TextIO
+    h_postfix_file: TextIO
+    c_prefix_file: TextIO
+    c_postfix_file: TextIO
+    allow_additional_properties: str
+    include_external_builtins_file: str
 
     def __init__(self, args, settings_json):
         for field in self.FIELDS:
