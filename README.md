@@ -1,5 +1,4 @@
-JSON Schema to C parser generator
-=================================
+# JSON Schema to C parser generator
 
 A tool to generate C structure declarations and a parser for a specific JSON Schema.
 
@@ -32,8 +31,7 @@ Important limitations:
 * `$id` is required on the root and is used to define the prefix of the generated types name
 * an invalid schema can make json_schema_to_c crash
 
-Example
--------
+## Example
 
 Using the [example schema](example/schema.json), and the following data:
 ```json
@@ -74,13 +72,55 @@ You can access the fields like this:
     printf("Also, arrays are well-supported: %ld", root.multidimensionals.items[1].items[0].items[1]);
 ```
 
-Usage
------
+## Usage
 
 Run the `json_schema_to_c.py --help` command, and go from there. Also see the example directory. You can test it by running `make run`. For more advanced functionality, check tests.
 
-Naming
-------
+### Extensions to JSON Schema
+
+The following extra features are implemented:
+* The `js2cDefault` field on data fields. It is similar to `default`, but it is pasted into the parser C code as-is, so it can be any C expression. It is recommended to still set `default` for interoperability, but it will be ignored by js2c. This is the only way to set non-trivial default values for arrays and objects.
+* The `js2cType` and `js2cParseFunction` on `string` fields. `js2cType` specifies a forces a specific C type in the struct, and `js2cParseFunction` specifies a custom function (probably included with `c-parser-prefix`) which takes a string and outputs this custom type. Useful for something like base64 decoding a string and storing the bytes.
+* The `js2cType` on `integer` fields. `js2cType` specifies a forces a specific C type in the struct (can only be `u?int(8|16|32|64)_t`). The integer will be parsed as a full 64 bit variable and truncated after range checks.
+* `js2cSettings` in the schema root. Can be used to specify parameters that are normally command line parameters. Both camelCase and snake_case forms are accepted. If the same parameters are given through command line arguments, the settings in the schema take precedence.
+
+### Custom parser functions
+
+In the JSON schema, `js2cType` can be used to specify a custom C type, and `js2cParseFunction` can be used to specify a custom parsing function.
+
+The custom parsing function can then be defined in a file and passed via the `--c-prefix-file <file>` argument.
+
+The parsing function must follow this signature/API:
+
+```c
+static bool parse_xxx(const char *current_string, int current_string_len, xxx *out, const char **error) {
+    // do stuff
+
+    if (some_error) {
+        *error = "something bad occured";
+        return true; // return true on error
+    }
+
+    *out = parsed_stuff;
+    return false; // return false on success
+}
+```
+
+### Custom logger
+
+In the prefix file passed via the `--c-prefix-file <file>` argument, you can define a logger.
+
+Example:
+
+```c
+#include <stdio.h>
+
+#define LOG_ERROR(token_position, ...) printf(__VA_ARGS__);
+```
+
+## Codegen logic
+
+### Naming
 
 Types name are built by recursively ascending the schema graph and appending the name of the parent until an `$id` field is found.
 
@@ -121,8 +161,7 @@ It will generate the following types:
 * `example_foo_bar_t`
 * `baz_t`
 
-Handling anyOf/oneOf
---------------------
+### Handling anyOf/oneOf
 
 The parsing of anyOf/oneOf is done by trying successively each option until one can be parsed without error.
 As a side effect, it can print errors with a valid JSON (this issue must be fixed in the future).
@@ -132,26 +171,15 @@ The generated `union` will be wrapped inside a `struct` also containing a `type`
 Each `union` option will be named `option_{x}` with type `..._option_{x}_t`.
 To have a nicer naming, add an `$id` in the anyOf/oneOf object and in its child objects.
 
-Extensions to JSON Schema
--------------------------
 
-The following extra features are implemented:
-* The `js2cDefault` field on data fields. It is similar to `default`, but it is pasted into the parser C code as-is, so it can be any C expression. It is recommended to still set `default` for interoperability, but it will be ignored by js2c. This is the only way to set non-trivial default values for arrays and objects.
-* The `js2cType` and `js2cParseFunction` on `string` fields. `js2cType` specifies a forces a specific C type in the struct, and `js2cParseFunction` specifies a custom function (probably included with `c-parser-prefix`) which takes a string and outputs this custom type. Useful for something like base64 decoding a string and storing the bytes.
-* The `js2cType` on `integer` fields. `js2cType` specifies a forces a specific C type in the struct (can only be `u?int(8|16|32|64)_t`). The integer will be parsed as a full 64 bit variable and truncated after range checks.
-* `js2cSettings` in the schema root. Can be used to specify parameters that are normally command line parameters. Both camelCase and snake_case forms are accepted. If the same parameters are given through command line arguments, the settings in the schema take precedence.
-
-Contribution
-------------
+## Contribution
 
 I love to receive pull requests, especially if it's a bugifx or a nice feature, and `make check` was successful on it.
 
-Thanks
-------
+## Thanks
 
 The JSON tokenizer used is [JSMN](https://github.com/zserge/jsmn). It works great.
 
-Licence
--------
+## Licence
 
 This software is distributed under [MIT license](http://www.opensource.org/licenses/mit-license.php).
