@@ -127,14 +127,14 @@ class UnionGenerator(Generator):
             restore_ctx = ("parse_state->current_token = saved_token;",
                            "parse_state->current_key = saved_key;",
                            "break;")
+            first_option = True
             for option_generator, option_name, enum_label in zip(self.option_generators, self.c_type.option_names, self.c_type.inner_enum_type.enum_labels):
-                with out_file.if_block("missing_value"):
-                    out_file.print("do")
-                    with out_file.code_block():
+                with out_file.if_block("missing_value", always_true=first_option):
+                    with out_file.do_while_block("0"):
                         option_generator.generate_parser_call("&out->" + option_name, out_file, on_err=restore_ctx)
                         out_file.print("out->type = {};".format(enum_label))
                         out_file.print("missing_value = false;")
-                    out_file.print("while(0);")
+                first_option = False
 
             with out_file.if_block("missing_value"):
                 self.generate_logged_error(

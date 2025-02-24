@@ -182,7 +182,7 @@ class ObjectGenerator(Generator):
 
             self.generate_seen_flags(out_file)
 
-            out_file.print("const int object_start_token = parse_state->current_token;")
+            out_file.print("const uint64_t object_start_token = parse_state->current_token;")
             out_file.print("const uint64_t n = parse_state->tokens[parse_state->current_token].size;")
             out_file.print("parse_state->current_token += 1;")
             with out_file.for_block("uint64_t i = 0; i < n; ++i"):
@@ -191,7 +191,7 @@ class ObjectGenerator(Generator):
             # This little magic is needed because both required checks and default setting
             # use CURRENT_TOKEN, which may be past the token list by now, and also we want
             # to report the issue at the start of the object.
-            out_file.print("const int saved_current_token = parse_state->current_token;")
+            out_file.print("const uint64_t saved_current_token = parse_state->current_token;")
             out_file.print("parse_state->current_token = object_start_token;")
 
             self.generate_required_checks(out_file)
