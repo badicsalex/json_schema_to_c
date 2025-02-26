@@ -69,7 +69,7 @@ def resolve_ref(full_schema, part_to_resolve):
 # WARNING OVER
 
 
-def merge_single_pair(element1, element2):
+def merge_single_pair(element1, element2, key: str):
     if type(element1) is not type(element2):
         raise TypeError(
             "Field types are different in allOf/anyOf/oneOf declaration: '{}' vs. '{}'"
@@ -81,6 +81,9 @@ def merge_single_pair(element1, element2):
         return element1 + [item for item in element2 if item not in element1]
     if element1 == element2:
         return element1
+    if isinstance(element1, int) and isinstance(element2, int):
+        if key in ("minimum", "exclusiveMinimum", "minLength"): return max(element1, element2)
+        if key in ("maximum", "exclusiveMaximum", "maxLength"): return min(element1, element2)
     raise ValueError(
         "Could not merge fields for allOf/anyOf/oneOf declaration: '{}' and '{}'"
         .format(element1, element2)
@@ -91,7 +94,7 @@ def merge_dict(schema1, schema2):
     result = schema1.copy()
     for key, value in schema2.items():
         if key in result:
-            result[key] = merge_single_pair(result[key], value)
+            result[key] = merge_single_pair(result[key], value, key)
         else:
             result[key] = value
     return result
