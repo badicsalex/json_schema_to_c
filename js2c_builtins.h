@@ -259,7 +259,8 @@ static inline bool builtin_parse_json_string(
     parse_state_t *parse_state,
     jsmntok_t *token_buffer,
     uint64_t token_buffer_size,
-    const char *json_string
+    const char *json_string,
+    size_t json_string_len
 ) {
     jsmn_parser parser = {0};
 
@@ -270,7 +271,7 @@ static inline bool builtin_parse_json_string(
     parse_state->current_key = "document root";
 
     jsmn_init(&parser);
-    int token_num = jsmn_parse(&parser, json_string, strlen(json_string), parse_state->tokens, token_buffer_size);
+    int token_num = jsmn_parse(&parser, json_string, json_string_len, parse_state->tokens, token_buffer_size);
     if (token_num < 0) {
         LOG_ERROR(parser.pos, "JSON syntax error: %s", jsmn_error_as_string(token_num));
         return true;
