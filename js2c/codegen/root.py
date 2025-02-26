@@ -59,12 +59,12 @@ class RootGenerator:
         self.name = schema['$id']
 
     def generate_root_parser(self, out_file, max_token_num):
-        out_file.print("bool json_parse_{}(const char *json_string, {} *out)".format(self.name, self.root_generator.c_type))
+        out_file.print("bool json_parse_{}_with_len(const char *json_string, size_t json_string_len, {} *out)".format(self.name, self.root_generator.c_type))
         with out_file.code_block():
             out_file.print("parse_state_t parse_state_var;")
             out_file.print("parse_state_t *parse_state = &parse_state_var;")
             out_file.print("jsmntok_t token_buffer[{}];".format(max_token_num))
-            parser_call = "builtin_parse_json_string(parse_state, token_buffer, {}, json_string)" \
+            parser_call = "builtin_parse_json_string(parse_state, token_buffer, {}, json_string, json_string_len)" \
                 .format(max_token_num)
             with out_file.if_block(parser_call):
                 out_file.print("return true;")
@@ -73,6 +73,11 @@ class RootGenerator:
                 out_file,
             )
             out_file.print("return false;")
+        out_file.print("")
+
+        out_file.print("bool json_parse_{}(const char *json_string, {} *out)".format(self.name, self.root_generator.c_type))
+        with out_file.code_block():
+            out_file.print("return json_parse_{}_with_len(json_string, strlen(json_string), out);".format(self.name))
         out_file.print("")
 
     def generate_parser_h(self, h_file):
@@ -85,8 +90,9 @@ class RootGenerator:
         h_file.print("#ifndef {}".format(header_guard_name))
         h_file.print("#define {}".format(header_guard_name))
 
-        h_file.print("#include <stdint.h>")
         h_file.print("#include <stdbool.h>")
+        h_file.print("#include <stddef.h>")
+        h_file.print("#include <stdint.h>")
 
         if self.settings.h_prefix_file is not None:
             h_file.print_separator("User-added prefix")
@@ -99,6 +105,7 @@ class RootGenerator:
         h_file.print_separator("Generated type declarations")
         self.root_generator.c_type.generate_type_declaration(h_file)
         h_file.print("bool json_parse_{}(const char *json_string, {} *out);".format(self.name, self.root_generator.c_type))
+        h_file.print("bool json_parse_{}_with_len(const char *json_string, size_t json_string_len, {} *out);".format(self.name, self.root_generator.c_type))
 
         h_file.print("#ifdef __cplusplus")
         h_file.print("}")
