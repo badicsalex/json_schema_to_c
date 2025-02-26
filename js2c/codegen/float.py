@@ -23,6 +23,7 @@
 # SOFTWARE.
 #
 from .base import Generator, CType
+from .code_block_printer import CodeBlockPrinter
 
 
 class FloatGenerator(Generator):
@@ -49,10 +50,11 @@ class FloatGenerator(Generator):
         return schema.get('type') == 'number'
 
     @classmethod
-    def generate_range_check(cls, check_number, out_var_name, check_operator, out_file, on_err: str | list[str]):
+
+    def generate_range_check(cls, check_number: str, out_var_name: str, check_operator: str, inverted_check_operator: str, out_file: CodeBlockPrinter, on_err: str | list[str]):
         if check_number is None:
             return
-        with out_file.if_block("!((*{}) {} {})".format(out_var_name, check_operator, check_number)):
+        with out_file.if_block("(*{}) {} {}".format(out_var_name, inverted_check_operator, check_number)):
             # Roll back the token, as the value was not actually correct
             out_file.print("parse_state->current_token -= 1;")
             cls.generate_logged_error(
@@ -68,10 +70,10 @@ class FloatGenerator(Generator):
     def generate_parser_call(self, out_var_name, out_file, on_err="return true;"):
         with out_file.if_block("builtin_parse_double(parse_state, {})".format(out_var_name)):
             out_file.print(on_err)
-        self.generate_range_check(self.minimum, out_var_name, ">=", out_file, on_err)
-        self.generate_range_check(self.maximum, out_var_name, "<=", out_file, on_err)
-        self.generate_range_check(self.exclusiveMinimum, out_var_name, ">", out_file, on_err)
-        self.generate_range_check(self.exclusiveMaximum, out_var_name, "<", out_file, on_err)
+        self.generate_range_check(self.minimum, out_var_name, ">=", "<", out_file, on_err)
+        self.generate_range_check(self.maximum, out_var_name, "<=", ">", out_file, on_err)
+        self.generate_range_check(self.exclusiveMinimum, out_var_name, ">", "<=", out_file, on_err)
+        self.generate_range_check(self.exclusiveMaximum, out_var_name, "<", ">=", out_file, on_err)
 
     def has_default_value(self):
         return super().has_default_value() or self.default is not None

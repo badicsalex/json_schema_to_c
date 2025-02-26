@@ -25,6 +25,7 @@
 from abc import abstractmethod
 
 from .base import Generator, CType, SchemaError
+from .code_block_printer import CodeBlockPrinter
 
 
 class IntegerType(CType):
@@ -92,11 +93,11 @@ class IntegerGeneratorBase(Generator):
         pass
 
     @classmethod
-    def generate_range_check(cls, check_number, out_var_printf_macro, check_operator, out_file, on_err: str | list[str]):
+    def generate_range_check(cls, check_number: int, out_var_printf_macro: str, check_operator: str, inverted_check_operator: str, out_file: CodeBlockPrinter, on_err: str | list[str]):
         # pylint: disable=too-many-arguments
         if check_number is None:
             return
-        with out_file.if_block("!(int_parse_tmp {} {})".format(check_operator, check_number)):
+        with out_file.if_block("int_parse_tmp {} {}".format(inverted_check_operator, check_number)):
             # Roll back the token, as the value was not actually correct
             out_file.print("parse_state->current_token -= 1;")
             cls.generate_logged_error(
@@ -120,10 +121,10 @@ class IntegerGeneratorBase(Generator):
         )
         with out_file.if_block(parser_call):
             out_file.print(on_err)
-        self.generate_range_check(self.minimum, self.parsed_type_printf_macro, ">=", out_file, on_err)
-        self.generate_range_check(self.maximum, self.parsed_type_printf_macro, "<=", out_file, on_err)
-        self.generate_range_check(self.exclusiveMinimum, self.parsed_type_printf_macro, ">", out_file, on_err)
-        self.generate_range_check(self.exclusiveMaximum, self.parsed_type_printf_macro, "<", out_file, on_err)
+        self.generate_range_check(self.minimum, self.parsed_type_printf_macro, ">=", "<", out_file, on_err)
+        self.generate_range_check(self.maximum, self.parsed_type_printf_macro, "<=", ">", out_file, on_err)
+        self.generate_range_check(self.exclusiveMinimum, self.parsed_type_printf_macro, ">", "<=", out_file, on_err)
+        self.generate_range_check(self.exclusiveMaximum, self.parsed_type_printf_macro, "<", ">=", out_file, on_err)
         out_file.print("*{} = int_parse_tmp;".format(out_var_name))
 
     def has_default_value(self):
