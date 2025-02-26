@@ -92,15 +92,14 @@ class IntegerGeneratorBase(Generator):
     def number_allowed(self):
         pass
 
-    @classmethod
-    def generate_range_check(cls, check_number: int, out_var_printf_macro: str, check_operator: str, inverted_check_operator: str, out_file: CodeBlockPrinter, on_err: str | list[str]):
+    def generate_range_check(self, check_number: int, out_var_printf_macro: str, check_operator: str, inverted_check_operator: str, out_file: CodeBlockPrinter, on_err: str | list[str]):
         # pylint: disable=too-many-arguments
         if check_number is None:
             return
-        with out_file.if_block("int_parse_tmp {} {}".format(inverted_check_operator, check_number)):
+        with out_file.if_block("int_parse_tmp {} {}{}".format(inverted_check_operator, check_number, self.default_suffix)):
             # Roll back the token, as the value was not actually correct
             out_file.print("parse_state->current_token -= 1;")
-            cls.generate_logged_error(
+            self.generate_logged_error(
                 [
                     "Integer %\" {} \" in '%s' out of range. It must be {} {}."
                     .format(out_var_printf_macro, check_operator, check_number),
