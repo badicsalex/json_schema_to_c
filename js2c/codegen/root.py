@@ -161,7 +161,7 @@ class RootGenerator:
 
     @classmethod
     def manually_include_jsmn(cls, c_file: CodeBlockPrinter):
-        with open(os.path.join(DIR_OF_THIS_FILE, '..', '..', 'jsmn', 'jsmn.h'), encoding='utf-8') as jsmn_h:
+        with open(os.path.join(DIR_OF_THIS_FILE, 'jsmn.h'), encoding='utf-8') as jsmn_h:
             c_file.print("")
             c_file.print_separator("jsmn.h (From https://github.com/zserge/jsmn)")
             c_file.write(jsmn_h.read())

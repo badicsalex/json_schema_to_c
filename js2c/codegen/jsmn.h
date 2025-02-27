@@ -1,1 +1,1 @@
-../../jsmn/jsmn.h
+../../jsmn.h

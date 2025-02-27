@@ -10,7 +10,7 @@ CFLAGS= \
 
 ALL_COMPILE_TESTS = $(patsubst %.c,%.run,$(filter-out %.parser.c, $(wildcard */*.c)))
 ALL_SCHEMA_ERROR_TESTS = $(patsubst %.json,%.run_scherr, $(wildcard schema_error/*.json))
-PARSER_SOURCE_FILES = ../json_schema_to_c.py $(wildcard ../js2c/*.py) $(wildcard ../js2c/*/*.py) $(wildcard ../js2c/codegen/*.h) ../jsmn/jsmn.h
+PARSER_SOURCE_FILES = ../json_schema_to_c.py $(wildcard ../js2c/*.py) $(wildcard ../js2c/*/*.py) $(wildcard ../js2c/codegen/*.h) ../jsmn.h
 
 all: other/cpp.run $(ALL_COMPILE_TESTS) $(ALL_SCHEMA_ERROR_TESTS)
 	@echo
