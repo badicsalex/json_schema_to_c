@@ -82,14 +82,21 @@ class Settings:
             "with this path will be generated. Be sure to copy js2c_builtins.h there.",
             metavar="file",
         ),
+        SettingsField(
+            "file_parser_max_size",
+            type=str,
+            help="Max file size allowed in the function that parse JSON from a file path.",
+            metavar="expression",
+        ),
     ]
 
-    h_prefix_file: TextIO
-    h_postfix_file: TextIO
-    c_prefix_file: TextIO
-    c_postfix_file: TextIO
-    allow_additional_properties: str
-    include_external_builtins_file: str
+    h_prefix_file: TextIO | None
+    h_postfix_file: TextIO | None
+    c_prefix_file: TextIO | None
+    c_postfix_file: TextIO | None
+    allow_additional_properties: str | None
+    include_external_builtins_file: str | None
+    file_parser_max_size: int | None
 
     def __init__(self, args, settings_json):
         for field in self.FIELDS:
