@@ -45,7 +45,7 @@ The settings in the schema take precedence.
 """.strip()
 
 
-def parse_args():
+def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=HELP,
         epilog=HELP_EPILOG,
@@ -58,25 +58,25 @@ def parse_args():
     )
     parser.add_argument(
         "c_file",
-        type=argparse.FileType('w'),
+        type=str,
         help="Filename of the generated parser .c file",
     )
     parser.add_argument(
         "h_file",
-        type=argparse.FileType('w'),
+        type=str,
         help="Filename of the generated parser .h file",
     )
     Settings.fill_argparse(parser)
     return parser.parse_args()
 
 
-def main(args):
+def main(args: argparse.Namespace):
     schema = load_schema(args.schema_file)
     settings = Settings(vars(args), schema.get('js2cSettings', {}))
     try:
         root_generator = RootGenerator(schema, settings)
         root_generator.generate_parser_h(args.h_file)
-        root_generator.generate_parser_c(args.c_file, os.path.basename(args.h_file.name))
+        root_generator.generate_parser_c(args.c_file, os.path.basename(args.h_file))
     except SchemaError as e:
         print(e, file=sys.stderr)
         sys.exit(1)

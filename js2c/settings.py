@@ -22,15 +22,21 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from collections import namedtuple
 import argparse
+from dataclasses import dataclass
+from typing_extensions import TextIO, TypeVar
 
-from typing_extensions import TextIO
+T = TypeVar('T')
 
-SettingsField = namedtuple("SettingsField", ["name", "type", "help", "metavar"])
+@dataclass
+class SettingsField:
+    name: str
+    type: T
+    help: str
+    metavar: str
 
 
-def snake_to_camel_case(text: str):
+def snake_to_camel_case(text: str) -> str:
     text = text.replace("_", " ").title().replace(" ", "")
     return text[0].lower() + text[1:]
 
@@ -97,11 +103,11 @@ class Settings:
             else:
                 setattr(self, field.name, None)
 
-    def parse_field(self, field_desc, field_data):
+    def parse_field(self, field_desc: SettingsField, field_data):
         setattr(self, field_desc.name, field_desc.type(field_data))
 
     @classmethod
-    def fill_argparse(cls, parser):
+    def fill_argparse(cls, parser: argparse.ArgumentParser):
         for field in cls.FIELDS:
             parser.add_argument(
                 "--" + field.name.replace('_', '-'),
