@@ -60,13 +60,15 @@ class RootGenerator:
         self.name = schema['$id']
 
     def generate_root_parser(self, out_file: CodeBlockPrinter, max_token_num: int):
-        out_file.print("")
+        out_file.print("// Splint can't see that: The json_string reference isn't held by the function, because parse_state is dropped at the end of the function.")
+        out_file.print("/*@-temptrans@*/")
         out_file.print("bool json_parse_{}_with_len(const char *json_string, size_t json_string_len, {})".format(self.name, self.root_generator.c_type.typed_identifier("out", indirection="*")))
         with out_file.code_block():
             out_file.print("parse_state_t parse_state_var;")
             out_file.print("parse_state_t *parse_state = &parse_state_var;")
             out_file.print("jsmntok_t token_buffer[{}];".format(max_token_num))
-            parser_call = "builtin_parse_json_string(parse_state, token_buffer, {}, json_string, json_string_len)" \
+            out_file.print("memset(token_buffer, 0, sizeof token_buffer);")
+            parser_call = "builtin_parse_json_string(parse_state, token_buffer, (size_t) {}, json_string, json_string_len)" \
                 .format(max_token_num)
             with out_file.if_block(parser_call):
                 out_file.print("return true;")
@@ -75,6 +77,7 @@ class RootGenerator:
                 out_file,
             )
             out_file.print("return false;")
+        out_file.print("/*@=temptrans@*/")
         out_file.print("")
 
         out_file.print("bool json_parse_{}(const char *json_string, {})".format(self.name, self.root_generator.c_type.typed_identifier("out", indirection="*")))
@@ -84,21 +87,22 @@ class RootGenerator:
 
         out_file.print("bool file_parse_{}(const char *filepath, {})".format(self.name, self.root_generator.c_type.typed_identifier("out", indirection="*")))
         with out_file.code_block():
-            exit_err = lambda msg: out_file.print(['LOG_ERROR(-1, {})'.format(msg), "close(fd);", "return true;"])
+            exit_err = lambda msg: out_file.print(['LOG_ERROR(-1, {})'.format(msg), "(void) close(fd);", "return true;"])
 
             out_file.print("int fd = open(filepath, O_RDONLY);")
             with out_file.if_block("fd < 0"):
                 exit_err('"cannot open JSON file \\"%s\\": %s", filepath, strerror(errno)')
             out_file.print("")
 
-            out_file.print("const off_t file_size = lseek(fd, 0, SEEK_END);")
-            with out_file.if_block("file_size < 0"):
+            out_file.print("const off_t file_size_or_err = lseek(fd, 0, SEEK_END);")
+            with out_file.if_block("file_size_or_err < 0"):
                 exit_err('"cannot seek JSON file \\"%s\\": %s", filepath, strerror(errno)')
+            out_file.print("const size_t file_size = (size_t) file_size_or_err;")
             out_file.print("")
 
             if self.settings.file_parser_max_size is not None:
-                with out_file.if_block("file_size > (off_t) ({})".format(self.settings.file_parser_max_size)):
-                    exit_err('"JSON file \\"%s\\" size is greater than max allowed size (%zu bytes), got %zu", filepath, (size_t) ({}), file_size'.format(self.settings.file_parser_max_size))
+                with out_file.if_block("file_size > (size_t) ({})".format(self.settings.file_parser_max_size)):
+                    exit_err('"JSON file \\"%s\\" size is greater than max allowed size (%zu bytes), got %jd", filepath, (size_t) ({}), (intmax_t) file_size'.format(self.settings.file_parser_max_size))
                 out_file.print("")
 
             out_file.print("void *const file_content = mmap(NULL, file_size, PROT_READ, MAP_PRIVATE, fd, 0);")
@@ -109,8 +113,8 @@ class RootGenerator:
             out_file.print("bool res = json_parse_{}_with_len(file_content, file_size, out);".format(self.name))
             out_file.print("")
 
-            out_file.print("munmap(file_content, file_size);")
-            out_file.print("close(fd);")
+            out_file.print("(void) munmap(file_content, file_size);")
+            out_file.print("(void) close(fd);")
             out_file.print("return res;")
         out_file.print("")
 
@@ -185,6 +189,7 @@ class RootGenerator:
 
         c_file.write(NOTE_FOR_GENERATED_FILES)
         c_file.print('#include "{}"'.format(h_file_name))
+        c_file.print("/*@+matchanyintegral@*/ // FIXME fix this mess")
 
         if self.settings.c_prefix_file is not None:
             c_file.print_separator("User-added prefix")
@@ -206,5 +211,8 @@ class RootGenerator:
         if self.settings.c_postfix_file:
             c_file.print_separator("User-added postfix")
             c_file.write(self.settings.c_postfix_file.read())
+
+        c_file.print("/*@=matchanyintegral@*/")
+        c_file.print("")
 
         c_file.save_to_file()

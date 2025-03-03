@@ -99,7 +99,7 @@ class StringGenerator(Generator):
                 "parse_state->current_key",
                 src_length,
                 src,
-                "error ? error : \"error calling {}\"".format(self.js2cParseFunction),
+                "error != NULL ? error : \"error calling {}\"".format(self.js2cParseFunction),
             ], out_file, exit_statement=on_err)
 
     def generate_parser_call(self, out_var_name, out_file, on_err="return true;"):

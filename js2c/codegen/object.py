@@ -197,7 +197,7 @@ class ObjectGenerator(Generator):
             self.generate_required_checks(out_file)
             self.generate_default_field_setting(out_file)
 
-            out_file.print("parse_state->current_token = saved_current_token;")
+            out_file.print("parse_state->current_token = saved_current_token;  // cppcheck-suppress[redundantAssignment,unmatchedSuppression]")
 
             out_file.print("return false;")
         out_file.print("")

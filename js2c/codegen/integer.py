@@ -96,7 +96,7 @@ class IntegerGeneratorBase(Generator):
         # pylint: disable=too-many-arguments
         if check_number is None:
             return
-        with out_file.if_block("int_parse_tmp {} {}{}".format(inverted_check_operator, check_number, self.default_suffix)):
+        with out_file.if_block("int_parse_tmp {} ({}) {}{}".format(inverted_check_operator, self.c_type, check_number, self.default_suffix)):
             # Roll back the token, as the value was not actually correct
             out_file.print("parse_state->current_token -= 1;")
             self.generate_logged_error(
@@ -111,7 +111,7 @@ class IntegerGeneratorBase(Generator):
             )
 
     def generate_parser_call(self, out_var_name, out_file, on_err="return true;"):
-        out_file.print("{} int_parse_tmp;".format(self.parsed_type))
+        out_file.print("{} int_parse_tmp = 0;".format(self.parsed_type))
         parser_call = "{}(parse_state, {}, {}, {}, &int_parse_tmp)".format(
             self.parser_fn,
             'true' if self.number_allowed else 'false',
