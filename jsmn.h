@@ -96,15 +96,15 @@ JSMN_API void jsmn_init(jsmn_parser *parser);
  * describing
  * a single JSON object.
  */
-JSMN_API int jsmn_parse(jsmn_parser *parser, const char *js, const size_t len,
-                        jsmntok_t *tokens, const unsigned int num_tokens);
+JSMN_API int jsmn_parse(jsmn_parser *parser, const char *js, size_t len,
+                        jsmntok_t *tokens, unsigned int num_tokens);
 
 #ifndef JSMN_HEADER
 /**
  * Allocates a fresh unused token from the token pool.
  */
-static jsmntok_t *jsmn_alloc_token(jsmn_parser *parser, jsmntok_t *tokens,
-                                   const size_t num_tokens) {
+static /*@null@*/ /*@observer@*/ jsmntok_t *jsmn_alloc_token(jsmn_parser *parser, jsmntok_t *tokens,
+                                                             const size_t num_tokens) {
   jsmntok_t *tok;
   if (parser->toknext >= num_tokens) {
     return NULL;
@@ -133,10 +133,10 @@ static void jsmn_fill_token(jsmntok_t *token, const jsmntype_t type,
  * Fills next available token with JSON primitive.
  */
 static int jsmn_parse_primitive(jsmn_parser *parser, const char *js,
-                                const size_t len, jsmntok_t *tokens,
+                                const size_t len, /*@null@*/ jsmntok_t *tokens,
                                 const size_t num_tokens) {
   jsmntok_t *token;
-  int start;
+  unsigned int start;
 
   start = parser->pos;
 
@@ -158,15 +158,15 @@ static int jsmn_parse_primitive(jsmn_parser *parser, const char *js,
                    /* to quiet a warning from gcc*/
       break;
     }
-    if (js[parser->pos] < 32 || js[parser->pos] >= 127) {
+    if (js[parser->pos] < (char) 32 || js[parser->pos] >= (char) 127) {
       parser->pos = start;
-      return JSMN_ERROR_INVAL;
+      return (int) JSMN_ERROR_INVAL;
     }
   }
 #ifdef JSMN_STRICT
   /* In strict mode primitive must be followed by a comma/object/array */
   parser->pos = start;
-  return JSMN_ERROR_PART;
+  return (int) JSMN_ERROR_PART;
 #endif
 
 found:
@@ -177,9 +177,9 @@ found:
   token = jsmn_alloc_token(parser, tokens, num_tokens);
   if (token == NULL) {
     parser->pos = start;
-    return JSMN_ERROR_NOMEM;
+    return (int) JSMN_ERROR_NOMEM;
   }
-  jsmn_fill_token(token, JSMN_PRIMITIVE, start, parser->pos);
+  jsmn_fill_token(token, JSMN_PRIMITIVE, (int) start, (int) parser->pos); // FIXME dubious type casting
 #ifdef JSMN_PARENT_LINKS
   token->parent = parser->toksuper;
 #endif
@@ -195,7 +195,7 @@ static int jsmn_parse_string(jsmn_parser *parser, const char *js,
                              const size_t num_tokens) {
   jsmntok_t *token;
 
-  int start = parser->pos;
+  unsigned int start = parser->pos;
 
   parser->pos++;
 
@@ -211,9 +211,9 @@ static int jsmn_parse_string(jsmn_parser *parser, const char *js,
       token = jsmn_alloc_token(parser, tokens, num_tokens);
       if (token == NULL) {
         parser->pos = start;
-        return JSMN_ERROR_NOMEM;
+        return (int) JSMN_ERROR_NOMEM;
       }
-      jsmn_fill_token(token, JSMN_STRING, start + 1, parser->pos);
+      jsmn_fill_token(token, JSMN_STRING, (int) start + 1, (int) parser->pos); // FIXME dubious type casting
 #ifdef JSMN_PARENT_LINKS
       token->parent = parser->toksuper;
 #endif
@@ -221,7 +221,7 @@ static int jsmn_parse_string(jsmn_parser *parser, const char *js,
     }
 
     /* Backslash: Quoted symbol expected */
-    if (c == '\\' && parser->pos + 1 < len) {
+    if (c == '\\' && (size_t) parser->pos + 1 < len) {
       int i;
       parser->pos++;
       switch (js[parser->pos]) {
@@ -241,11 +241,11 @@ static int jsmn_parse_string(jsmn_parser *parser, const char *js,
         for (i = 0; i < 4 && parser->pos < len && js[parser->pos] != '\0';
              i++) {
           /* If it isn't a hex character we have an error */
-          if (!((js[parser->pos] >= 48 && js[parser->pos] <= 57) ||   /* 0-9 */
-                (js[parser->pos] >= 65 && js[parser->pos] <= 70) ||   /* A-F */
-                (js[parser->pos] >= 97 && js[parser->pos] <= 102))) { /* a-f */
+          if (!((js[parser->pos] >= '0' && js[parser->pos] <= '9') ||
+                (js[parser->pos] >= 'A' && js[parser->pos] <= 'F') ||
+                (js[parser->pos] >= 'a' && js[parser->pos] <= 'f'))) {
             parser->pos = start;
-            return JSMN_ERROR_INVAL;
+            return (int) JSMN_ERROR_INVAL;
           }
           parser->pos++;
         }
@@ -254,12 +254,12 @@ static int jsmn_parse_string(jsmn_parser *parser, const char *js,
       /* Unexpected symbol */
       default:
         parser->pos = start;
-        return JSMN_ERROR_INVAL;
+        return (int) JSMN_ERROR_INVAL;
       }
     }
   }
   parser->pos = start;
-  return JSMN_ERROR_PART;
+  return (int) JSMN_ERROR_PART;
 }
 
 /**
@@ -270,7 +270,7 @@ JSMN_API int jsmn_parse(jsmn_parser *parser, const char *js, const size_t len,
   int r;
   int i;
   jsmntok_t *token;
-  int count = parser->toknext;
+  unsigned int count = parser->toknext;
 
   for (; parser->pos < len && js[parser->pos] != '\0'; parser->pos++) {
     char c;
@@ -286,14 +286,14 @@ JSMN_API int jsmn_parse(jsmn_parser *parser, const char *js, const size_t len,
       }
       token = jsmn_alloc_token(parser, tokens, num_tokens);
       if (token == NULL) {
-        return JSMN_ERROR_NOMEM;
+        return (int) JSMN_ERROR_NOMEM;
       }
       if (parser->toksuper != -1) {
         jsmntok_t *t = &tokens[parser->toksuper];
 #ifdef JSMN_STRICT
         /* In strict mode an object or array can't become a key */
         if (t->type == JSMN_OBJECT) {
-          return JSMN_ERROR_INVAL;
+          return (int) JSMN_ERROR_INVAL;
         }
 #endif
         t->size++;
@@ -302,8 +302,8 @@ JSMN_API int jsmn_parse(jsmn_parser *parser, const char *js, const size_t len,
 #endif
       }
       token->type = (c == '{' ? JSMN_OBJECT : JSMN_ARRAY);
-      token->start = parser->pos;
-      parser->toksuper = parser->toknext - 1;
+      token->start = (int) parser->pos; // FIXME dubious type casting
+      parser->toksuper = (int) parser->toknext - 1; // FIXME dubious type casting
       break;
     case '}':
     case ']':
@@ -312,48 +312,48 @@ JSMN_API int jsmn_parse(jsmn_parser *parser, const char *js, const size_t len,
       }
       type = (c == '}' ? JSMN_OBJECT : JSMN_ARRAY);
 #ifdef JSMN_PARENT_LINKS
-      if (parser->toknext < 1) {
-        return JSMN_ERROR_INVAL;
+      if (parser->toknext < 1u) {
+        return (int) JSMN_ERROR_INVAL;
       }
       token = &tokens[parser->toknext - 1];
       for (;;) {
         if (token->start != -1 && token->end == -1) {
           if (token->type != type) {
-            return JSMN_ERROR_INVAL;
+            return (int) JSMN_ERROR_INVAL;
           }
-          token->end = parser->pos + 1;
+          token->end = (int) parser->pos + 1; // FIXME dubious type casting
           parser->toksuper = token->parent;
-          break;
+          /*@innerbreak@*/ break;
         }
         if (token->parent == -1) {
           if (token->type != type || parser->toksuper == -1) {
-            return JSMN_ERROR_INVAL;
+            return (int) JSMN_ERROR_INVAL;
           }
-          break;
+          /*@innerbreak@*/ break;
         }
         token = &tokens[token->parent];
       }
 #else
-      for (i = parser->toknext - 1; i >= 0; i--) {
+      for (i = (int) parser->toknext - 1; i >= 0; i--) { // FIXME dubious type casting
         token = &tokens[i];
         if (token->start != -1 && token->end == -1) {
           if (token->type != type) {
-            return JSMN_ERROR_INVAL;
+            return (int) JSMN_ERROR_INVAL;
           }
           parser->toksuper = -1;
-          token->end = parser->pos + 1;
-          break;
+          token->end = (int) parser->pos + 1;
+          /*@innerbreak@*/  break;
         }
       }
       /* Error if unmatched closing bracket */
       if (i == -1) {
-        return JSMN_ERROR_INVAL;
+        return (int) JSMN_ERROR_INVAL;
       }
       for (; i >= 0; i--) {
         token = &tokens[i];
         if (token->start != -1 && token->end == -1) {
           parser->toksuper = i;
-          break;
+          /*@innerbreak@*/  break;
         }
       }
 #endif
@@ -374,7 +374,7 @@ JSMN_API int jsmn_parse(jsmn_parser *parser, const char *js, const size_t len,
     case ' ':
       break;
     case ':':
-      parser->toksuper = parser->toknext - 1;
+      parser->toksuper = (int) parser->toknext - 1; // FIXME dubious type casting
       break;
     case ',':
       if (tokens != NULL && parser->toksuper != -1 &&
@@ -383,11 +383,11 @@ JSMN_API int jsmn_parse(jsmn_parser *parser, const char *js, const size_t len,
 #ifdef JSMN_PARENT_LINKS
         parser->toksuper = tokens[parser->toksuper].parent;
 #else
-        for (i = parser->toknext - 1; i >= 0; i--) {
+        for (i = (int) parser->toknext - 1; i >= 0; i--) { // FIXME dubious type casting
           if (tokens[i].type == JSMN_ARRAY || tokens[i].type == JSMN_OBJECT) {
             if (tokens[i].start != -1 && tokens[i].end == -1) {
               parser->toksuper = i;
-              break;
+              /*@innerbreak@*/ break;
             }
           }
         }
@@ -415,7 +415,7 @@ JSMN_API int jsmn_parse(jsmn_parser *parser, const char *js, const size_t len,
         const jsmntok_t *t = &tokens[parser->toksuper];
         if (t->type == JSMN_OBJECT ||
             (t->type == JSMN_STRING && t->size != 0)) {
-          return JSMN_ERROR_INVAL;
+          return (int) JSMN_ERROR_INVAL;
         }
       }
 #else
@@ -435,21 +435,21 @@ JSMN_API int jsmn_parse(jsmn_parser *parser, const char *js, const size_t len,
 #ifdef JSMN_STRICT
     /* Unexpected char in strict mode */
     default:
-      return JSMN_ERROR_INVAL;
+      return (int) JSMN_ERROR_INVAL;
 #endif
     }
   }
 
   if (tokens != NULL) {
-    for (i = parser->toknext - 1; i >= 0; i--) {
+    for (i = (int) parser->toknext - 1; i >= 0; i--) { // FIXME dubious type casting
       /* Unmatched opened object or array */
       if (tokens[i].start != -1 && tokens[i].end == -1) {
-        return JSMN_ERROR_PART;
+        return (int) JSMN_ERROR_PART;
       }
     }
   }
 
-  return count;
+  return (int) count; // FIXME dubious type casting
 }
 
 /**
