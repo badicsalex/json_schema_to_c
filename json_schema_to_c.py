@@ -53,7 +53,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "schema_file",
-        type=argparse.FileType('r'),
+        type=str,
         help="Filename of the JSON schema to use. Schema version 7 is supported.",
     )
     parser.add_argument(
