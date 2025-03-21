@@ -22,11 +22,12 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-import argparse
+import argparse, sys
 from dataclasses import dataclass
 from typing_extensions import TextIO, TypeVar
 
 T = TypeVar('T')
+PRINT_RESOLVED_SCHEMA_FLAG = "--print-resolved-schema"
 
 @dataclass
 class SettingsField:
@@ -34,6 +35,7 @@ class SettingsField:
     type: T
     help: str
     metavar: str
+    required: bool
 
 
 def snake_to_camel_case(text: str) -> str:
@@ -45,28 +47,46 @@ class Settings:
     # pylint: disable=too-few-public-methods
     FIELDS = [
         SettingsField(
+            "h_file",
+            type=str,
+            help="Filename of the generated parser .h file",
+            metavar="file",
+            required=PRINT_RESOLVED_SCHEMA_FLAG not in sys.argv,
+        ),
+        SettingsField(
+            "c_file",
+            type=str,
+            help="Filename of the generated parser .c file",
+            metavar="file",
+            required=PRINT_RESOLVED_SCHEMA_FLAG not in sys.argv,
+        ),
+        SettingsField(
             "h_prefix_file",
             type=argparse.FileType('r'),
             help="Contents of this file will be placed right after the header guard and includes in the generated header.",
             metavar="file",
+            required=False,
         ),
         SettingsField(
             "h_postfix_file",
             type=argparse.FileType('r'),
             help="Contents of this file will be placed right before header guard's #endif in the generated header.",
             metavar="file",
+            required=False,
         ),
         SettingsField(
             "c_prefix_file",
             type=argparse.FileType('r'),
             help="Contents of this file will be placed right after the includes, before the JSMN code in the generated C file.",
             metavar="file",
+            required=False,
         ),
         SettingsField(
             "c_postfix_file",
             type=argparse.FileType('r'),
             help="Contents of this file will be placed at the end of the generated C file.",
             metavar="file",
+            required=False,
         ),
         SettingsField(
             "allow_additional_properties",
@@ -74,6 +94,7 @@ class Settings:
             help="Allow additionalProperties to be true (default for objects), and leave a $token_num amount of space for these \n"
             "additional properties during the tokenizing step. (One token is basically one element, e.g. a string literal or a number)",
             metavar="tokens",
+            required=False,
         ),
         SettingsField(
             "include_external_builtins_file",
@@ -81,17 +102,21 @@ class Settings:
             help="Instead of manually including the builtin functions to the generated parser, only an include statement \n"
             "with this path will be generated. Be sure to copy js2c_builtins.h there.",
             metavar="file",
+            required=False,
         ),
         SettingsField(
             "file_parser_max_size",
             type=str,
             help="Max file size allowed in the function that parse JSON from a file path.",
             metavar="expression",
+            required=False,
         ),
     ]
 
+    h_file: str | None
     h_prefix_file: TextIO | None
     h_postfix_file: TextIO | None
+    c_file: str | None
     c_prefix_file: TextIO | None
     c_postfix_file: TextIO | None
     allow_additional_properties: str | None
@@ -121,5 +146,6 @@ class Settings:
                 metavar=field.metavar,
                 type=field.type,
                 help=field.help,
+                required=field.required,
                 default=None,
             )
