@@ -24,14 +24,15 @@
 #
 import json, os
 from collections import OrderedDict
+from typing import Any
 from urllib.parse import urlparse
 
 
 # dictionary of schemas indexed by their canonical file path
-schema_cache: dict[str, any] = {}
+schema_cache: dict[str, Any] = {}
 
 # todo check for file location
-def get_schema_from_path(path: str, relative_to: str) -> any:
+def get_schema_from_path(path: str, relative_to: str) -> Any:
     path = os.path.abspath(os.path.join(os.path.dirname(relative_to), path))
     if path in schema_cache:
         if schema_cache[path] is None: # check if slot is already being computed

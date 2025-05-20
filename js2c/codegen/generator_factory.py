@@ -22,7 +22,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from typing import Type
+from typing import Type, Any
 
 from .array import ArrayGenerator
 from .const import ConstGenerator
@@ -53,7 +53,7 @@ class GeneratorFactory:
     ]
 
     @classmethod
-    def get_generator_for(cls, schema: any, parameters: GeneratorInitParameters) -> Generator:
+    def get_generator_for(cls, schema: Any, parameters: GeneratorInitParameters) -> Generator:
         if not isinstance(schema, dict):
             raise SchemaError(
                 parameters.path_in_schema,
