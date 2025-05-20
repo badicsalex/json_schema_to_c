@@ -24,21 +24,23 @@
 #
 from typing import Type, Any
 
+from .alternate_storage import AlternateStorageGenerator
 from .array import ArrayGenerator
-from .const import ConstGenerator
-from .integer import IntegerGenerator, NumericStringGenerator, IntegerStringAnyOfGenerator
-from .float import FloatGenerator
+from .base import SchemaError, GeneratorInitParameters, Generator
 from .bool import BoolGenerator
+from .const import ConstGenerator
+from .enum import EnumGenerator
+from .float import FloatGenerator
+from .integer import IntegerGenerator, NumericStringGenerator, IntegerStringAnyOfGenerator
 from .object import ObjectGenerator
 from .string import StringGenerator
-from .enum import EnumGenerator
-from .base import SchemaError, GeneratorInitParameters, Generator
 from .union import UnionGenerator
 
 
 class GeneratorFactory:
     #pylint: disable=too-few-public-methods
     GENERATORS: list[Type[Generator]] = [
+        AlternateStorageGenerator,
         EnumGenerator,
         ConstGenerator,
         NumericStringGenerator,

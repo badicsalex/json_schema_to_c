@@ -50,6 +50,7 @@ class SchemaError(ValueError):
 @dataclass
 class GeneratorInitParameters:
     path_in_schema: str
+    base_name: str
     parser_name: str
     type_name: str
     settings: Settings
@@ -59,6 +60,7 @@ class GeneratorInitParameters:
     def with_suffix(self, path_in_schema: str, type_name: str, suffix: str) -> GeneratorInitParameters:
         return GeneratorInitParameters(
             self.path_in_schema + "." + path_in_schema,
+            self.base_name,
             "{}_{}".format(self.parser_name, suffix),
             "{}_{}_t".format(type_name.removesuffix("_t"), suffix),
             self.settings,

@@ -83,6 +83,9 @@ The following extra features are implemented:
 * The `js2cType` and `js2cParseFunction` on `string` fields. `js2cType` specifies a forces a specific C type in the struct, and `js2cParseFunction` specifies a custom function (probably included with `c-parser-prefix`) which takes a string and outputs this custom type. Useful for something like base64 decoding a string and storing the bytes.
 * The `js2cType` on `integer` fields. `js2cType` specifies a forces a specific C type in the struct (can only be `u?int(8|16|32|64)_t`). The integer will be parsed as a full 64 bit variable and truncated after range checks.
 * `js2cSettings` in the schema root. Can be used to specify parameters that are normally command line parameters. Both camelCase and snake_case forms are accepted. If the same parameters are given through command line arguments, the settings in the schema take precedence.
+* The `js2cStorageFormat` field tells json-schema-to-c to generate a parser for the attached value that wills store the parsed data in an alternate format:
+  * When set to `void`, the data will simply be dropped.
+  * When set to `raw`, the generated parser will only save a reference (index + size) into the raw JSON input.
 
 ### Custom parser functions
 
