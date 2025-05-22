@@ -75,7 +75,9 @@ class EnumGenerator(Generator):
 
     @classmethod
     def can_parse_schema(cls, schema):
-        return schema.get('type') == 'string' and 'enum' in schema
+        return (schema.get('type') == 'string'
+                and 'enum' in schema
+                and 'js2cParseFunction' not in schema)  # if custom parse function, it should be treated by the StringGenerator
 
     def convert_enum_label(self, enum_label):
         if self.convertLabelsToSnakeCase:

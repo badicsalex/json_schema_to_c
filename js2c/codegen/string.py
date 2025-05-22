@@ -69,11 +69,14 @@ class StringGenerator(Generator):
 
     def __init__(self, schema, parameters):
         super().__init__(schema, parameters)
-        assert 'enum' not in schema, "Enums should be generated with EnumGenerator"
+        assert 'enum' not in schema or 'js2cParseFunction' in schema, "Enums should be generated with EnumGenerator"
         assert 'const' not in schema, "Consts should be generated with ConstGenerator"
 
         if self.maxLength is None:
-            raise SchemaError(self, "Strings must have maxLength")
+            if 'enum' in schema:
+                self.maxLength = max([len(val) for val in schema['enum']])
+            else:
+                raise SchemaError(self, "Strings must have maxLength")
 
         if self.default is not None and len(self.default) > self.maxLength:
             raise SchemaError(self, "String default value longer than maxLength")
