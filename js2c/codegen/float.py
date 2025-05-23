@@ -82,6 +82,3 @@ class FloatGenerator(Generator):
         if super().generate_set_default_value(out_var_name, out_file):
             return
         out_file.print("{} = {};".format(out_var_name, self.default))
-
-    def max_token_num(self):
-        return 1

@@ -128,6 +128,3 @@ class ArrayGenerator(Generator):
         if super().generate_set_default_value(out_var_name, out_file):
             return
         out_file.print("{}.n = 0;".format(out_var_name))
-
-    def max_token_num(self):
-        return self.maxItems * self.item_generator.max_token_num() + 1

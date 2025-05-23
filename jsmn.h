@@ -97,7 +97,7 @@ JSMN_API void jsmn_init(jsmn_parser *parser);
  * a single JSON object.
  */
 JSMN_API int jsmn_parse(jsmn_parser *parser, const char *js, size_t len,
-                        jsmntok_t *tokens, unsigned int num_tokens);
+                        /*@null@*/ jsmntok_t *tokens, unsigned int num_tokens);
 
 #ifndef JSMN_HEADER
 /**
@@ -191,7 +191,7 @@ found:
  * Fills next token with JSON string.
  */
 static int jsmn_parse_string(jsmn_parser *parser, const char *js,
-                             const size_t len, jsmntok_t *tokens,
+                             const size_t len, /*@null@*/ jsmntok_t *tokens,
                              const size_t num_tokens) {
   jsmntok_t *token;
 

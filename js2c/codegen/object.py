@@ -215,6 +215,3 @@ class ObjectGenerator(Generator):
                 "{}.{}".format(out_var_name, field_name),
                 out_file
             )
-
-    def max_token_num(self):
-        return sum(1 + field_generator.max_token_num() for field_generator in self.fields.values()) + 1

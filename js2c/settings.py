@@ -28,6 +28,7 @@ from typing_extensions import TextIO, TypeVar
 
 T = TypeVar('T')
 PRINT_RESOLVED_SCHEMA_FLAG = "--print-resolved-schema"
+TOKENS_BUF_MAX_SIZE_DEFAULT = "1024*1024"
 
 @dataclass
 class SettingsField:
@@ -36,6 +37,7 @@ class SettingsField:
     help: str
     metavar: str
     required: bool
+    default: str | None
 
 
 def snake_to_camel_case(text: str) -> str:
@@ -52,6 +54,7 @@ class Settings:
             help="Filename of the generated parser .h file",
             metavar="file",
             required=PRINT_RESOLVED_SCHEMA_FLAG not in sys.argv,
+            default=None,
         ),
         SettingsField(
             "c_file",
@@ -59,6 +62,7 @@ class Settings:
             help="Filename of the generated parser .c file",
             metavar="file",
             required=PRINT_RESOLVED_SCHEMA_FLAG not in sys.argv,
+            default=None,
         ),
         SettingsField(
             "h_prefix_file",
@@ -66,6 +70,7 @@ class Settings:
             help="Contents of this file will be placed right after the header guard and includes in the generated header.",
             metavar="file",
             required=False,
+            default=None,
         ),
         SettingsField(
             "h_postfix_file",
@@ -73,6 +78,7 @@ class Settings:
             help="Contents of this file will be placed right before header guard's #endif in the generated header.",
             metavar="file",
             required=False,
+            default=None,
         ),
         SettingsField(
             "c_prefix_file",
@@ -80,6 +86,7 @@ class Settings:
             help="Contents of this file will be placed right after the includes, before the JSMN code in the generated C file.",
             metavar="file",
             required=False,
+            default=None,
         ),
         SettingsField(
             "c_postfix_file",
@@ -87,6 +94,7 @@ class Settings:
             help="Contents of this file will be placed at the end of the generated C file.",
             metavar="file",
             required=False,
+            default=None,
         ),
         SettingsField(
             "allow_additional_properties",
@@ -95,6 +103,7 @@ class Settings:
             "additional properties during the tokenizing step. (One token is basically one element, e.g. a string literal or a number)",
             metavar="tokens",
             required=False,
+            default=None,
         ),
         SettingsField(
             "include_external_builtins_file",
@@ -103,13 +112,23 @@ class Settings:
             "with this path will be generated. Be sure to copy js2c_builtins.h there.",
             metavar="file",
             required=False,
+            default=None,
         ),
         SettingsField(
             "file_parser_max_size",
             type=str,
-            help="Max file size allowed in the function that parse JSON from a file path.",
+            help="Max input file size allowed (as a C expression). Only relevant in the function that parse JSON from a file path.",
             metavar="expression",
             required=False,
+            default=None,
+        ),
+        SettingsField(
+            "tokens_buf_max_size",
+            type=str,
+            help=f"Maximum memory size limit allowed (as a C expression) when allocating the JSMN token buffer. Default is {TOKENS_BUF_MAX_SIZE_DEFAULT}.",
+            metavar="expression",
+            required=False,
+            default=TOKENS_BUF_MAX_SIZE_DEFAULT,
         ),
     ]
 
@@ -122,6 +141,7 @@ class Settings:
     allow_additional_properties: str | None
     include_external_builtins_file: str | None
     file_parser_max_size: int | None
+    tokens_buf_max_size: int | None
 
     def __init__(self, args, settings_json):
         for field in self.FIELDS:
@@ -147,5 +167,5 @@ class Settings:
                 type=field.type,
                 help=field.help,
                 required=field.required,
-                default=None,
+                default=field.default,
             )

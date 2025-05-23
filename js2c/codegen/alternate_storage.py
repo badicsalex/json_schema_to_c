@@ -75,6 +75,3 @@ class AlternateStorageGenerator(Generator):
 
     def has_default_value(self):
         return False
-
-    def max_token_num(self):
-        return 0  # FIXME not sure about that

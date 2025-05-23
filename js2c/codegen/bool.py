@@ -58,6 +58,3 @@ class BoolGenerator(Generator):
                 'true' if self.default else 'false'
             )
         )
-
-    def max_token_num(self):
-        return 1

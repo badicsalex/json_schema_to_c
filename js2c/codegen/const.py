@@ -78,6 +78,3 @@ class ConstGenerator(Generator):
             out_file.print("parse_state->current_token += 1;")
             out_file.print("return false;")
         out_file.print("")
-
-    def max_token_num(self):
-        return 1

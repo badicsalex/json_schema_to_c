@@ -146,6 +146,3 @@ class UnionGenerator(Generator):
 
             out_file.print("return false;")
         out_file.print("")
-
-    def max_token_num(self):
-        return sum([option.max_token_num() for option in self.option_generators]) + 1

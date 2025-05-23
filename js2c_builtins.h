@@ -259,32 +259,34 @@ static inline bool builtin_skip(parse_state_t *parse_state) {
     return false;
 }
 
-static inline bool builtin_parse_json_string(
-    /*@out@*/ parse_state_t *parse_state,
-    /*@dependent@*/ jsmntok_t *token_buffer,
+static inline int builtin_parse_json_string(
+    /*@null@*/ /*@out@*/ parse_state_t *parse_state,
+    /*@null@*/ /*@dependent@*/ jsmntok_t *token_buffer,
     size_t token_buffer_size,
     /*@dependent@*/ const char *json_string,
     size_t json_string_len
 ) {
     jsmn_parser parser = {0, 0, 0};
 
-    parse_state->json_string = json_string;
-    parse_state->tokens = token_buffer;
-    parse_state->current_token = 0;
-    parse_state->max_token_num = token_buffer_size;
-    parse_state->current_key = "document root";
+	if (parse_state != NULL) {
+		parse_state->json_string = json_string;
+		parse_state->tokens = token_buffer;
+		parse_state->current_token = 0;
+		parse_state->max_token_num = token_buffer_size;
+		parse_state->current_key = "document root";
+    }
 
     jsmn_init(&parser);
     int token_num = jsmn_parse(&parser, json_string, json_string_len, token_buffer, token_buffer_size);
     if (token_num < 0) {
         LOG_ERROR(parser.pos, "JSON syntax error: %s", jsmn_error_as_string(token_num));
-        return true;
+        return -1;
     }
     if (token_num == 0) {
         LOG_ERROR(parser.pos, "String did not contain any JSON tokens");
-        return true;
+        return -1;
     }
-    return false;
+    return token_num;
 }
 
 #endif /* JS2C_BUILTINS_H */

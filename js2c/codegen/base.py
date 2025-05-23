@@ -101,10 +101,6 @@ class Generator(ABC):
     def generate_parser_call(self, out_var_name: str, out_file: CodeBlockPrinter, on_err="return true;"):
         pass
 
-    @abstractmethod
-    def max_token_num(self):
-        pass
-
     @classmethod
     @abstractmethod
     def can_parse_schema(cls, schema):

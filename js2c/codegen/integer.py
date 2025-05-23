@@ -134,9 +134,6 @@ class IntegerGeneratorBase(Generator):
             return
         out_file.print("{} = {}{};".format(out_var_name, self.default, self.default_suffix))
 
-    def max_token_num(self):
-        return 1
-
 
 class IntegerGenerator(IntegerGeneratorBase):
     def __init__(self, schema, parameters):

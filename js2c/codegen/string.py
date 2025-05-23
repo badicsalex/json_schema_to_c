@@ -161,6 +161,3 @@ class StringGenerator(Generator):
                     size=len(self.default) + 1
                 )
             )
-
-    def max_token_num(self):
-        return 1

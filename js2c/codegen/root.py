@@ -24,7 +24,6 @@
 #
 import os
 import re
-from typing import TextIO
 
 from .code_block_printer import CodeBlockPrinter
 
@@ -60,18 +59,22 @@ class RootGenerator:
         )
         self.name = schema['$id']
 
-    def generate_root_parser(self, out_file: CodeBlockPrinter, max_token_num: int):
+    def generate_root_parser(self, out_file: CodeBlockPrinter):
         out_file.print("// Splint can't see that: The json_string reference isn't held by the function, because parse_state is dropped at the end of the function.")
         out_file.print("/*@-temptrans@*/")
         out_file.print("bool json_parse_{}_with_len(const char *json_string, size_t json_string_len, {})".format(self.name, self.root_generator.c_type.typed_identifier("out", indirection="*")))
         with out_file.code_block():
+            out_file.print("int token_num = builtin_parse_json_string(NULL, NULL, 0, json_string, json_string_len);")
+            with out_file.if_block("token_num < 0"):
+                out_file.print("return true;")
+            with out_file.if_block(f"(size_t) token_num > (size_t) ({self.settings.tokens_buf_max_size}) / sizeof(jsmntok_t)"):
+                out_file.print("LOG_ERROR(parser.pos, \"Exceeded maximum allowed buffer size for JSMN token buffer\");")
+                out_file.print("return true;")
             out_file.print("parse_state_t parse_state_var;")
             out_file.print("parse_state_t *parse_state = &parse_state_var;")
-            out_file.print("jsmntok_t token_buffer[{}];".format(max_token_num))
+            out_file.print("jsmntok_t token_buffer[token_num];")
             out_file.print("memset(token_buffer, 0, sizeof token_buffer);")
-            parser_call = "builtin_parse_json_string(parse_state, token_buffer, (size_t) {}, json_string, json_string_len)" \
-                .format(max_token_num)
-            with out_file.if_block(parser_call):
+            with out_file.if_block("builtin_parse_json_string(parse_state, token_buffer, (size_t) token_num, json_string, json_string_len) < 0"):
                 out_file.print("return true;")
             self.root_generator.generate_parser_call(
                 "out",
@@ -203,11 +206,7 @@ class RootGenerator:
         c_file.print_separator("Generated parsers")
         c_file.print("")
         self.root_generator.generate_parser_bodies(c_file)
-
-        max_token_num = self.root_generator.max_token_num()
-        if self.settings.allow_additional_properties is not None:
-            max_token_num += self.settings.allow_additional_properties
-        self.generate_root_parser(c_file, max_token_num)
+        self.generate_root_parser(c_file)
 
         if self.settings.c_postfix_file:
             c_file.print_separator("User-added postfix")

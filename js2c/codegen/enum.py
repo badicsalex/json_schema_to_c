@@ -119,6 +119,3 @@ class EnumGenerator(Generator):
         if self.default not in self.enum:
             raise SchemaError(self, "The enum default value '{}' is not in the allowed values {}".format(self.default, self.enum))
         out_file.print("{} = {};".format(out_var_name, self.convert_enum_label(self.default)))
-
-    def max_token_num(self):
-        return 1
