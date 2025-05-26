@@ -128,7 +128,7 @@ class RootGenerator:
 
         h_file.write(NOTE_FOR_GENERATED_FILES)
 
-        header_guard_name = re.sub("[^A-Z0-9]", "_", os.path.basename(h_file_path).upper())
+        header_guard_name = "H_" + re.sub("[^A-Z0-9]", "_", os.path.basename(h_file_path).upper())
         h_file.print("#ifndef {}".format(header_guard_name))
         h_file.print("#define {}".format(header_guard_name))
 
