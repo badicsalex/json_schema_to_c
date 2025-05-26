@@ -93,14 +93,19 @@ class StringGenerator(Generator):
     def can_parse_schema(cls, schema):
         return schema.get('type') == 'string'
 
-    def generate_custom_parser_call(self, src, src_length, out_var_name, out_file, on_err):
+    def generate_custom_parser_call(self, src, src_length: int | str, out_var_name, out_file, on_err):
         out_file.print("const char *error = NULL;")
-        parser_call = "{}({}, {}, {}, &error)".format(self.js2cParseFunction, src, src_length, out_var_name)
+        parser_call = "{}({}, {}, {}, &error)".format(
+            self.js2cParseFunction,
+            src,
+            src_length if isinstance(src_length, str) else str(src_length) + "u",
+            out_var_name
+        )
         with out_file.if_block(parser_call):
             self.generate_logged_error([
                 "Error parsing '%s', value=\\\"%.*s\\\": %s",
                 "parse_state->current_key",
-                src_length,
+                "(int) " + src_length if isinstance(src_length, str) else str(src_length),
                 src,
                 "error != NULL ? error : \"error calling {}\"".format(self.js2cParseFunction),
             ], out_file, exit_statement=on_err)
@@ -108,7 +113,7 @@ class StringGenerator(Generator):
     def generate_parser_call(self, out_var_name, out_file, on_err="return true;"):
         if self.js2cParseFunction is not None:
             length_check = \
-                "builtin_check_current_string(parse_state, {}, {})" \
+                "builtin_check_current_string(parse_state, {}u, {}u)" \
                 .format(self.minLength, self.maxLength)
             with out_file.if_block(length_check):
                 out_file.print(on_err)
@@ -123,7 +128,7 @@ class StringGenerator(Generator):
             out_file.print("parse_state->current_token += 1;")
         else:
             length_check = \
-                "builtin_parse_string(parse_state, {}[0], {}, {})" \
+                "builtin_parse_string(parse_state, {}[0], {}u, {}u)" \
                 .format(out_var_name, self.minLength, self.maxLength)
             with out_file.if_block(length_check):
                 out_file.print(on_err)
@@ -148,7 +153,7 @@ class StringGenerator(Generator):
             with out_file.code_block(standalone=True):
                 self.generate_custom_parser_call(
                     '"{}"'.format(self.default),
-                    str(len(self.default)),
+                    len(self.default),
                     "&{}".format(out_var_name),
                     out_file,
                     on_err="return true;"

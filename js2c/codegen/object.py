@@ -128,7 +128,7 @@ class ObjectGenerator(Generator):
                 self.generate_logged_error("Missing required field in '%s': {}".format(field_name), out_file)
 
     def generate_key_children_check(self, out_file):
-        with out_file.if_block("CURRENT_TOKEN(parse_state).size > 1"):
+        with out_file.if_block("CURRENT_TOKEN(parse_state).size > 1u"):
             self.generate_logged_error(
                 [
                     "Missing separator between values in '%s', after key: %.*s",
@@ -138,7 +138,7 @@ class ObjectGenerator(Generator):
                 out_file
             )
 
-        with out_file.if_block("CURRENT_TOKEN(parse_state).size < 1"):
+        with out_file.if_block("CURRENT_TOKEN(parse_state).size < 1u"):
             self.generate_logged_error(
                 [
                     "Missing value in '%s', after key: %.*s",
@@ -182,16 +182,16 @@ class ObjectGenerator(Generator):
 
             self.generate_seen_flags(out_file)
 
-            out_file.print("const uint64_t object_start_token = parse_state->current_token;")
-            out_file.print("const uint64_t n = parse_state->tokens[parse_state->current_token].size;")
+            out_file.print("const unsigned int object_start_token = parse_state->current_token;")
+            out_file.print("const unsigned int n = parse_state->tokens[parse_state->current_token].size;")
             out_file.print("parse_state->current_token += 1;")
-            with out_file.for_block("uint64_t i = 0; i < n; ++i"):
+            with out_file.for_block("unsigned int i = 0; i < n; ++i"):
                 self.generate_field_parsers(out_file)
 
             # This little magic is needed because both required checks and default setting
             # use CURRENT_TOKEN, which may be past the token list by now, and also we want
             # to report the issue at the start of the object.
-            out_file.print("const uint64_t saved_current_token = parse_state->current_token;")
+            out_file.print("const unsigned int saved_current_token = parse_state->current_token;")
             out_file.print("parse_state->current_token = object_start_token;")
 
             self.generate_required_checks(out_file)

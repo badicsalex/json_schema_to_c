@@ -62,17 +62,14 @@ enum jsmnerr {
 
 /**
  * JSON token description.
- * type		type (object, array, string etc.)
- * start	start position in JSON data string
- * end		end position in JSON data string
  */
 typedef struct {
-  jsmntype_t type;
-  int start;
-  int end;
-  int size;
+  jsmntype_t type;    /* type (object, array, string etc.) */
+  unsigned int start; /* start position in JSON data string */
+  unsigned int end;   /* end position + 1 in JSON data string, such as the token length is end - start */
+  unsigned int size;  /* number of child (nested) tokens */
 #ifdef JSMN_PARENT_LINKS
-  int parent;
+  int parent;         /* index of the parent token, or -1 when there is none */
 #endif
 } jsmntok_t;
 
@@ -82,8 +79,8 @@ typedef struct {
  */
 typedef struct {
   unsigned int pos;     /* offset in the JSON string */
-  unsigned int toknext; /* next token to allocate */
-  int toksuper;         /* superior token node, e.g. parent object or array */
+  unsigned int toknext; /* index of next token to allocate */
+  int toksuper;         /* index of superior token node, e.g. parent object or array, or -1 when there is none */
 } jsmn_parser;
 
 /**
@@ -96,7 +93,7 @@ JSMN_API void jsmn_init(jsmn_parser *parser);
  * describing
  * a single JSON object.
  */
-JSMN_API int jsmn_parse(jsmn_parser *parser, const char *js, size_t len,
+JSMN_API int jsmn_parse(jsmn_parser *parser, const char *js, unsigned int len,
                         /*@null@*/ jsmntok_t *tokens, unsigned int num_tokens);
 
 #ifndef JSMN_HEADER
@@ -104,13 +101,14 @@ JSMN_API int jsmn_parse(jsmn_parser *parser, const char *js, size_t len,
  * Allocates a fresh unused token from the token pool.
  */
 static /*@null@*/ /*@observer@*/ jsmntok_t *jsmn_alloc_token(jsmn_parser *parser, jsmntok_t *tokens,
-                                                             const size_t num_tokens) {
+                                                             const unsigned int num_tokens) {
   jsmntok_t *tok;
   if (parser->toknext >= num_tokens) {
     return NULL;
   }
   tok = &tokens[parser->toknext++];
-  tok->start = tok->end = -1;
+  tok->start = 0;
+  tok->end = 0;
   tok->size = 0;
 #ifdef JSMN_PARENT_LINKS
   tok->parent = -1;
@@ -122,7 +120,7 @@ static /*@null@*/ /*@observer@*/ jsmntok_t *jsmn_alloc_token(jsmn_parser *parser
  * Fills token type and boundaries.
  */
 static void jsmn_fill_token(jsmntok_t *token, const jsmntype_t type,
-                            const int start, const int end) {
+                            const unsigned int start, const unsigned int end) {
   token->type = type;
   token->start = start;
   token->end = end;
@@ -133,8 +131,8 @@ static void jsmn_fill_token(jsmntok_t *token, const jsmntype_t type,
  * Fills next available token with JSON primitive.
  */
 static int jsmn_parse_primitive(jsmn_parser *parser, const char *js,
-                                const size_t len, /*@null@*/ jsmntok_t *tokens,
-                                const size_t num_tokens) {
+                                const unsigned int len, /*@null@*/ jsmntok_t *tokens,
+                                const unsigned int num_tokens) {
   jsmntok_t *token;
   unsigned int start;
 
@@ -179,7 +177,7 @@ found:
     parser->pos = start;
     return (int) JSMN_ERROR_NOMEM;
   }
-  jsmn_fill_token(token, JSMN_PRIMITIVE, (int) start, (int) parser->pos); // FIXME dubious type casting
+  jsmn_fill_token(token, JSMN_PRIMITIVE, start, parser->pos);
 #ifdef JSMN_PARENT_LINKS
   token->parent = parser->toksuper;
 #endif
@@ -191,8 +189,8 @@ found:
  * Fills next token with JSON string.
  */
 static int jsmn_parse_string(jsmn_parser *parser, const char *js,
-                             const size_t len, /*@null@*/ jsmntok_t *tokens,
-                             const size_t num_tokens) {
+                             const unsigned int len, /*@null@*/ jsmntok_t *tokens,
+                             const unsigned int num_tokens) {
   jsmntok_t *token;
 
   unsigned int start = parser->pos;
@@ -213,7 +211,7 @@ static int jsmn_parse_string(jsmn_parser *parser, const char *js,
         parser->pos = start;
         return (int) JSMN_ERROR_NOMEM;
       }
-      jsmn_fill_token(token, JSMN_STRING, (int) start + 1, (int) parser->pos); // FIXME dubious type casting
+      jsmn_fill_token(token, JSMN_STRING, start + 1, parser->pos);
 #ifdef JSMN_PARENT_LINKS
       token->parent = parser->toksuper;
 #endif
@@ -221,7 +219,7 @@ static int jsmn_parse_string(jsmn_parser *parser, const char *js,
     }
 
     /* Backslash: Quoted symbol expected */
-    if (c == '\\' && (size_t) parser->pos + 1 < len) {
+    if (c == '\\' && parser->pos + 1 < len) {
       int i;
       parser->pos++;
       switch (js[parser->pos]) {
@@ -265,10 +263,10 @@ static int jsmn_parse_string(jsmn_parser *parser, const char *js,
 /**
  * Parse JSON string and fill tokens.
  */
-JSMN_API int jsmn_parse(jsmn_parser *parser, const char *js, const size_t len,
+JSMN_API int jsmn_parse(jsmn_parser *parser, const char *js, const unsigned int len,
                         jsmntok_t *tokens, const unsigned int num_tokens) {
   int r;
-  int i;
+  unsigned int i;
   jsmntok_t *token;
   unsigned int count = parser->toknext;
 
@@ -302,8 +300,8 @@ JSMN_API int jsmn_parse(jsmn_parser *parser, const char *js, const size_t len,
 #endif
       }
       token->type = (c == '{' ? JSMN_OBJECT : JSMN_ARRAY);
-      token->start = (int) parser->pos; // FIXME dubious type casting
-      parser->toksuper = (int) parser->toknext - 1; // FIXME dubious type casting
+      token->start = parser->pos;
+      parser->toksuper = (int) parser->toknext - 1;
       break;
     case '}':
     case ']':
@@ -312,16 +310,16 @@ JSMN_API int jsmn_parse(jsmn_parser *parser, const char *js, const size_t len,
       }
       type = (c == '}' ? JSMN_OBJECT : JSMN_ARRAY);
 #ifdef JSMN_PARENT_LINKS
-      if (parser->toknext < 1u) {
+      if (parser->toknext == 0) {
         return (int) JSMN_ERROR_INVAL;
       }
       token = &tokens[parser->toknext - 1];
       for (;;) {
-        if (token->start != -1 && token->end == -1) {
+        if (token->end == 0) {
           if (token->type != type) {
             return (int) JSMN_ERROR_INVAL;
           }
-          token->end = (int) parser->pos + 1; // FIXME dubious type casting
+          token->end = parser->pos + 1;
           parser->toksuper = token->parent;
           /*@innerbreak@*/ break;
         }
@@ -334,25 +332,28 @@ JSMN_API int jsmn_parse(jsmn_parser *parser, const char *js, const size_t len,
         token = &tokens[token->parent];
       }
 #else
-      for (i = (int) parser->toknext - 1; i >= 0; i--) { // FIXME dubious type casting
+      for (i = parser->toknext - 1;; i--) {
         token = &tokens[i];
-        if (token->start != -1 && token->end == -1) {
+        if (token->end == 0) {
           if (token->type != type) {
             return (int) JSMN_ERROR_INVAL;
           }
           parser->toksuper = -1;
-          token->end = (int) parser->pos + 1;
+          token->end = parser->pos + 1;
           /*@innerbreak@*/  break;
         }
+        /* Error if unmatched closing bracket */
+        if (i == 0) {
+          return (int) JSMN_ERROR_INVAL;
+        }
       }
-      /* Error if unmatched closing bracket */
-      if (i == -1) {
-        return (int) JSMN_ERROR_INVAL;
-      }
-      for (; i >= 0; i--) {
+      for (;; i--) {
         token = &tokens[i];
-        if (token->start != -1 && token->end == -1) {
-          parser->toksuper = i;
+        if (token->end == 0) {
+          parser->toksuper = (int) i;
+          /*@innerbreak@*/  break;
+        }
+        if (i == 0) {
           /*@innerbreak@*/  break;
         }
       }
@@ -374,7 +375,7 @@ JSMN_API int jsmn_parse(jsmn_parser *parser, const char *js, const size_t len,
     case ' ':
       break;
     case ':':
-      parser->toksuper = (int) parser->toknext - 1; // FIXME dubious type casting
+      parser->toksuper = (int) parser->toknext - 1;
       break;
     case ',':
       if (tokens != NULL && parser->toksuper != -1 &&
@@ -383,12 +384,15 @@ JSMN_API int jsmn_parse(jsmn_parser *parser, const char *js, const size_t len,
 #ifdef JSMN_PARENT_LINKS
         parser->toksuper = tokens[parser->toksuper].parent;
 #else
-        for (i = (int) parser->toknext - 1; i >= 0; i--) { // FIXME dubious type casting
+        for (i = parser->toknext - 1;; i--) {
           if (tokens[i].type == JSMN_ARRAY || tokens[i].type == JSMN_OBJECT) {
-            if (tokens[i].start != -1 && tokens[i].end == -1) {
-              parser->toksuper = i;
+            if (tokens[i].end == 0) {
+              parser->toksuper = (int) i;
               /*@innerbreak@*/ break;
             }
+          }
+          if (i == 0) {
+              /*@innerbreak@*/ break;
           }
         }
 #endif
@@ -441,15 +445,18 @@ JSMN_API int jsmn_parse(jsmn_parser *parser, const char *js, const size_t len,
   }
 
   if (tokens != NULL) {
-    for (i = (int) parser->toknext - 1; i >= 0; i--) { // FIXME dubious type casting
+    for (i = parser->toknext - 1;; i--) {
       /* Unmatched opened object or array */
-      if (tokens[i].start != -1 && tokens[i].end == -1) {
+      if (tokens[i].end == 0) {
         return (int) JSMN_ERROR_PART;
+      }
+      if (i == 0) {
+        break;
       }
     }
   }
 
-  return (int) count; // FIXME dubious type casting
+  return (int) count;
 }
 
 /**

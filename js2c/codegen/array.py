@@ -36,7 +36,7 @@ class ArrayType(CType):
 
         out_file.print("typedef struct " + self.type_name.removesuffix("_t") + " {")
         with out_file.indent():
-            out_file.print_with_docstring("uint64_t n;", "The number of elements in the array")
+            out_file.print_with_docstring("uint32_t n;", "The number of elements in the array")
             self.item_type.generate_field_declaration(
                 "items[{}]".format(self.max_items), out_file
             )
@@ -90,15 +90,15 @@ class ArrayGenerator(Generator):
             out_file.print(on_err)
 
     def generate_range_checks(self, out_file):
-        with out_file.if_block("n > {}".format(self.maxItems)):
+        with out_file.if_block("n > {}u".format(self.maxItems)):
             self.generate_logged_error(
-                ["Array '%s' too large. Length: %i. Maximum length: {}.".format(self.maxItems), "parse_state->current_key", "n"],
+                ["Array '%s' too large. Length: %u. Maximum length: {}.".format(self.maxItems), "parse_state->current_key", "n"],
                 out_file
             )
         if self.minItems:
-            with out_file.if_block("n < {}".format(self.minItems)):
+            with out_file.if_block("n < {}u".format(self.minItems)):
                 self.generate_logged_error(
-                    ["Array '%s' too small. Length: %i. Minimum length: {}.".format(self.minItems), "parse_state->current_key", "n"],
+                    ["Array '%s' too small. Length: %u. Minimum length: {}.".format(self.minItems), "parse_state->current_key", "n"],
                     out_file
                 )
 
@@ -109,11 +109,11 @@ class ArrayGenerator(Generator):
         with out_file.code_block():
             with out_file.if_block("check_type(parse_state, JSMN_ARRAY)"):
                 out_file.print("return true;")
-            out_file.print("const int n = parse_state->tokens[parse_state->current_token].size;")
+            out_file.print("const unsigned int n = parse_state->tokens[parse_state->current_token].size;")
             self.generate_range_checks(out_file)
-            out_file.print("out->n = n;")
+            out_file.print("out->n = (uint32_t) n;")
             out_file.print("parse_state->current_token += 1;")
-            with out_file.for_block("int i = 0; i < n; ++i"):
+            with out_file.for_block("unsigned int i = 0; i < n; ++i"):
                 self.item_generator.generate_parser_call(
                     "&out->items[i]",
                     out_file

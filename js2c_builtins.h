@@ -53,14 +53,14 @@ typedef struct parse_state_s {
     /*@observer@*/ const char *json_string;
     /*@observer@*/ const char *current_key;
     /*@observer@*/ const jsmntok_t *tokens;
-    uint64_t current_token;
-    uint64_t max_token_num;
+    unsigned int current_token;
+    unsigned int max_token_num;
 } parse_state_t;
 
 #define CURRENT_TOKEN(parse_state) ((parse_state)->tokens[(parse_state)->current_token])
 #define CURRENT_STRING(parse_state) ((parse_state)->json_string + CURRENT_TOKEN(parse_state).start)
 #define CURRENT_STRING_LENGTH(parse_state) (CURRENT_TOKEN(parse_state).end - CURRENT_TOKEN(parse_state).start)
-#define CURRENT_STRING_FOR_ERROR(parse_state) CURRENT_STRING_LENGTH(parse_state), CURRENT_STRING(parse_state)
+#define CURRENT_STRING_FOR_ERROR(parse_state) (int) CURRENT_STRING_LENGTH(parse_state), CURRENT_STRING(parse_state)
 
 static inline /*@observer@*/ const char *token_type_as_string(jsmntype_t type) {
     switch (type) {
@@ -114,31 +114,31 @@ static inline bool current_string_is(const parse_state_t *parse_state, const cha
     if (strlen(s) != (size_t)(token->end - token->start)) {
         return false;
     }
-    return memcmp(parse_state->json_string + token->start, s, token->end - token->start) == 0;
+    return memcmp(parse_state->json_string + token->start, s, (size_t) (token->end - token->start)) == 0;
 }
 
-static inline bool builtin_check_current_string(parse_state_t *parse_state, int min_len, int max_len) {
+static inline bool builtin_check_current_string(parse_state_t *parse_state, unsigned int min_len, unsigned int max_len) {
     if (check_type(parse_state, JSMN_STRING)) {
         return true;
     }
     const jsmntok_t *token = &CURRENT_TOKEN(parse_state);
     if (token->end - token->start > max_len) {
-        LOG_ERROR(token->start, "String too large in '%s'. Length: %i. Maximum length: %i.", parse_state->current_key, token->end - token->start, max_len);
+        LOG_ERROR(token->start, "String too large in '%s'. Length: %u. Maximum length: %u.", parse_state->current_key, token->end - token->start, max_len);
         return true;
     }
     if (token->end - token->start < min_len) {
-        LOG_ERROR(token->start, "String too short in '%s'. Length: %i. Minimum length: %i.", parse_state->current_key, token->end - token->start, min_len);
+        LOG_ERROR(token->start, "String too short in '%s'. Length: %u. Minimum length: %u.", parse_state->current_key, token->end - token->start, min_len);
         return true;
     }
     return false;
 }
 
-static inline bool builtin_parse_string(parse_state_t *parse_state, char *out, int min_len, int max_len) {
+static inline bool builtin_parse_string(parse_state_t *parse_state, char *out, unsigned int min_len, unsigned int max_len) {
     if (builtin_check_current_string(parse_state, min_len, max_len)){
         return true;
     }
     const jsmntok_t *token = &CURRENT_TOKEN(parse_state);
-    memcpy(out, parse_state->json_string + token->start, token->end - token->start);
+    memcpy(out, parse_state->json_string + token->start, (size_t) (token->end - token->start));
     out[token->end - token->start] = '\0';
     parse_state->current_token += 1;
     return false;
@@ -204,7 +204,7 @@ static inline bool builtin_parse_unsigned(
         LOG_ERROR(token->start, "Invalid unsigned integer literal in '%s': %.*s", parse_state->current_key, CURRENT_STRING_FOR_ERROR(parse_state));
         return true;
     }
-    *out = strtoull(start_char, &end_char, radix);
+    *out = (uint64_t) strtoull(start_char, &end_char, radix);
     if (end_char != parse_state->json_string + token->end) {
         LOG_ERROR(token->start, "Invalid unsigned integer literal in '%s': %.*s", parse_state->current_key, CURRENT_STRING_FOR_ERROR(parse_state));
         return true;
@@ -219,7 +219,7 @@ static inline bool builtin_parse_double(parse_state_t *parse_state, double *out)
         return true;
     }
     const char *start_char = parse_state->json_string + token->start;
-    if (token->end - token->start >= 2) {
+    if (token->end - token->start >= 2u) {
         if (start_char[1] != '.' && start_char[1] != 'e' && start_char[1] != 'E' &&
             !(start_char[1] >= '0' && start_char[1] <= '9')) {
             LOG_ERROR(token->start, "Invalid floating point literal in '%s': %.*s", parse_state->current_key, CURRENT_STRING_FOR_ERROR(parse_state));
@@ -243,10 +243,10 @@ static inline bool builtin_skip(parse_state_t *parse_state) {
      *   - Object keys have a size of 1. This is important, because {"a": "b"} is 3 tokens this way:
      *       - An object of size 1,
      *       - A key of size 1
-     *       - A string of size 0.
+     *       - A string of size 1.
      *   - All other tokens are size 0.
      */
-    uint32_t skip_tokens = 1;
+    unsigned int skip_tokens = 1u;
     while (skip_tokens > 0) {
         skip_tokens += CURRENT_TOKEN(parse_state).size;
         if (parse_state->current_token >= parse_state->max_token_num) {
@@ -262,9 +262,9 @@ static inline bool builtin_skip(parse_state_t *parse_state) {
 static inline int builtin_parse_json_string(
     /*@null@*/ /*@out@*/ parse_state_t *parse_state,
     /*@null@*/ /*@dependent@*/ jsmntok_t *token_buffer,
-    size_t token_buffer_size,
+    unsigned int token_buffer_size,
     /*@dependent@*/ const char *json_string,
-    size_t json_string_len
+    unsigned int json_string_len
 ) {
     jsmn_parser parser = {0, 0, 0};
 

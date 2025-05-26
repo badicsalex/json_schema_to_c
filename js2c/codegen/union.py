@@ -122,7 +122,7 @@ class UnionGenerator(Generator):
         out_file.print("static bool parse_{}(parse_state_t *parse_state, {} *out)".format(self.parser_name, self.c_type))
         with out_file.code_block():
             out_file.print("bool missing_value = true;")
-            out_file.print("uint64_t saved_token = parse_state->current_token;")
+            out_file.print("unsigned int saved_token = parse_state->current_token;")
             out_file.print("const char *saved_key = parse_state->current_key;")
             restore_ctx = ("parse_state->current_token = saved_token;",
                            "parse_state->current_key = saved_key;",

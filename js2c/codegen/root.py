@@ -64,17 +64,17 @@ class RootGenerator:
         out_file.print("/*@-temptrans@*/")
         out_file.print("bool json_parse_{}_with_len(const char *json_string, size_t json_string_len, {})".format(self.name, self.root_generator.c_type.typed_identifier("out", indirection="*")))
         with out_file.code_block():
-            out_file.print("int token_num = builtin_parse_json_string(NULL, NULL, 0, json_string, json_string_len);")
+            out_file.print("int token_num = builtin_parse_json_string(NULL, NULL, 0, json_string, (unsigned int) json_string_len);")
             with out_file.if_block("token_num < 0"):
                 out_file.print("return true;")
-            with out_file.if_block(f"(size_t) token_num > (size_t) ({self.settings.tokens_buf_max_size}) / sizeof(jsmntok_t)"):
+            with out_file.if_block(f"(size_t) token_num > (size_t) ({self.settings.tokens_buf_max_size}) / (size_t) sizeof(jsmntok_t)"):
                 out_file.print("LOG_ERROR(parser.pos, \"Exceeded maximum allowed buffer size for JSMN token buffer\");")
                 out_file.print("return true;")
             out_file.print("parse_state_t parse_state_var;")
             out_file.print("parse_state_t *parse_state = &parse_state_var;")
             out_file.print("jsmntok_t token_buffer[token_num];")
             out_file.print("memset(token_buffer, 0, sizeof token_buffer);")
-            with out_file.if_block("builtin_parse_json_string(parse_state, token_buffer, (size_t) token_num, json_string, json_string_len) < 0"):
+            with out_file.if_block("builtin_parse_json_string(parse_state, token_buffer, (unsigned int) token_num, json_string, (unsigned int) json_string_len) < 0"):
                 out_file.print("return true;")
             self.root_generator.generate_parser_call(
                 "out",
@@ -193,7 +193,6 @@ class RootGenerator:
 
         c_file.write(NOTE_FOR_GENERATED_FILES)
         c_file.print('#include "{}"'.format(h_file_name))
-        c_file.print("/*@+matchanyintegral@*/ // FIXME fix this mess")
 
         if self.settings.c_prefix_file is not None:
             c_file.print_separator("User-added prefix")
@@ -212,7 +211,6 @@ class RootGenerator:
             c_file.print_separator("User-added postfix")
             c_file.write(self.settings.c_postfix_file.read())
 
-        c_file.print("/*@=matchanyintegral@*/")
         c_file.print("")
 
         c_file.save_to_file()
