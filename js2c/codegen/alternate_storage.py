@@ -74,4 +74,5 @@ class AlternateStorageGenerator(Generator):
         return
 
     def has_default_value(self):
-        return False
+        # always behave like there is a default value in the schema, because the alternate_storage parser doesn't need it
+        return True
