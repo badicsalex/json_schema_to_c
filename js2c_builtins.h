@@ -92,6 +92,7 @@ static inline /*@observer@*/ const char *jsmn_error_as_string(int err) {
     }
 }
 
+// js2c-start check_type
 static inline bool check_type(const parse_state_t *parse_state, jsmntype_t type) {
     const jsmntok_t *token = &parse_state->tokens[parse_state->current_token];
     if (token->type != type) {
@@ -105,7 +106,9 @@ static inline bool check_type(const parse_state_t *parse_state, jsmntype_t type)
     }
     return false;
 }
+// js2c-end
 
+// js2c-start current_string_is
 static inline bool current_string_is(const parse_state_t *parse_state, const char *s) {
     const jsmntok_t *token = &parse_state->tokens[parse_state->current_token];
     if (token->type != JSMN_STRING) {
@@ -116,7 +119,9 @@ static inline bool current_string_is(const parse_state_t *parse_state, const cha
     }
     return memcmp(parse_state->json_string + token->start, s, (size_t) (token->end - token->start)) == 0;
 }
+// js2c-end
 
+// js2c-start builtin_check_current_string
 static inline bool builtin_check_current_string(parse_state_t *parse_state, unsigned int min_len, unsigned int max_len) {
     if (check_type(parse_state, JSMN_STRING)) {
         return true;
@@ -132,7 +137,9 @@ static inline bool builtin_check_current_string(parse_state_t *parse_state, unsi
     }
     return false;
 }
+// js2c-end
 
+// js2c-start builtin_parse_string
 static inline bool builtin_parse_string(parse_state_t *parse_state, char *out, unsigned int min_len, unsigned int max_len) {
     if (builtin_check_current_string(parse_state, min_len, max_len)){
         return true;
@@ -143,7 +150,9 @@ static inline bool builtin_parse_string(parse_state_t *parse_state, char *out, u
     parse_state->current_token += 1;
     return false;
 }
+// js2c-end
 
+// js2c-start builtin_parse_bool
 static inline bool builtin_parse_bool(parse_state_t *parse_state, bool *out) {
     if (check_type(parse_state, JSMN_PRIMITIVE)) {
         return true;
@@ -158,7 +167,9 @@ static inline bool builtin_parse_bool(parse_state_t *parse_state, bool *out) {
     parse_state->current_token += 1;
     return false;
 }
+// js2c-end
 
+// js2c-start builtin_parse_signed
 static inline bool builtin_parse_signed(
     parse_state_t *parse_state,
     bool number_allowed,
@@ -182,7 +193,9 @@ static inline bool builtin_parse_signed(
     parse_state->current_token += 1;
     return false;
 }
+// js2c-end
 
+// js2c-start builtin_parse_unsigned
 static inline bool builtin_parse_unsigned(
     parse_state_t *parse_state,
     bool number_allowed,
@@ -212,7 +225,9 @@ static inline bool builtin_parse_unsigned(
     parse_state->current_token += 1;
     return false;
 }
+// js2c-end
 
+// js2c-start builtin_parse_double
 static inline bool builtin_parse_double(parse_state_t *parse_state, double *out) {
     const jsmntok_t *token = &parse_state->tokens[parse_state->current_token];
     if (check_type(parse_state, JSMN_PRIMITIVE)) {
@@ -235,7 +250,9 @@ static inline bool builtin_parse_double(parse_state_t *parse_state, double *out)
     parse_state->current_token += 1;
     return false;
 }
+// js2c-end
 
+// js2c-start builtin_skip
 static inline bool builtin_skip(parse_state_t *parse_state) {
     /* The algorithm works, because of how .size behaves on JSMN tokens:
      *   - Arrays have size = number of elements
@@ -258,6 +275,7 @@ static inline bool builtin_skip(parse_state_t *parse_state) {
     }
     return false;
 }
+// js2c-end
 
 static inline int builtin_parse_json_string(
     /*@null@*/ /*@out@*/ parse_state_t *parse_state,

@@ -112,6 +112,7 @@ class IntegerGeneratorBase(Generator):
 
     def generate_parser_call(self, out_var_name, out_file, on_err="return true;"):
         out_file.print("{} int_parse_tmp = 0;".format(self.parsed_type))
+        out_file.require_section(self.parser_fn)
         parser_call = "{}(parse_state, {}, {}, {}, &int_parse_tmp)".format(
             self.parser_fn,
             'true' if self.number_allowed else 'false',

@@ -100,6 +100,7 @@ class EnumGenerator(Generator):
                 out_file.print("return true;")
 
             for enum_label in self.enum:
+                out_file.require_section("current_string_is")
                 with out_file.if_block('current_string_is(parse_state, "{}")'.format(enum_label)):
                     out_file.print("*out = {};".format(self.convert_enum_label(enum_label)))
                 out_file.print("else")

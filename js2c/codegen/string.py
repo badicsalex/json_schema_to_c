@@ -95,6 +95,7 @@ class StringGenerator(Generator):
 
     def generate_custom_parser_call(self, src, src_length: int | str, out_var_name, out_file, on_err):
         out_file.print("const char *error = NULL;")
+        out_file.require_section(self.js2cParseFunction)
         parser_call = "{}({}, {}, {}, &error)".format(
             self.js2cParseFunction,
             src,
@@ -112,6 +113,7 @@ class StringGenerator(Generator):
 
     def generate_parser_call(self, out_var_name, out_file, on_err="return true;"):
         if self.js2cParseFunction is not None:
+            out_file.require_section("builtin_check_current_string")
             length_check = \
                 "builtin_check_current_string(parse_state, {}u, {}u)" \
                 .format(self.minLength, self.maxLength)
@@ -127,6 +129,7 @@ class StringGenerator(Generator):
             )
             out_file.print("parse_state->current_token += 1;")
         else:
+            out_file.require_section("builtin_parse_string")
             length_check = \
                 "builtin_parse_string(parse_state, {}[0], {}u, {}u)" \
                 .format(out_var_name, self.minLength, self.maxLength)

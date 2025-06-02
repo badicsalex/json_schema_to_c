@@ -58,6 +58,7 @@ class RootGenerator:
             )
         )
         self.name = schema['$id']
+        self.required_sections_storage = set()
 
     def generate_root_parser(self, out_file: CodeBlockPrinter):
         out_file.print("// Splint can't see that: The json_string reference isn't held by the function, because parse_state is dropped at the end of the function.")
@@ -124,7 +125,7 @@ class RootGenerator:
 
 
     def generate_parser_h(self, h_file_path: str):
-        h_file = CodeBlockPrinter(h_file_path)
+        h_file = CodeBlockPrinter(h_file_path, self.required_sections_storage)
 
         h_file.write(NOTE_FOR_GENERATED_FILES)
 
@@ -189,7 +190,7 @@ class RootGenerator:
             c_file.print("")
 
     def generate_parser_c(self, c_file_path: str, h_file_name: str):
-        c_file = CodeBlockPrinter(c_file_path)
+        c_file = CodeBlockPrinter(c_file_path, self.required_sections_storage)
 
         c_file.write(NOTE_FOR_GENERATED_FILES)
         c_file.print('#include "{}"'.format(h_file_name))

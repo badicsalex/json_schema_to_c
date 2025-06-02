@@ -68,6 +68,7 @@ class FloatGenerator(Generator):
             )
 
     def generate_parser_call(self, out_var_name, out_file, on_err="return true;"):
+        out_file.require_section("builtin_parse_double")
         with out_file.if_block("builtin_parse_double(parse_state, {})".format(out_var_name)):
             out_file.print(on_err)
         self.generate_range_check(self.minimum, out_var_name, ">=", "<", out_file, on_err)

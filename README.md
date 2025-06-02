@@ -96,6 +96,7 @@ The custom parsing function can then be defined in a file and passed via the `--
 The parsing function must follow this signature/API:
 
 ```c
+// js2c-start parse_xxx
 static bool parse_xxx(const char *current_string, int current_string_len, xxx *out, const char **error) {
     // do stuff
 
@@ -107,7 +108,10 @@ static bool parse_xxx(const char *current_string, int current_string_len, xxx *o
     *out = parsed_stuff;
     return false; // return false on success
 }
+// js2c-end
 ```
+
+The `js2c-start` amd `js2c-end` tags are not required, but they are useful because they to tell JS2C to prune this function if unused.
 
 ### Custom logger
 

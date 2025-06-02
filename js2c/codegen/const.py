@@ -59,11 +59,13 @@ class ConstGenerator(Generator):
             if isinstance(self.const, str):
                 with out_file.if_block("check_type(parse_state, JSMN_STRING)"):
                     out_file.print("return true;")
+                out_file.require_section("current_string_is")
                 not_match = '!current_string_is(parse_state, "{}")'.format(self.const)
             else:
                 with out_file.if_block("check_type(parse_state, JSMN_PRIMITIVE)"):
                     out_file.print("return true;")
                 out_file.print("int64_t val;")
+                out_file.require_section("builtin_parse_signed")
                 out_file.print("builtin_parse_signed(parse_state, true, false, 10, &val);")
                 not_match = "val != " + str(self.const)
 

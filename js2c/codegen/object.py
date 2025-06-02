@@ -151,6 +151,7 @@ class ObjectGenerator(Generator):
     def generate_field_parsers(self, out_file):
         self.generate_key_children_check(out_file)
         for field_name, field_generator in self.fields.items():
+            out_file.require_section("current_string_is")
             with out_file.if_block('current_string_is(parse_state, "{}")'.format(field_name)):
                 with out_file.if_block("seen_{}".format(field_name)):
                     self.generate_logged_error("Duplicate field definition in '%s': {}".format(field_name), out_file)
@@ -167,6 +168,7 @@ class ObjectGenerator(Generator):
         with out_file.code_block():
             if self.settings.allow_additional_properties:
                 out_file.print("parse_state->current_token += 1;")
+                out_file.require_section("builtin_skip")
                 out_file.print("builtin_skip(parse_state);")
             else:
                 self.generate_logged_error(["Unknown field in '%s': %.*s", "parse_state->current_key", "CURRENT_STRING_FOR_ERROR(parse_state)"], out_file)

@@ -67,6 +67,7 @@ class AlternateStorageGenerator(Generator):
             out_file.print(f"{out_var_name.removeprefix('&')}.index = (size_t) CURRENT_TOKEN(parse_state).start;")
             out_file.print(f"{out_var_name.removeprefix('&')}.length = (size_t) CURRENT_TOKEN(parse_state).end - CURRENT_TOKEN(parse_state).start;")
 
+        out_file.require_section("builtin_skip")
         with out_file.if_block("builtin_skip(parse_state)"):
             out_file.print(on_err)
 

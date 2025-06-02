@@ -24,6 +24,9 @@
 #
 from __future__ import annotations
 
+import io
+import re
+
 
 class CodeBlockContextManager:
     def __init__(self, printer: CodeBlockPrinter, indent_level: int, indent_only=False, suffix=""):
@@ -51,15 +54,51 @@ class CodeBlockContextManager:
 
 
 class CodeBlockPrinter:
-    def __init__(self, filepath: str):
+    def __init__(self, filepath: str, required_sections_storage: set[str]):
         self.filepath = filepath
         self.indent_level = 0
         self.last_was_else = False
         self.text = ""
+        self.required_sections = required_sections_storage
 
     def save_to_file(self):
         with open(self.filepath, "w") as file:
-            file.write(self.text)
+            file.write(self.get_stripped_text())
+
+    def require_section(self, section_name: str):
+        self.required_sections.add(section_name)
+
+        # handle inter-dependencies
+        if section_name in ("builtin_check_current_string", "builtin_parse_bool", "builtin_parse_double"):
+            self.require_section("check_type")
+        if section_name == "builtin_parse_string":
+            self.require_section("builtin_check_current_string")
+
+    # returns self.text stripped of non-required sections
+    def get_stripped_text(self) -> str:
+        res = ""
+        in_section = False
+        skip_section = False
+        cleanup_blank = False
+        for line in io.StringIO(self.text):
+            if in_section:
+                if re.match(r'^\s*//\s*js2c-end\s*$', line):
+                    in_section = False
+                    cleanup_blank = skip_section
+                    continue
+                elif skip_section:
+                    continue
+            elif m := re.match(r'^\s*//\s*js2c-start\s+(\S.*?)\s*$', line):
+                tags = set(re.split(r'\s+', m.group(1)))
+                in_section = True
+                skip_section = self.required_sections & tags == set()
+                continue
+            elif cleanup_blank:
+                cleanup_blank = False
+                if re.match(r'^\s*$', line):
+                    continue
+            res += line
+        return res
 
     def print(self, lines: str | list[str]):
         if isinstance(lines, str):
