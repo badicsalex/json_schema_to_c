@@ -133,7 +133,7 @@ class IntegerGeneratorBase(Generator):
     def generate_set_default_value(self, out_var_name, out_file):
         if super().generate_set_default_value(out_var_name, out_file):
             return
-        out_file.print("{} = {}{};".format(out_var_name, self.default, self.default_suffix))
+        out_file.print(f"{out_var_name} = ({self.c_type}) {self.default}{self.default_suffix};")
 
 
 class IntegerGenerator(IntegerGeneratorBase):
