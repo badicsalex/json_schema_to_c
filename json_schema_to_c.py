@@ -67,7 +67,12 @@ def parse_args() -> argparse.Namespace:
 
 
 def main(args: argparse.Namespace):
-    schema = load_schema(args.schema_file)
+    try:
+        schema = load_schema(args.schema_file, args.authorized_paths or [])
+    except ValueError as e:
+        print(e, file=sys.stderr)
+        sys.exit(1)
+
     settings = Settings(vars(args), schema.get('js2cSettings', {}))
 
     if args.print_resolved_schema:

@@ -151,6 +151,15 @@ class Settings:
             default=ENTRYPOINTS,
             nargs="+",
         ),
+        SettingsField(
+            "authorized_paths",
+            type=str,
+            help=f"List of paths to files or directories that are allowed to be resolved by JSON schema references.",
+            metavar="path",
+            required=False,
+            default=None,
+            nargs="+",
+        ),
     ]
 
     h_file: str | None
@@ -164,6 +173,7 @@ class Settings:
     file_parser_max_size: int | None
     tokens_buf_max_size: int | None
     entrypoints: list[str]
+    authorized_paths: list[str]
 
     def __init__(self, args, settings_json):
         for field in self.FIELDS:

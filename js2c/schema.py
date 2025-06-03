@@ -31,33 +31,41 @@ from urllib.parse import urlparse
 # dictionary of schemas indexed by their canonical file path
 schema_cache: dict[str, Any] = {}
 
-# todo check for file location
-def get_schema_from_path(path: str, relative_to: str) -> Any:
+def get_schema_from_path(path: str, relative_to: str, authorized_paths: list[str]) -> Any:
     path = os.path.abspath(os.path.join(os.path.dirname(relative_to), path))
+
+    authorized = False
+    for authorized_path in authorized_paths:
+        if path.startswith(os.path.abspath(authorized_path)):
+            authorized = True
+            break
+    if not authorized:
+        raise ValueError("Cannot resolve reference to unauthorized path (use --authorized-paths to unblock): " + path)
+
     if path in schema_cache:
         if schema_cache[path] is None: # check if slot is already being computed
             raise ValueError("Circular dependency detected in JSON schema reference")
     else:
         schema_cache[path] = None # reserve slot to avoid circular references
-        schema_cache[path] = load_schema(path)
+        schema_cache[path] = load_schema(path, authorized_paths)
     return schema_cache[path]
 
 # WARNING: reviewing the following algorithm might cause brain damage
 # Sorry for that.
-def resolve_children(full_schema, part_to_resolve, schema_filepath: str):
+def resolve_children(full_schema, part_to_resolve, schema_filepath: str, authorized_paths: list[str]):
     if part_to_resolve is None:
         return
     if isinstance(part_to_resolve, (str, int, bool, float)):
         return
     if isinstance(part_to_resolve, list):
         for i, v in enumerate(part_to_resolve):
-            part_to_resolve[i] = resolve_ref(full_schema, v, schema_filepath)
-            resolve_children(full_schema, v, schema_filepath)
+            part_to_resolve[i] = resolve_ref(full_schema, v, schema_filepath, authorized_paths)
+            resolve_children(full_schema, v, schema_filepath, authorized_paths)
         return
     if isinstance(part_to_resolve, dict):
         for k, v in part_to_resolve.items():
-            part_to_resolve[k] = resolve_ref(full_schema, v, schema_filepath)
-            resolve_children(full_schema, v, schema_filepath)
+            part_to_resolve[k] = resolve_ref(full_schema, v, schema_filepath, authorized_paths)
+            resolve_children(full_schema, v, schema_filepath, authorized_paths)
         # terminate by cleaning up $defs
         if part_to_resolve == full_schema and "$defs" in full_schema:
             del full_schema["$defs"]
@@ -65,7 +73,7 @@ def resolve_children(full_schema, part_to_resolve, schema_filepath: str):
     raise ValueError("Value {} is not supported by the schema loader".format(part_to_resolve))
 
 
-def resolve_ref(full_schema, part_to_resolve, schema_filepath: str):
+def resolve_ref(full_schema, part_to_resolve, schema_filepath: str, authorized_paths: list[str]):
     if not isinstance(part_to_resolve, dict) or "$ref" not in part_to_resolve:
         return part_to_resolve
     if len(part_to_resolve) > 1:
@@ -82,7 +90,7 @@ def resolve_ref(full_schema, part_to_resolve, schema_filepath: str):
         raise ValueError("Only path-like references are supported. (Id-based references are not)")
 
     if ref_uri.scheme == "file" or ref_uri.path != "":
-        full_schema = get_schema_from_path(ref_uri.path, schema_filepath)
+        full_schema = get_schema_from_path(ref_uri.path, schema_filepath, authorized_paths)
 
     ref_str = ref_uri.fragment[1:] + '/'
     replacement = full_schema
@@ -171,10 +179,10 @@ def resolve_any_of(schema):
         return schema
 
 
-def load_schema(schema_filepath: str):
+def load_schema(schema_filepath: str, authorized_paths: list[str]):
     with open(schema_filepath) as schema_file:
         schema = json.load(schema_file, object_pairs_hook=OrderedDict)
-    resolve_children(schema, schema, schema_filepath)
+    resolve_children(schema, schema, schema_filepath, authorized_paths)
     schema = resolve_all_of(schema)
     resolve_one_of(schema)
     schema = resolve_any_of(schema)
