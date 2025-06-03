@@ -29,6 +29,7 @@ from typing_extensions import TextIO, TypeVar
 T = TypeVar('T')
 PRINT_RESOLVED_SCHEMA_FLAG = "--print-resolved-schema"
 TOKENS_BUF_MAX_SIZE_DEFAULT = "1024*1024"
+ENTRYPOINTS = ["json_parse", "json_parse_with_len", "file_parse"]
 
 @dataclass
 class SettingsField:
@@ -37,7 +38,8 @@ class SettingsField:
     help: str
     metavar: str
     required: bool
-    default: str | None
+    default: str | list[str] | None
+    nargs: str | None
 
 
 def snake_to_camel_case(text: str) -> str:
@@ -55,6 +57,7 @@ class Settings:
             metavar="file",
             required=PRINT_RESOLVED_SCHEMA_FLAG not in sys.argv,
             default=None,
+            nargs=None,
         ),
         SettingsField(
             "c_file",
@@ -63,6 +66,7 @@ class Settings:
             metavar="file",
             required=PRINT_RESOLVED_SCHEMA_FLAG not in sys.argv,
             default=None,
+            nargs=None,
         ),
         SettingsField(
             "h_prefix_file",
@@ -71,6 +75,7 @@ class Settings:
             metavar="file",
             required=False,
             default=None,
+            nargs=None,
         ),
         SettingsField(
             "h_postfix_file",
@@ -79,6 +84,7 @@ class Settings:
             metavar="file",
             required=False,
             default=None,
+            nargs=None,
         ),
         SettingsField(
             "c_prefix_file",
@@ -87,6 +93,7 @@ class Settings:
             metavar="file",
             required=False,
             default=None,
+            nargs=None,
         ),
         SettingsField(
             "c_postfix_file",
@@ -95,6 +102,7 @@ class Settings:
             metavar="file",
             required=False,
             default=None,
+            nargs=None,
         ),
         SettingsField(
             "allow_additional_properties",
@@ -104,6 +112,7 @@ class Settings:
             metavar="tokens",
             required=False,
             default=None,
+            nargs=None,
         ),
         SettingsField(
             "include_external_builtins_file",
@@ -113,6 +122,7 @@ class Settings:
             metavar="file",
             required=False,
             default=None,
+            nargs=None,
         ),
         SettingsField(
             "file_parser_max_size",
@@ -121,6 +131,7 @@ class Settings:
             metavar="expression",
             required=False,
             default=None,
+            nargs=None,
         ),
         SettingsField(
             "tokens_buf_max_size",
@@ -129,6 +140,16 @@ class Settings:
             metavar="expression",
             required=False,
             default=TOKENS_BUF_MAX_SIZE_DEFAULT,
+            nargs=None,
+        ),
+        SettingsField(
+            "entrypoints",
+            type=str,
+            help=f"List of parser entrypoints to generate. All by default: \"{' '.join(ENTRYPOINTS)}\"",
+            metavar="entrypoint",
+            required=False,
+            default=ENTRYPOINTS,
+            nargs="+",
         ),
     ]
 
@@ -142,6 +163,7 @@ class Settings:
     include_external_builtins_file: str | None
     file_parser_max_size: int | None
     tokens_buf_max_size: int | None
+    entrypoints: list[str]
 
     def __init__(self, args, settings_json):
         for field in self.FIELDS:
@@ -168,4 +190,5 @@ class Settings:
                 help=field.help,
                 required=field.required,
                 default=field.default,
+                nargs=field.nargs,
             )

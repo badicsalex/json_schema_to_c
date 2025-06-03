@@ -63,7 +63,8 @@ class RootGenerator:
     def generate_root_parser(self, out_file: CodeBlockPrinter):
         out_file.print("// Splint can't see that: The json_string reference isn't held by the function, because parse_state is dropped at the end of the function.")
         out_file.print("/*@-temptrans@*/")
-        out_file.print("bool json_parse_{}_with_len(const char *json_string, size_t json_string_len, {})".format(self.name, self.root_generator.c_type.typed_identifier("out", indirection="*")))
+        prefix = "" if "json_parse_with_len" in self.settings.entrypoints else "static "
+        out_file.print(f"{prefix}bool json_parse_{self.name}_with_len(const char *json_string, size_t json_string_len, {self.root_generator.c_type.typed_identifier('out', indirection='*')})")
         with out_file.code_block():
             out_file.print("int token_num = builtin_parse_json_string(NULL, NULL, 0, json_string, (unsigned int) json_string_len);")
             with out_file.if_block("token_num < 0"):
@@ -85,43 +86,45 @@ class RootGenerator:
         out_file.print("/*@=temptrans@*/")
         out_file.print("")
 
-        out_file.print("bool json_parse_{}(const char *json_string, {})".format(self.name, self.root_generator.c_type.typed_identifier("out", indirection="*")))
-        with out_file.code_block():
-            out_file.print("return json_parse_{}_with_len(json_string, strlen(json_string), out);".format(self.name))
-        out_file.print("")
-
-        out_file.print("bool file_parse_{}(const char *filepath, {})".format(self.name, self.root_generator.c_type.typed_identifier("out", indirection="*")))
-        with out_file.code_block():
-            exit_err = lambda msg: out_file.print(['LOG_ERROR(-1, {})'.format(msg), "(void) close(fd);", "return true;"])
-
-            out_file.print("int fd = open(filepath, O_RDONLY);")
-            with out_file.if_block("fd < 0"):
-                exit_err('"cannot open JSON file \\"%s\\": %s", filepath, strerror(errno)')
+        if "json_parse" in self.settings.entrypoints:
+            out_file.print("bool json_parse_{}(const char *json_string, {})".format(self.name, self.root_generator.c_type.typed_identifier("out", indirection="*")))
+            with out_file.code_block():
+                out_file.print("return json_parse_{}_with_len(json_string, strlen(json_string), out);".format(self.name))
             out_file.print("")
 
-            out_file.print("const off_t file_size_or_err = lseek(fd, 0, SEEK_END);")
-            with out_file.if_block("file_size_or_err < 0"):
-                exit_err('"cannot seek JSON file \\"%s\\": %s", filepath, strerror(errno)')
-            out_file.print("const size_t file_size = (size_t) file_size_or_err;")
-            out_file.print("")
+        if "file_parse" in self.settings.entrypoints:
+            out_file.print("bool file_parse_{}(const char *filepath, {})".format(self.name, self.root_generator.c_type.typed_identifier("out", indirection="*")))
+            with out_file.code_block():
+                exit_err = lambda msg: out_file.print(['LOG_ERROR(-1, {})'.format(msg), "(void) close(fd);", "return true;"])
 
-            if self.settings.file_parser_max_size is not None:
-                with out_file.if_block("file_size > (size_t) ({})".format(self.settings.file_parser_max_size)):
-                    exit_err('"JSON file \\"%s\\" size is greater than max allowed size (%zu bytes), got %jd", filepath, (size_t) ({}), (intmax_t) file_size'.format(self.settings.file_parser_max_size))
+                out_file.print("int fd = open(filepath, O_RDONLY);")
+                with out_file.if_block("fd < 0"):
+                    exit_err('"cannot open JSON file \\"%s\\": %s", filepath, strerror(errno)')
                 out_file.print("")
 
-            out_file.print("void *const file_content = mmap(NULL, file_size, PROT_READ, MAP_PRIVATE, fd, 0);")
-            with out_file.if_block("file_content == MAP_FAILED"):
-                exit_err('"cannot memory map JSON file \\"%s\\": %s", filepath, strerror(errno)')
-            out_file.print("")
+                out_file.print("const off_t file_size_or_err = lseek(fd, 0, SEEK_END);")
+                with out_file.if_block("file_size_or_err < 0"):
+                    exit_err('"cannot seek JSON file \\"%s\\": %s", filepath, strerror(errno)')
+                out_file.print("const size_t file_size = (size_t) file_size_or_err;")
+                out_file.print("")
 
-            out_file.print("bool res = json_parse_{}_with_len(file_content, file_size, out);".format(self.name))
-            out_file.print("")
+                if self.settings.file_parser_max_size is not None:
+                    with out_file.if_block("file_size > (size_t) ({})".format(self.settings.file_parser_max_size)):
+                        exit_err('"JSON file \\"%s\\" size is greater than max allowed size (%zu bytes), got %jd", filepath, (size_t) ({}), (intmax_t) file_size'.format(self.settings.file_parser_max_size))
+                    out_file.print("")
 
-            out_file.print("(void) munmap(file_content, file_size);")
-            out_file.print("(void) close(fd);")
-            out_file.print("return res;")
-        out_file.print("")
+                out_file.print("void *const file_content = mmap(NULL, file_size, PROT_READ, MAP_PRIVATE, fd, 0);")
+                with out_file.if_block("file_content == MAP_FAILED"):
+                    exit_err('"cannot memory map JSON file \\"%s\\": %s", filepath, strerror(errno)')
+                out_file.print("")
+
+                out_file.print("bool res = json_parse_{}_with_len(file_content, file_size, out);".format(self.name))
+                out_file.print("")
+
+                out_file.print("(void) munmap(file_content, file_size);")
+                out_file.print("(void) close(fd);")
+                out_file.print("return res;")
+            out_file.print("")
 
 
     def generate_parser_h(self, h_file_path: str):
@@ -147,9 +150,15 @@ class RootGenerator:
 
         h_file.print_separator("Generated type declarations")
         self.root_generator.c_type.generate_type_declaration(h_file)
-        h_file.print("bool json_parse_{}(const char *json_string, {});".format(self.name, self.root_generator.c_type.typed_identifier("out", indirection="*")))
-        h_file.print("bool json_parse_{}_with_len(const char *json_string, size_t json_string_len, {});".format(self.name, self.root_generator.c_type.typed_identifier("out", indirection="*")))
-        h_file.print("bool file_parse_{}(const char *filepath, {});".format(self.name, self.root_generator.c_type.typed_identifier("out", indirection="*")))
+
+        if "json_parse" in self.settings.entrypoints:
+            h_file.print("bool json_parse_{}(const char *json_string, {});".format(self.name, self.root_generator.c_type.typed_identifier("out", indirection="*")))
+
+        if "json_parse_with_len" in self.settings.entrypoints:
+            h_file.print("bool json_parse_{}_with_len(const char *json_string, size_t json_string_len, {});".format(self.name, self.root_generator.c_type.typed_identifier("out", indirection="*")))
+
+        if "file_parse" in self.settings.entrypoints:
+            h_file.print("bool file_parse_{}(const char *filepath, {});".format(self.name, self.root_generator.c_type.typed_identifier("out", indirection="*")))
 
         h_file.print("#ifdef __cplusplus")
         h_file.print("}")
