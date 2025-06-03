@@ -128,6 +128,7 @@ class UnionGenerator(Generator):
                            "parse_state->current_key = saved_key;",
                            "break;")
             first_option = True
+            out_file.print("++inhibit_errors;") # do not log errors when trying each parser, because it is expected to fail
             for option_generator, option_name, enum_label in zip(self.option_generators, self.c_type.option_names, self.c_type.inner_enum_type.enum_labels):
                 with out_file.if_block("missing_value", always_true=first_option):
                     with out_file.do_while_block("false"):
@@ -135,6 +136,7 @@ class UnionGenerator(Generator):
                         out_file.print("out->type = {};".format(enum_label))
                         out_file.print("missing_value = false;")
                 first_option = False
+            out_file.print("--inhibit_errors;")
 
             with out_file.if_block("missing_value"):
                 self.generate_logged_error(

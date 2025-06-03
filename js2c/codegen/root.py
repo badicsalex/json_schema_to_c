@@ -70,7 +70,7 @@ class RootGenerator:
             with out_file.if_block("token_num < 0"):
                 out_file.print("return true;")
             with out_file.if_block(f"(size_t) token_num > (size_t) ({self.settings.tokens_buf_max_size}) / (size_t) sizeof(jsmntok_t)"):
-                out_file.print("LOG_ERROR(parser.pos, \"Exceeded maximum allowed buffer size for JSMN token buffer\");")
+                out_file.print("TRY_LOG_ERROR(parser.pos, \"Exceeded maximum allowed buffer size for JSMN token buffer\");")
                 out_file.print("return true;")
             out_file.print("parse_state_t parse_state_var;")
             out_file.print("parse_state_t *parse_state = &parse_state_var;")
@@ -95,7 +95,7 @@ class RootGenerator:
         if "file_parse" in self.settings.entrypoints:
             out_file.print("bool file_parse_{}(const char *filepath, {})".format(self.name, self.root_generator.c_type.typed_identifier("out", indirection="*")))
             with out_file.code_block():
-                exit_err = lambda msg: out_file.print(['LOG_ERROR(-1, {})'.format(msg), "(void) close(fd);", "return true;"])
+                exit_err = lambda msg: out_file.print(['TRY_LOG_ERROR(-1, {})'.format(msg), "(void) close(fd);", "return true;"])
 
                 out_file.print("int fd = open(filepath, O_RDONLY);")
                 with out_file.if_block("fd < 0"):
