@@ -23,8 +23,7 @@
 # SOFTWARE.
 #
 from __future__ import annotations
-
-import io
+from dataclasses import dataclass
 import re
 
 
@@ -53,52 +52,64 @@ class CodeBlockContextManager:
                 self.printer.print("} " + self.suffix)
 
 
+@dataclass
+class CodeSection:
+    content: str
+    name: str | None
+
+    def is_blank(self) -> bool:
+        return True if re.match(r'^\s*$', self.content) else False
+
+
+class CodeUsageResolver:
+    required_sections: set[str] = set()
+    sections_dependencies: dict[str, set[str]] = {}
+    resolved = False
+
+    def add_required_section(self, section_name: str):
+        self.required_sections.add(section_name)
+        self.resolved = False
+
+    def add_section_dependencies(self, dependent_name: str, dependencies_name: set[str]):
+        if dependent_name not in self.sections_dependencies:
+            self.sections_dependencies[dependent_name] = set()
+        self.sections_dependencies[dependent_name] = self.sections_dependencies[dependent_name].union(dependencies_name)
+        self.resolved = False
+
+    def is_section_required(self, section_name: str | None) -> bool:
+        if section_name is None: return True
+        if not self.resolved: self.__resolve();
+        return section_name in self.required_sections
+
+    def __resolve(self):
+        while True:
+            initial_len = len(self.required_sections)
+            self.__resolve_once()
+            new_len = len(self.required_sections)
+            if new_len == initial_len: break
+        self.resolved = True
+
+    def __resolve_once(self):
+        resolved: set[str] = set()
+        for required_section in self.required_sections:
+            resolved = resolved.union(self.sections_dependencies.get(required_section, set()))
+        self.required_sections = self.required_sections.union(resolved)
+
+
 class CodeBlockPrinter:
-    def __init__(self, filepath: str, required_sections_storage: set[str]):
+    def __init__(self, filepath: str, code_usage_resolver: CodeUsageResolver):
         self.filepath = filepath
         self.indent_level = 0
         self.last_was_else = False
         self.text = ""
-        self.required_sections = required_sections_storage
+        self.code_usage_resolver = code_usage_resolver
 
     def save_to_file(self):
         with open(self.filepath, "w") as file:
-            file.write(self.get_stripped_text())
+            file.write(self.__into_pruned_text())
 
     def require_section(self, section_name: str):
-        self.required_sections.add(section_name)
-
-        # handle inter-dependencies
-        if section_name in ("builtin_check_current_string", "builtin_parse_bool", "builtin_parse_double"):
-            self.require_section("check_type")
-        if section_name == "builtin_parse_string":
-            self.require_section("builtin_check_current_string")
-
-    # returns self.text stripped of non-required sections
-    def get_stripped_text(self) -> str:
-        res = ""
-        in_section = False
-        skip_section = False
-        cleanup_blank = False
-        for line in io.StringIO(self.text):
-            if in_section:
-                if re.match(r'^\s*//\s*js2c-end\s*$', line):
-                    in_section = False
-                    cleanup_blank = skip_section
-                    continue
-                elif skip_section:
-                    continue
-            elif m := re.match(r'^\s*//\s*js2c-start\s+(\S.*?)\s*$', line):
-                tags = set(re.split(r'\s+', m.group(1)))
-                in_section = True
-                skip_section = self.required_sections & tags == set()
-                continue
-            elif cleanup_blank:
-                cleanup_blank = False
-                if re.match(r'^\s*$', line):
-                    continue
-            res += line
-        return res
+        self.code_usage_resolver.add_required_section(section_name)
 
     def print(self, lines: str | list[str]):
         if isinstance(lines, str):
@@ -162,3 +173,45 @@ class CodeBlockPrinter:
 
     def indent(self, indent_level=4) -> CodeBlockContextManager:
         return CodeBlockContextManager(self, indent_level, indent_only=True)
+
+    def __into_pruned_text(self) -> str:
+        pruned_text = ""
+        skip_if_blank = False
+
+        for section in self.__into_code_sections():
+            if not self.code_usage_resolver.is_section_required(section.name):
+                skip_if_blank = True # skip unused section and the following blank
+                continue
+            if skip_if_blank:
+                skip_if_blank = False
+                if section.is_blank(): continue
+            pruned_text += section.content
+
+        return pruned_text
+
+    def __into_code_sections(self) -> list[CodeSection]:
+        sections: list[CodeSection] = []
+
+        in_named_section = False
+        section_name = ""
+        section_needs: set[str] = set()
+        section_text = ""
+
+        for txt_chunk in re.split(r'^[ \t]*(//[ \t]*js2c-(?:start|end)(?:[ \t][^\n]*?)?)[ \t]*$\n?', self.text, flags=re.MULTILINE):
+            if in_named_section:
+                if re.match(r'^//\s*js2c-end', txt_chunk):
+                    in_named_section = False
+                    sections.append(CodeSection(content=section_text, name=section_name))
+                    self.code_usage_resolver.add_section_dependencies(section_name, section_needs)
+                else:
+                    section_text += txt_chunk
+            else:
+                if m := re.match(r'^//\s*js2c-start\s+(\S+)(?:\s+\(\s*needs\s*:\s*([^ \t,]+(?:\s*,\s*[^ \t,]+)*)\s*\))?$', txt_chunk):
+                    in_named_section = True
+                    section_name = m.group(1)
+                    section_needs = set(re.split(r'\s*,\s*', m.group(2))) if m.group(2) else set()
+                    section_text = ""
+                else:
+                    sections.append(CodeSection(content=txt_chunk, name=None))
+
+        return sections

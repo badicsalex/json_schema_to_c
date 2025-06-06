@@ -125,7 +125,7 @@ static inline bool current_string_is(const parse_state_t *parse_state, const cha
 }
 // js2c-end
 
-// js2c-start builtin_check_current_string
+// js2c-start builtin_check_current_string (needs: check_type)
 static inline bool builtin_check_current_string(parse_state_t *parse_state, unsigned int min_len, unsigned int max_len) {
     if (check_type(parse_state, JSMN_STRING)) {
         return true;
@@ -143,7 +143,7 @@ static inline bool builtin_check_current_string(parse_state_t *parse_state, unsi
 }
 // js2c-end
 
-// js2c-start builtin_parse_string
+// js2c-start builtin_parse_string (needs: builtin_check_current_string)
 static inline bool builtin_parse_string(parse_state_t *parse_state, char *out, unsigned int min_len, unsigned int max_len) {
     if (builtin_check_current_string(parse_state, min_len, max_len)){
         return true;
@@ -156,7 +156,7 @@ static inline bool builtin_parse_string(parse_state_t *parse_state, char *out, u
 }
 // js2c-end
 
-// js2c-start builtin_parse_bool
+// js2c-start builtin_parse_bool (needs: check_type)
 static inline bool builtin_parse_bool(parse_state_t *parse_state, bool *out) {
     if (check_type(parse_state, JSMN_PRIMITIVE)) {
         return true;
@@ -231,7 +231,7 @@ static inline bool builtin_parse_unsigned(
 }
 // js2c-end
 
-// js2c-start builtin_parse_double
+// js2c-start builtin_parse_double (needs: check_type)
 static inline bool builtin_parse_double(parse_state_t *parse_state, double *out) {
     const jsmntok_t *token = &parse_state->tokens[parse_state->current_token];
     if (check_type(parse_state, JSMN_PRIMITIVE)) {

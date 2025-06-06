@@ -96,7 +96,11 @@ The custom parsing function can then be defined in a file and passed via the `--
 The parsing function must follow this signature/API:
 
 ```c
-// js2c-start parse_xxx
+// js2c-start some_include
+#include <stuff.h>
+// js2c-end
+
+// js2c-start parse_xxx (needs: some_include)
 static bool parse_xxx(const char *current_string, int current_string_len, xxx *out, const char **error) {
     // do stuff
 
@@ -111,7 +115,8 @@ static bool parse_xxx(const char *current_string, int current_string_len, xxx *o
 // js2c-end
 ```
 
-The `js2c-start` amd `js2c-end` tags are not required, but they are useful because they to tell JS2C to prune this function if unused.
+The `js2c-start` amd `js2c-end` tags are not required, but they are useful because they tell JS2C to prune this function if unused (the section name should be the same as the function name defined by `js2cParseFunction`).
+You can also define code sections with the name you want, and then reference them by the `(needs: ..., ..., ...)` syntax to create a dependency graph.
 
 ### Custom logger
 
