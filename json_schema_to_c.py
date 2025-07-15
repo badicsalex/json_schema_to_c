@@ -83,8 +83,10 @@ def main(args: argparse.Namespace):
 
     try:
         root_generator = RootGenerator(schema, settings)
-        if settings.c_file is not None: root_generator.generate_parser_c(settings.c_file, os.path.basename(args.h_file))
-        if settings.h_file is not None: root_generator.generate_parser_h(settings.h_file)
+        if settings.c_file is not None:
+            root_generator.generate_parser_c(settings.c_file, os.path.basename(args.h_file))
+        if settings.h_file is not None:
+            root_generator.generate_parser_h(settings.h_file)
     except SchemaError as e:
         print(e, file=sys.stderr)
         sys.exit(1)

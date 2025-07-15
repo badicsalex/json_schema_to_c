@@ -58,7 +58,7 @@ class CodeSection:
     name: str | None
 
     def is_blank(self) -> bool:
-        return True if re.match(r'^\s*$', self.content) else False
+        return bool(re.match(r'^\s*$', self.content))
 
 
 class CodeUsageResolver:
@@ -77,8 +77,10 @@ class CodeUsageResolver:
         self.resolved = False
 
     def is_section_required(self, section_name: str | None) -> bool:
-        if section_name is None: return True
-        if not self.resolved: self.__resolve();
+        if section_name is None:
+            return True
+        if not self.resolved:
+            self.__resolve()
         return section_name in self.required_sections
 
     def __resolve(self):
@@ -86,7 +88,8 @@ class CodeUsageResolver:
             initial_len = len(self.required_sections)
             self.__resolve_once()
             new_len = len(self.required_sections)
-            if new_len == initial_len: break
+            if new_len == initial_len:
+                break
         self.resolved = True
 
     def __resolve_once(self):
@@ -105,7 +108,7 @@ class CodeBlockPrinter:
         self.code_usage_resolver = code_usage_resolver
 
     def save_to_file(self):
-        with open(self.filepath, "w") as file:
+        with open(self.filepath, "w", encoding="utf-8") as file:
             file.write(self.__into_pruned_text())
 
     def require_section(self, section_name: str):
@@ -184,7 +187,8 @@ class CodeBlockPrinter:
                 continue
             if skip_if_blank:
                 skip_if_blank = False
-                if section.is_blank(): continue
+                if section.is_blank():
+                    continue
             pruned_text += section.content
 
         return pruned_text

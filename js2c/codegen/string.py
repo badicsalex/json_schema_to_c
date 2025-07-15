@@ -34,10 +34,9 @@ class StringType(CType):
     def typed_identifier(self, identifier: str, indirection="") -> str:
         if self.has_typedef:
             return super().typed_identifier(identifier, indirection)
-        elif indirection == "":
+        if indirection == "":
             return "char {}[{}]".format(identifier, self.max_length + 1)
-        else:
-            return "char ({}{})[{}]".format(indirection, identifier, self.max_length + 1)
+        return "char ({}{})[{}]".format(indirection, identifier, self.max_length + 1)
 
     def generate_type_declaration_impl(self, out_file):
         if self.has_typedef:

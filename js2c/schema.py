@@ -22,7 +22,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-import json, os
+import json
+import os
 from collections import OrderedDict
 from typing import Any
 from urllib.parse import urlparse
@@ -30,6 +31,7 @@ from urllib.parse import urlparse
 
 # dictionary of schemas indexed by their canonical file path
 schema_cache: dict[str, Any] = {}
+
 
 def get_schema_from_path(path: str, relative_to: str, authorized_paths: list[str]) -> Any:
     path = os.path.abspath(os.path.join(os.path.dirname(relative_to), path))
@@ -43,15 +45,17 @@ def get_schema_from_path(path: str, relative_to: str, authorized_paths: list[str
         raise ValueError("Cannot resolve reference to unauthorized path (use --authorized-paths to unblock): " + path)
 
     if path in schema_cache:
-        if schema_cache[path] is None: # check if slot is already being computed
+        if schema_cache[path] is None:  # check if slot is already being computed
             raise ValueError("Circular dependency detected in JSON schema reference")
     else:
-        schema_cache[path] = None # reserve slot to avoid circular references
+        schema_cache[path] = None  # reserve slot to avoid circular references
         schema_cache[path] = load_schema(path, authorized_paths)
     return schema_cache[path]
 
 # WARNING: reviewing the following algorithm might cause brain damage
 # Sorry for that.
+
+
 def resolve_children(full_schema, part_to_resolve, schema_filepath: str, authorized_paths: list[str]):
     if part_to_resolve is None:
         return
@@ -82,7 +86,7 @@ def resolve_ref(full_schema, part_to_resolve, schema_filepath: str, authorized_p
     ref_str: str = part_to_resolve["$ref"]
     ref_uri = urlparse(ref_str)
 
-    if ref_uri.scheme != "" and ref_uri.scheme != "file":
+    if ref_uri.scheme not in ("", "file"):
         raise ValueError("Unsupported references scheme: " + ref_uri.scheme)
     if ref_uri.netloc != "" or ref_uri.params != "" or ref_uri.query != "":
         raise ValueError("Unsupported references: " + ref_str)
@@ -114,8 +118,10 @@ def merge_single_pair(element1, element2, key: str):
     if element1 == element2:
         return element1
     if isinstance(element1, int) and isinstance(element2, int):
-        if key in ("minimum", "exclusiveMinimum", "minLength"): return max(element1, element2)
-        if key in ("maximum", "exclusiveMaximum", "maxLength"): return min(element1, element2)
+        if key in ("minimum", "exclusiveMinimum", "minLength"):
+            return max(element1, element2)
+        if key in ("maximum", "exclusiveMaximum", "maxLength"):
+            return min(element1, element2)
     raise ValueError(
         "Could not merge fields for allOf/anyOf/oneOf declaration: '{}' and '{}'"
         .format(element1, element2)
@@ -135,15 +141,14 @@ def merge_dict(schema1, schema2):
 def resolve_all_of(schema):
     if isinstance(schema, list):
         return [resolve_all_of(item) for item in schema]
-    elif isinstance(schema, dict):
+    if isinstance(schema, dict):
         result = OrderedDict((k, resolve_all_of(v)) for k, v in schema.items() if k != "allOf")
         if "allOf" in schema:
             for schema_to_process in schema["allOf"]:
                 schema_to_process = resolve_all_of(schema_to_process)
                 result = merge_dict(result, schema_to_process)
         return result
-    else:
-        return schema
+    return schema
 
 
 # replace all oneOf by anyOf
@@ -164,23 +169,21 @@ def resolve_one_of(schema):
 def resolve_any_of(schema):
     if isinstance(schema, list):
         return [resolve_any_of(item) for item in schema]
-    elif isinstance(schema, dict):
+    if isinstance(schema, dict):
         if "anyOf" in schema:
-            common_data = OrderedDict((k, resolve_any_of(v)) for k, v in schema.items() if k != "anyOf" and k != "$id")
+            common_data = OrderedDict((k, resolve_any_of(v)) for k, v in schema.items() if k not in ("anyOf", "$id"))
             result = OrderedDict((k, resolve_any_of(v)) for k, v in schema.items() if k == "$id")
             result["anyOf"] = [
                 merge_dict(resolve_any_of(schema_to_process), common_data)
                 for schema_to_process in schema["anyOf"]
             ]
             return result
-        else:
-            return OrderedDict((k, resolve_any_of(v)) for k, v in schema.items())
-    else:
-        return schema
+        return OrderedDict((k, resolve_any_of(v)) for k, v in schema.items())
+    return schema
 
 
 def load_schema(schema_filepath: str, authorized_paths: list[str]):
-    with open(schema_filepath) as schema_file:
+    with open(schema_filepath, encoding="utf-8") as schema_file:
         schema = json.load(schema_file, object_pairs_hook=OrderedDict)
     resolve_children(schema, schema, schema_filepath, authorized_paths)
     schema = resolve_all_of(schema)

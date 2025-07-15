@@ -31,7 +31,8 @@ from .type_cache import TypeCache
 # Return the longest prefix of all list elements.
 # from https://stackoverflow.com/a/6718435 (CC BY-SA 3.0)
 def commonprefix(m):
-    if not m: return ''
+    if not m:
+        return ''
     s1 = min(m)
     s2 = max(m)
     for i, c in enumerate(s1):
@@ -48,7 +49,7 @@ class UnionType(CType):
         # try to infer nice option names
         prefix_len = len(commonprefix([t.type_name for t in self.option_types]))
         self.option_names = [t.type_name[prefix_len:].removesuffix("_t") for t in self.option_types]
-        if any([n[0].isdigit() for n in self.option_names]):
+        if any(n[0].isdigit() for n in self.option_names):
             self.option_names = ["option_" + n for n in self.option_names]
 
         type_name_base = self.type_name.removesuffix("_t")

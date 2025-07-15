@@ -26,9 +26,6 @@ from .base import Generator, CType, SchemaError
 
 
 class RawJsonType(CType):
-    def __init__(self, type_name, description):
-        super().__init__(type_name, description)
-
     def generate_type_declaration_impl(self, out_file):
         out_file.print("typedef struct " + self.type_name.removesuffix("_t") + " {")
         with out_file.indent():

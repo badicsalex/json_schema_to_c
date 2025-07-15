@@ -22,7 +22,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-import argparse, sys
+import argparse
+import sys
 from dataclasses import dataclass
 from typing_extensions import TextIO, TypeVar
 
@@ -30,6 +31,7 @@ T = TypeVar('T')
 PRINT_RESOLVED_SCHEMA_FLAG = "--print-resolved-schema"
 TOKENS_BUF_MAX_SIZE_DEFAULT = "1024*1024"
 ENTRYPOINTS = ["json_parse", "json_parse_with_len", "file_parse"]
+
 
 @dataclass
 class SettingsField:
@@ -154,7 +156,7 @@ class Settings:
         SettingsField(
             "authorized_paths",
             type=str,
-            help=f"List of paths to files or directories that are allowed to be resolved by JSON schema references.",
+            help="List of paths to files or directories that are allowed to be resolved by JSON schema references.",
             metavar="path",
             required=False,
             default=None,

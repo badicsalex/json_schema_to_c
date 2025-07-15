@@ -72,7 +72,8 @@ class IntegerGeneratorBase(Generator):
                 c_type_name = "int64_t"
 
         if self.js2cParseFunction is not None:
-            if self.js2cParseType is None: self.js2cParseType = "int64_t"
+            if self.js2cParseType is None:
+                self.js2cParseType = "int64_t"
             self.c_intermediary_type = CType(self.js2cParseType, self.description)
             self.c_type = CType(c_type_name, self.description)
         else:
