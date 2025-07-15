@@ -107,6 +107,7 @@ class ArrayGenerator(Generator):
 
         out_file.print("static bool parse_{}(parse_state_t *parse_state, {} *out)".format(self.parser_name, self.c_type))
         with out_file.code_block():
+            out_file.require_section("check_type")
             with out_file.if_block("check_type(parse_state, JSMN_ARRAY)"):
                 out_file.print("return true;")
             out_file.print("const unsigned int n = parse_state->tokens[parse_state->current_token].size;")

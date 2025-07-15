@@ -38,7 +38,7 @@ class SettingsField:
     name: str
     type: T
     help: str
-    metavar: str
+    metavar: str | None
     required: bool
     default: str | list[str] | None
     nargs: str | None
@@ -108,10 +108,9 @@ class Settings:
         ),
         SettingsField(
             "allow_additional_properties",
-            type=int,
-            help="Allow additionalProperties to be true (default for objects), and leave a $token_num amount of space for these \n"
-            "additional properties during the tokenizing step. (One token is basically one element, e.g. a string literal or a number)",
-            metavar="tokens",
+            type=bool,
+            help="Allow additionalProperties to be true (default for objects)",
+            metavar=None,
             required=False,
             default=None,
             nargs=None,
@@ -170,7 +169,7 @@ class Settings:
     c_file: str | None
     c_prefix_file: TextIO | None
     c_postfix_file: TextIO | None
-    allow_additional_properties: str | None
+    allow_additional_properties: bool | None
     include_external_builtins_file: str | None
     file_parser_max_size: int | None
     tokens_buf_max_size: int | None

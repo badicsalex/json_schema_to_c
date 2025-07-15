@@ -96,6 +96,7 @@ class EnumGenerator(Generator):
     def generate_parser_bodies(self, out_file):
         out_file.print("static bool parse_{}(parse_state_t *parse_state, {} *out)".format(self.parser_name, self.c_type))
         with out_file.code_block():
+            out_file.require_section("check_type")
             with out_file.if_block("check_type(parse_state, JSMN_STRING)"):
                 out_file.print("return true;")
 

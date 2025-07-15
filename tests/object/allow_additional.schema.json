@@ -3,7 +3,7 @@
     "$id": "root",
     "description": "Some demo structure for demoing.",
     "js2cSettings": {
-        "allowAdditionalProperties": 20
+        "allowAdditionalProperties": true
     },
     "type": "object",
     "properties": {

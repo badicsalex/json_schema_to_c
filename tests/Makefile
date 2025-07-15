@@ -31,7 +31,7 @@ other/args_and_settings.parser.c other/args_and_settings.parser.h &: \
 	../json_schema_to_c.py \
 		--c-prefix /dev/null \
 		--c-postfix other/c_postfix.inc \
-		other/args_and_settings.schema.json other/args_and_settings.parser.c other/args_and_settings.parser.h
+		other/args_and_settings.schema.json --c-file other/args_and_settings.parser.c --h-file other/args_and_settings.parser.h
 
 other/cpp.o: other/cpp.cpp other/cpp.parser.h
 
@@ -43,7 +43,7 @@ other/cpp.compiled: other/cpp.o other/cpp.parser.c
 # === General test running and compilation rules ===
 %.parser.c %.parser.h: %.schema.json $(PARSER_SOURCE_FILES)
 	echo "$*: generating schema"
-	../json_schema_to_c.py $*.schema.json $*.parser.c $*.parser.h
+	../json_schema_to_c.py $*.schema.json --c-file $*.parser.c --h-file $*.parser.h
 
 
 %.compiled: %.c %.parser.c
@@ -57,6 +57,6 @@ other/cpp.compiled: other/cpp.o other/cpp.parser.c
 # === Schema error checking rules ===
 %.run_scherr: %.json %.expected_err
 	echo "$*: generating invalid schema"
-	if ../json_schema_to_c.py $*.json $*.parser.c $*.parser.h 2>$*.err; then echo "Invalid schema was processed. That's a problem."; exit 1; fi
+	if ../json_schema_to_c.py $*.json --c-file $*.parser.c --h-file $*.parser.h 2>$*.err; then echo "Invalid schema was processed. That's a problem."; exit 1; fi
 	if [ "`<$*.err`" != "`<$*.expected_err`" ]; then echo -e "Wrong error.\\n  Got error: `<$*.err`\\n   Expected: `<$*.expected_err`"; exit 1; fi
 	@echo "$*: OK"

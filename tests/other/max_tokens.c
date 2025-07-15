@@ -38,8 +38,8 @@ int main(int argc, char** argv){
     assert(!json_parse_root(data, &root));
     check_error(
         data2,
-        "JSON syntax error: JSON file too complex",
-        200
+        "JSON syntax error: End-of-file reached (JSON file incomplete)",
+        204
     );
     check_error(
         data3,

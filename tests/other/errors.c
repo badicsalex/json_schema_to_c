@@ -20,12 +20,12 @@ int main(int argc, char** argv){
         "JSON syntax error: End-of-file reached (JSON file incomplete)",
         1
     );
-    char many_objects[20001] = {};
-    memset(many_objects, '[', 10000);
-    memset(many_objects + 10000, ']', 10000);
+    char many_objects[200001] = {};
+    memset(many_objects, '[', 100000);
+    memset(many_objects + 100000, ']', 100000);
     check_error(
         many_objects,
-        "JSON syntax error: JSON file too complex",
+        "Exceeded maximum allowed buffer size for JSMN token buffer",
         -1 /* don't care about the actual position of the failure here */
     );
 

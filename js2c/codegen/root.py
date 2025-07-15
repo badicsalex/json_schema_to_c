@@ -70,7 +70,7 @@ class RootGenerator:
             with out_file.if_block("token_num < 0"):
                 out_file.print("return true;")
             with out_file.if_block(f"(size_t) token_num > (size_t) ({self.settings.tokens_buf_max_size}) / (size_t) sizeof(jsmntok_t)"):
-                out_file.print("TRY_LOG_ERROR(parser.pos, \"Exceeded maximum allowed buffer size for JSMN token buffer\");")
+                out_file.print("TRY_LOG_ERROR(-1, \"Exceeded maximum allowed buffer size for JSMN token buffer\")")
                 out_file.print("return true;")
             out_file.print("parse_state_t parse_state_var;")
             out_file.print("parse_state_t *parse_state = &parse_state_var;")

@@ -166,7 +166,7 @@ class ObjectGenerator(Generator):
                 out_file.print("parse_state->current_key = saved_key;")
             out_file.print("else")
         with out_file.code_block():
-            if self.settings.allow_additional_properties:
+            if self.settings.allow_additional_properties and self.additionalProperties:
                 out_file.print("parse_state->current_token += 1;")
                 out_file.require_section("builtin_skip")
                 out_file.print("builtin_skip(parse_state);")
@@ -179,6 +179,7 @@ class ObjectGenerator(Generator):
 
         out_file.print("static bool parse_{}(parse_state_t *parse_state, {} *out)".format(self.parser_name, self.c_type))
         with out_file.code_block():
+            out_file.require_section("check_type")
             with out_file.if_block("check_type(parse_state, JSMN_OBJECT)"):
                 out_file.print("return true;")
 
