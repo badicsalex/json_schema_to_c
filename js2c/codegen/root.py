@@ -93,6 +93,7 @@ class RootGenerator:
             out_file.print("")
 
         if "file_parse" in self.settings.entrypoints:
+            out_file.require_section("file_parse_includes")
             out_file.print("bool file_parse_{}(const char *filepath, {})".format(self.name, self.root_generator.c_type.typed_identifier("out", indirection="*")))
             with out_file.code_block():
                 exit_err = lambda msg: out_file.print(['TRY_LOG_ERROR(-1, {})'.format(msg), "(void) close(fd);", "return true;"])

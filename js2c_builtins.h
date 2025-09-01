@@ -24,16 +24,18 @@
 #ifndef JS2C_BUILTINS_H
 #define JS2C_BUILTINS_H
 
-#include <errno.h>
-#include <fcntl.h>
 #include <inttypes.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+// js2c-start file_parse_includes
+#include <errno.h>
+#include <fcntl.h>
 #include <sys/mman.h>
 #include <unistd.h>
+// js2c-end
 
 #ifndef JSMN_STATIC
 #define JSMN_STATIC
