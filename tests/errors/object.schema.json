@@ -1,0 +1,70 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "root",
+    "description": "Error message tests: object shape, unknown/duplicate/required fields, nesting.",
+    "js2cSettings": {
+        "hPrefixFile": "errors/check_error_h_prefix.inc",
+        "cPrefixFile": "errors/check_error_c_prefix.inc"
+    },
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "the_array"
+    ],
+    "properties": {
+        "the_array": {
+            "type": "array",
+            "maxItems": 3,
+            "minItems": 2,
+            "items": {
+                "type": "integer"
+            }
+        },
+        "num": {
+            "type": "integer",
+            "default": 1337,
+            "minimum": -5000,
+            "maximum": 5000
+        },
+        "name": {
+            "type": "string",
+            "maxLength": 8,
+            "minLength": 4,
+            "default": "abcd"
+        },
+        "fnum2": {
+            "type": "number",
+            "default": 420,
+            "exclusiveMinimum": -1000,
+            "exclusiveMaximum": 1000
+        },
+        "obj_with_subobj": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "a": {
+                    "type": "integer",
+                    "default": 0
+                },
+                "subsub": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "x": {
+                            "type": "integer",
+                            "default": 0
+                        },
+                        "y": {
+                            "type": "integer",
+                            "default": 0
+                        }
+                    }
+                },
+                "b": {
+                    "type": "integer",
+                    "default": 0
+                }
+            }
+        }
+    }
+}

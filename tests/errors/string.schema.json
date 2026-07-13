@@ -1,0 +1,19 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "root",
+    "description": "Error message tests: string length and type.",
+    "js2cSettings": {
+        "hPrefixFile": "errors/check_error_h_prefix.inc",
+        "cPrefixFile": "errors/check_error_c_prefix.inc"
+    },
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "name": {
+            "type": "string",
+            "maxLength": 8,
+            "minLength": 4,
+            "default": "abcd"
+        }
+    }
+}

@@ -1,0 +1,17 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "root",
+    "description": "Error message tests: boolean literals.",
+    "js2cSettings": {
+        "hPrefixFile": "errors/check_error_h_prefix.inc",
+        "cPrefixFile": "errors/check_error_c_prefix.inc"
+    },
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "is_good": {
+            "type": "boolean",
+            "default": false
+        }
+    }
+}

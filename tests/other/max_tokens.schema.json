@@ -3,8 +3,8 @@
     "$id": "root",
     "description": "Some demo structure for demoing.",
     "js2cSettings": {
-        "hPrefixFile": "other/errors_h_prefix.inc",
-        "cPrefixFile": "other/errors_c_prefix.inc"
+        "hPrefixFile": "errors/check_error_h_prefix.inc",
+        "cPrefixFile": "errors/check_error_c_prefix.inc"
     },
     "type": "object",
     "required": [

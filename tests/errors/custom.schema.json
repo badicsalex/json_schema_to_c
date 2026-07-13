@@ -1,0 +1,31 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "root",
+    "description": "Error message tests: custom js2cParseFunction failures.",
+    "js2cSettings": {
+        "hPrefixFile": "errors/check_error_h_prefix.inc",
+        "cPrefixFile": "errors/check_error_c_prefix.inc"
+    },
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "error_arr": {
+            "type": "array",
+            "maxItems": 1,
+            "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "trigger": {
+                        "$id": "THE ERRORER",
+                        "type": "string",
+                        "maxLength": 15,
+                        "js2cType": "int",
+                        "js2cParseFunction": "error_creating_parser",
+                        "default": "INVALID DEFAULT"
+                    }
+                }
+            }
+        }
+    }
+}

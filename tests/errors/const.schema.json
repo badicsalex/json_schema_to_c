@@ -1,0 +1,24 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "root",
+    "description": "Error message tests: const mismatches.",
+    "js2cSettings": {
+        "hPrefixFile": "errors/check_error_h_prefix.inc",
+        "cPrefixFile": "errors/check_error_c_prefix.inc"
+    },
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "dummy": {
+            "type": "integer",
+            "default": 0
+        },
+        "a_const": {
+            "const": 42
+        },
+        "a_str_const": {
+            "type": "string",
+            "const": "fixed"
+        }
+    }
+}

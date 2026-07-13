@@ -1,0 +1,55 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "root",
+    "description": "Error message tests: integers, numeric strings and int/string anyOf.",
+    "js2cSettings": {
+        "hPrefixFile": "errors/check_error_h_prefix.inc",
+        "cPrefixFile": "errors/check_error_c_prefix.inc"
+    },
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "num": {
+            "type": "integer",
+            "default": 1337,
+            "minimum": -5000,
+            "maximum": 5000
+        },
+        "num2": {
+            "type": "integer",
+            "default": 420,
+            "exclusiveMinimum": -1000,
+            "exclusiveMaximum": 1000
+        },
+        "numeric_string": {
+            "type": "string",
+            "default": "1234",
+            "pattern": "[0-9]+"
+        },
+        "anyof_hex": {
+            "anyOf": [
+                {
+                    "type": "integer",
+                    "default": 1234,
+                    "minimum": 123,
+                    "maximum": 1000000
+                },
+                {
+                    "type": "string",
+                    "pattern": "[0-9a-fA-F]+"
+                }
+            ]
+        },
+        "unsigned_num": {
+            "type": "integer",
+            "default": 420,
+            "minimum": 0
+        },
+        "unsigned_num2": {
+            "type": "integer",
+            "default": 420,
+            "minimum": 123,
+            "maximum": 456
+        }
+    }
+}
