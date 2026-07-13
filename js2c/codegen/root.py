@@ -50,6 +50,7 @@ class RootGenerator:
             GeneratorInitParameters(
                 '',
                 schema['$id'],
+                schema['$id'],
                 schema['$id'] + '_t',
                 settings,
                 GeneratorFactory,

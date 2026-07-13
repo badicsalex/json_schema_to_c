@@ -49,6 +49,7 @@ GeneratorInitParametersBase = namedtuple(
     "GeneratorInitParameters",
     (
         'path_in_schema',
+        'base_name',
         'parser_name',
         'type_name',
         'settings',
@@ -64,6 +65,7 @@ class GeneratorInitParameters(GeneratorInitParametersBase):
     def with_suffix(self, path_in_schema, type_name, suffix):
         return GeneratorInitParameters(
             self.path_in_schema + "." + path_in_schema,
+            self.base_name,
             "{}_{}".format(self.parser_name, suffix),
             "{}_{}_t".format(type_name.removesuffix("_t"), suffix),
             self.settings,

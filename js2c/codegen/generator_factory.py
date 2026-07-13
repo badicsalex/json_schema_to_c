@@ -24,6 +24,7 @@
 #
 from typing import Type, Any
 
+from .alternate_storage import AlternateStorageGenerator
 from .array import ArrayGenerator
 from .const import ConstGenerator
 from .integer import IntegerGenerator, NumericStringGenerator, IntegerStringAnyOfGenerator
@@ -39,6 +40,7 @@ from .base import SchemaError, GeneratorInitParameters, Generator
 class GeneratorFactory:
     #pylint: disable=too-few-public-methods
     GENERATORS: list[Type[Generator]] = [
+        AlternateStorageGenerator,
         EnumGenerator,
         ConstGenerator,
         NumericStringGenerator,
@@ -63,7 +65,8 @@ class GeneratorFactory:
 
         if 'oneOf' in schema:
             raise SchemaError(parameters.path_in_schema, "oneOf is not supported, only anyOf")
-        if 'type' not in schema and 'anyOf' not in schema and 'const' not in schema:
+        if ('type' not in schema and 'anyOf' not in schema and 'const' not in schema
+                and schema.get('js2cType') not in AlternateStorageGenerator.STORAGE_FORMATS):
             raise SchemaError(parameters.path_in_schema, "Missing field: 'type'")
         for generator_class in cls.GENERATORS:
             if generator_class.can_parse_schema(schema):
