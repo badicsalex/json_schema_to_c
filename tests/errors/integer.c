@@ -115,5 +115,10 @@ int main(int argc, char** argv){
         "Integer 18 in 'anyof_hex' out of range. It must be >= 123.",
         15
     );
+    check_error(
+        "{\"big\": 18446744073709551615}",
+        "Integer 18446744073709551615 in 'big' out of range. It must be <= 18000000000000000000.",
+        8
+    );
     return 0;
 }

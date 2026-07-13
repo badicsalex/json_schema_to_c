@@ -50,6 +50,12 @@
             "default": 420,
             "minimum": 123,
             "maximum": 456
+        },
+        "big": {
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "maximum": 18000000000000000000
         }
     }
 }

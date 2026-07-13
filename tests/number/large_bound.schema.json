@@ -1,0 +1,17 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "root",
+    "description": "A range bound above INT64_MAX: its range-check literal needs a ULL suffix to compile.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "big"
+    ],
+    "properties": {
+        "big": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 18000000000000000000
+        }
+    }
+}
