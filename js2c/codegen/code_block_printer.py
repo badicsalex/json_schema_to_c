@@ -63,7 +63,7 @@ class CodeBlockPrinter:
             self.file.write(line)
         else:
             self.file.write("\n{}{}".format(" "*self.indent_level, line))
-        self.last_was_else = (line == "else")
+        self.last_was_else = line == "else"
 
     def print_with_docstring(self, line, docstring):
         if not docstring:
