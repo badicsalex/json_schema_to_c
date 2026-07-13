@@ -32,38 +32,43 @@ from urllib.parse import urlparse
 SCHEMA_CACHE = {}
 
 
-def get_schema_from_path(path, relative_to):
+def get_schema_from_path(path, relative_to, authorized_paths):
     path = os.path.abspath(os.path.join(os.path.dirname(relative_to), path))
+    roots = [os.path.abspath(a) for a in authorized_paths]
+    if not any(path == root or path.startswith(root + os.sep) for root in roots):
+        raise ValueError(
+            "Cannot resolve reference to unauthorized path (use --authorized-paths to allow it): " + path
+        )
     if path in SCHEMA_CACHE:
         if SCHEMA_CACHE[path] is None:
             raise ValueError("Circular dependency detected in JSON schema reference")
     else:
         SCHEMA_CACHE[path] = None  # Reserve the slot first, so a ref back into this file is caught.
-        SCHEMA_CACHE[path] = load_schema(path)
+        SCHEMA_CACHE[path] = load_schema(path, authorized_paths)
     return SCHEMA_CACHE[path]
 
 
 # WARNING: reviewing the following algorithm might cause brain damage
 # Sorry for that.
-def resolve_children(full_schema, part_to_resolve, schema_filepath):
+def resolve_children(full_schema, part_to_resolve, schema_filepath, authorized_paths):
     if part_to_resolve is None:
         return
     if isinstance(part_to_resolve, (str, int, bool, float)):
         return
     if isinstance(part_to_resolve, list):
         for i, v in enumerate(part_to_resolve):
-            part_to_resolve[i] = resolve_ref(full_schema, v, schema_filepath)
-            resolve_children(full_schema, v, schema_filepath)
+            part_to_resolve[i] = resolve_ref(full_schema, v, schema_filepath, authorized_paths)
+            resolve_children(full_schema, v, schema_filepath, authorized_paths)
         return
     if isinstance(part_to_resolve, dict):
         for k, v in part_to_resolve.items():
-            part_to_resolve[k] = resolve_ref(full_schema, v, schema_filepath)
-            resolve_children(full_schema, v, schema_filepath)
+            part_to_resolve[k] = resolve_ref(full_schema, v, schema_filepath, authorized_paths)
+            resolve_children(full_schema, v, schema_filepath, authorized_paths)
         return
     raise ValueError("Value {} is not supported by the schema loader".format(part_to_resolve))
 
 
-def resolve_ref(full_schema, part_to_resolve, schema_filepath):
+def resolve_ref(full_schema, part_to_resolve, schema_filepath, authorized_paths):
     if not isinstance(part_to_resolve, dict) or "$ref" not in part_to_resolve:
         return part_to_resolve
     if len(part_to_resolve) > 1:
@@ -79,7 +84,7 @@ def resolve_ref(full_schema, part_to_resolve, schema_filepath):
 
     # A path (or an explicit file: scheme) points at another schema file; a bare fragment stays in this one.
     if ref_uri.scheme == "file" or ref_uri.path != "":
-        full_schema = get_schema_from_path(ref_uri.path, schema_filepath)
+        full_schema = get_schema_from_path(ref_uri.path, schema_filepath, authorized_paths)
 
     ref_str = ref_uri.fragment[1:] + '/'
     replacement = full_schema
@@ -137,9 +142,9 @@ def resolve_all_of(schema):
     return result
 
 
-def load_schema(schema_filepath):
+def load_schema(schema_filepath, authorized_paths):
     with open(schema_filepath, encoding="utf-8") as schema_file:
         schema = json.load(schema_file, object_pairs_hook=OrderedDict)
-    resolve_children(schema, schema, schema_filepath)
+    resolve_children(schema, schema, schema_filepath, authorized_paths)
     schema = resolve_all_of(schema)
     return schema

@@ -66,12 +66,28 @@ def parse_args():
         type=str,
         help="Filename of the generated parser .h file",
     )
+    parser.add_argument(
+        "--authorized-paths",
+        type=str,
+        nargs="+",
+        metavar="path",
+        default=None,
+        help="Files or directories that a schema is allowed to reference across files. "
+             "The directory of the schema itself is always allowed.",
+    )
     Settings.fill_argparse(parser)
     return parser.parse_args()
 
 
 def main(args):
-    schema = load_schema(args.schema_file)
+    # Kept out of js2cSettings on purpose: an untrusted schema must not be able to widen its own allowlist.
+    authorized_paths = list(args.authorized_paths or [])
+    authorized_paths.append(os.path.dirname(os.path.abspath(args.schema_file)))
+    try:
+        schema = load_schema(args.schema_file, authorized_paths)
+    except (ValueError, OSError) as e:
+        print(e, file=sys.stderr)
+        sys.exit(1)
     settings = Settings(vars(args), schema.get('js2cSettings', {}))
     try:
         root_generator = RootGenerator(schema, settings)
