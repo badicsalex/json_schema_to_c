@@ -9,14 +9,13 @@
     "additionalProperties": false,
     "required": [
         "kept",
-        "ignored",
         "blob"
     ],
     "properties": {
         "kept": {
             "type": "integer"
         },
-        "ignored": {
+        "meta": {
             "js2cType": "void"
         },
         "blob": {
