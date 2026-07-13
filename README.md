@@ -126,9 +126,45 @@ Extensions to JSON Schema
 
 The following extra features are implemented:
 * The `js2cDefault` field on data fields. It is similar to `default`, but it is pasted into the parser C code as-is, so it can be any C expression. It is recommended to still set `default` for interoperability, but it will be ignored by js2c. This is the only way to set non-trivial default values for arrays and objects.
-* The `js2cType` and `js2cParseFunction` on `string` fields. `js2cType` specifies a forces a specific C type in the struct, and `js2cParseFunction` specifies a custom function (probably included with `c-parser-prefix`) which takes a string and outputs this custom type. Useful for something like base64 decoding a string and storing the bytes.
-* The `js2cType` on `integer` fields. `js2cType` specifies a forces a specific C type in the struct (can only be `u?int(8|16|32|64)_t`). The integer will be parsed as a full 64 bit variable and truncated after range checks.
+* The `js2cType` and `js2cParseFunction` on `string` and `enum` fields. `js2cType` forces a specific C type in the struct, and `js2cParseFunction` specifies a custom function (probably included via `--c-prefix-file`) which takes the matched string and outputs this custom type. Useful for something like base64 decoding a string and storing the bytes.
+* The `js2cType` on `integer` fields. `js2cType` forces a specific C type in the struct (can only be `u?int(8|16|32|64)_t`). The integer will be parsed as a full 64 bit variable and truncated after range checks.
 * `js2cSettings` in the schema root. Can be used to specify parameters that are normally command line parameters. Both camelCase and snake_case forms are accepted. If the same parameters are given through command line arguments, the settings in the schema take precedence.
+
+Custom parser functions
+-----------------------
+
+`js2cType` sets a custom C type for a `string` or `enum` field, and `js2cParseFunction` names a
+function that converts the matched string into that type. Define it in a file passed via
+`--c-prefix-file <file>`, with this signature:
+
+```c
+static bool parse_xxx(const char *current_string, int current_string_len, xxx *out, const char **error) {
+    // do stuff
+
+    if (some_error) {
+        *error = "something bad occurred";
+        return true; // return true on error
+    }
+
+    *out = parsed_stuff;
+    return false; // return false on success
+}
+```
+
+Custom logger
+-------------
+
+Define `LOG_ERROR` in the file passed via `--c-prefix-file <file>` to capture parse errors. Its
+first argument is the byte offset of the offending token; the rest are printf-style:
+
+```c
+#include <stdio.h>
+
+#define LOG_ERROR(token_position, ...) printf(__VA_ARGS__)
+```
+
+Errors from an `anyOf` option that fails to match are suppressed, since trying each option is
+expected to fail until one fits.
 
 Contribution
 ------------
