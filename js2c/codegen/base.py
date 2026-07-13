@@ -24,9 +24,6 @@
 #
 from abc import ABC, abstractmethod
 from collections import namedtuple
-import re
-
-
 # Names that can't be used as C identifiers: keywords, plus the stdbool.h macros.
 C_RESERVED = frozenset((
     "auto", "break", "case", "char", "const", "continue", "default", "do", "double",
@@ -65,12 +62,10 @@ class GeneratorInitParameters(GeneratorInitParametersBase):
     __slots__ = ()
 
     def with_suffix(self, path_in_schema, type_name, suffix):
-        # Remove _t suffix if present
-        type_name = re.sub("_t$", "", type_name)
         return GeneratorInitParameters(
             self.path_in_schema + "." + path_in_schema,
             "{}_{}".format(self.parser_name, suffix),
-            "{}_{}_t".format(type_name, suffix),
+            "{}_{}_t".format(type_name.removesuffix("_t"), suffix),
             self.settings,
             self.generator_factory,
             self.type_cache,
@@ -103,8 +98,7 @@ class Generator(ABC):
         if self.js2cType is not None:
             self.type_name = self.js2cType
         elif "$id" in schema:
-            # Remove starting # if present
-            self.type_name = re.sub("^#", "", schema["$id"]) + "_t"
+            self.type_name = schema["$id"].removeprefix("#") + "_t"
         else:
             self.type_name = parameters.type_name
 

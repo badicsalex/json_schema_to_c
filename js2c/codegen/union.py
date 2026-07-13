@@ -23,7 +23,6 @@
 # SOFTWARE.
 #
 import os.path
-import re
 
 from .base import Generator, CType, SchemaError, C_RESERVED
 from .enum import EnumType
@@ -36,11 +35,11 @@ class UnionType(CType):
 
         # Name the members after the option type names, minus their common prefix and the _t suffix.
         prefix_len = len(os.path.commonprefix([t.type_name for t in option_types]))
-        self.option_names = [re.sub("_t$", "", t.type_name[prefix_len:]) for t in option_types]
+        self.option_names = [t.type_name[prefix_len:].removesuffix("_t") for t in option_types]
         if any(name[0].isdigit() or name in C_RESERVED for name in self.option_names):
             self.option_names = ["option_" + name for name in self.option_names]
 
-        type_name_base = re.sub("_t$", "", self.type_name)
+        type_name_base = self.type_name.removesuffix("_t")
         self.tag_type = EnumType(
             type_name_base + "_type_t",
             "Tag telling which union member is set",

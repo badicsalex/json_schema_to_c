@@ -83,7 +83,7 @@ class EnumGenerator(Generator):
         if self.convertLabelsToSnakeCase:
             enum_label = self.CAMEL_CASE_RE.sub(r"_", enum_label)
             enum_label = enum_label.upper()
-        prefix = re.sub("_t$", "", self.type_name).upper()
+        prefix = self.type_name.removesuffix("_t").upper()
         prefixed = "{}_{}".format(prefix, enum_label)
         sanitized = self.SANITIZE_RE.sub("_", prefixed)
         return sanitized
