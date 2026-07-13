@@ -18,6 +18,7 @@ The following schema features are supported:
 * Required fields
 * `additionalProperties: true`, i.e. skipping unknown fields
 * `const` is supported for strings and integers
+* `anyOf`, generated as a tagged union
 
 Important limitations:
 
@@ -27,7 +28,7 @@ Important limitations:
 * `null` is not supported
 * Tuples (a specific form of array declarations) are not supported
 * More advanced `$ref` declarations (especially pointing to another file) are not supported
-* `anyOf` and `oneOf` are not supported
+* `oneOf` is not supported
 * `$id` is required on the root and is used to define the prefix of the generated types name
 * an invalid schema can make json_schema_to_c crash
 

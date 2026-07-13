@@ -218,7 +218,7 @@ class IntegerStringAnyOfGenerator(NumericStringGenerator):
     def can_parse_schema(cls, schema):
         if "anyOf" not in schema or len(schema['anyOf']) != 2:
             return False
-        return set((schema['anyOf'][0]['type'], schema['anyOf'][1]['type'])) == set(('integer', 'string'))
+        return set((schema['anyOf'][0].get('type'), schema['anyOf'][1].get('type'))) == set(('integer', 'string'))
 
     @property
     def string_allowed(self):

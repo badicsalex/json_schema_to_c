@@ -45,12 +45,16 @@
 #define LOG_ERROR(position, ...)
 #endif
 
+// Suppressed while a union tries each option, since a failing option is expected.
+#define TRY_LOG_ERROR(position, ...) { if (!parse_state->inhibit_errors) { LOG_ERROR(position, __VA_ARGS__); } }
+
 typedef struct parse_state_s {
     const char *json_string;
     const char *current_key;
     jsmntok_t *tokens;
     uint64_t current_token;
     uint64_t max_token_num;
+    bool inhibit_errors;
 } parse_state_t;
 
 #define CURRENT_TOKEN(parse_state) ((parse_state)->tokens[(parse_state)->current_token])
@@ -91,7 +95,7 @@ static inline const char *jsmn_error_as_string(int err) {
 static inline bool check_type(const parse_state_t *parse_state, jsmntype_t type) {
     const jsmntok_t *token = &parse_state->tokens[parse_state->current_token];
     if (token->type != type) {
-        LOG_ERROR(
+        TRY_LOG_ERROR(
             token->start,
             "Unexpected token in '%s': %s instead of %s",
             parse_state->current_key,
@@ -119,11 +123,11 @@ static inline bool builtin_check_current_string(parse_state_t *parse_state, int 
     }
     const jsmntok_t *token = &CURRENT_TOKEN(parse_state);
     if (token->end - token->start > max_len) {
-        LOG_ERROR(token->start, "String too large in '%s'. Length: %i. Maximum length: %i.", parse_state->current_key, token->end - token->start, max_len);
+        TRY_LOG_ERROR(token->start, "String too large in '%s'. Length: %i. Maximum length: %i.", parse_state->current_key, token->end - token->start, max_len);
         return true;
     }
     if (token->end - token->start < min_len) {
-        LOG_ERROR(token->start, "String too short in '%s'. Length: %i. Minimum length: %i.", parse_state->current_key, token->end - token->start, min_len);
+        TRY_LOG_ERROR(token->start, "String too short in '%s'. Length: %i. Minimum length: %i.", parse_state->current_key, token->end - token->start, min_len);
         return true;
     }
     return false;
@@ -147,7 +151,7 @@ static inline bool builtin_parse_bool(parse_state_t *parse_state, bool *out) {
     const jsmntok_t *token = &parse_state->tokens[parse_state->current_token];
     const char first_char = parse_state->json_string[token->start];
     if (first_char != 't' && first_char != 'f') {
-        LOG_ERROR(token->start, "Invalid boolean literal in '%s': %.*s", parse_state->current_key, CURRENT_STRING_FOR_ERROR(parse_state));
+        TRY_LOG_ERROR(token->start, "Invalid boolean literal in '%s': %.*s", parse_state->current_key, CURRENT_STRING_FOR_ERROR(parse_state));
         return true;
     }
     *out = first_char == 't';
@@ -163,7 +167,7 @@ static inline bool builtin_parse_signed(
     int64_t *out) {
     const jsmntok_t *token = &parse_state->tokens[parse_state->current_token];
     if (!((number_allowed && token->type == JSMN_PRIMITIVE) || (string_allowed && token->type == JSMN_STRING))) {
-        LOG_ERROR(token->start, "Unexpected token in '%s': %s", parse_state->current_key, token_type_as_string(token->type))
+        TRY_LOG_ERROR(token->start, "Unexpected token in '%s': %s", parse_state->current_key, token_type_as_string(token->type))
         return true;
     }
     if (token->type == JSMN_PRIMITIVE) {
@@ -172,7 +176,7 @@ static inline bool builtin_parse_signed(
     char *end_char = NULL;
     *out = strtoll(parse_state->json_string + token->start, &end_char, radix);
     if (end_char != parse_state->json_string + token->end) {
-        LOG_ERROR(token->start, "Invalid signed integer literal in '%s': %.*s", parse_state->current_key, CURRENT_STRING_FOR_ERROR(parse_state));
+        TRY_LOG_ERROR(token->start, "Invalid signed integer literal in '%s': %.*s", parse_state->current_key, CURRENT_STRING_FOR_ERROR(parse_state));
         return true;
     }
     parse_state->current_token += 1;
@@ -188,7 +192,7 @@ static inline bool builtin_parse_unsigned(
 ) {
     const jsmntok_t *token = &parse_state->tokens[parse_state->current_token];
     if (!((number_allowed && token->type == JSMN_PRIMITIVE) || (string_allowed && token->type == JSMN_STRING))) {
-        LOG_ERROR(token->start, "Unexpected token in '%s': %s", parse_state->current_key, token_type_as_string(token->type))
+        TRY_LOG_ERROR(token->start, "Unexpected token in '%s': %s", parse_state->current_key, token_type_as_string(token->type))
         return true;
     }
     if (token->type == JSMN_PRIMITIVE) {
@@ -197,12 +201,12 @@ static inline bool builtin_parse_unsigned(
     const char *start_char = parse_state->json_string + token->start;
     char *end_char = NULL;
     if (*start_char == '-') {
-        LOG_ERROR(token->start, "Invalid unsigned integer literal in '%s': %.*s", parse_state->current_key, CURRENT_STRING_FOR_ERROR(parse_state));
+        TRY_LOG_ERROR(token->start, "Invalid unsigned integer literal in '%s': %.*s", parse_state->current_key, CURRENT_STRING_FOR_ERROR(parse_state));
         return true;
     }
     *out = strtoull(start_char, &end_char, radix);
     if (end_char != parse_state->json_string + token->end) {
-        LOG_ERROR(token->start, "Invalid unsigned integer literal in '%s': %.*s", parse_state->current_key, CURRENT_STRING_FOR_ERROR(parse_state));
+        TRY_LOG_ERROR(token->start, "Invalid unsigned integer literal in '%s': %.*s", parse_state->current_key, CURRENT_STRING_FOR_ERROR(parse_state));
         return true;
     }
     parse_state->current_token += 1;
@@ -218,14 +222,14 @@ static inline bool builtin_parse_double(parse_state_t *parse_state, double *out)
     if (token->end - token->start >= 2) {
         if (start_char[1] != '.' && start_char[1] != 'e' && start_char[1] != 'E' &&
             !(start_char[1] >= '0' && start_char[1] <= '9')) {
-            LOG_ERROR(token->start, "Invalid floating point literal in '%s': %.*s", parse_state->current_key, CURRENT_STRING_FOR_ERROR(parse_state));
+            TRY_LOG_ERROR(token->start, "Invalid floating point literal in '%s': %.*s", parse_state->current_key, CURRENT_STRING_FOR_ERROR(parse_state));
             return true;
         }
     }
     char *end_char = NULL;
     *out = strtod(start_char, &end_char);
     if (end_char != parse_state->json_string + token->end) {
-        LOG_ERROR(token->start, "Invalid floating point literal in '%s': %.*s", parse_state->current_key, CURRENT_STRING_FOR_ERROR(parse_state));
+        TRY_LOG_ERROR(token->start, "Invalid floating point literal in '%s': %.*s", parse_state->current_key, CURRENT_STRING_FOR_ERROR(parse_state));
         return true;
     }
     parse_state->current_token += 1;
@@ -268,6 +272,7 @@ static inline bool builtin_parse_json_string(
     parse_state->current_token = 0;
     parse_state->max_token_num = token_buffer_size;
     parse_state->current_key = "document root";
+    parse_state->inhibit_errors = false;
 
     jsmn_init(&parser);
     int token_num = jsmn_parse(&parser, json_string, strlen(json_string), parse_state->tokens, token_buffer_size);

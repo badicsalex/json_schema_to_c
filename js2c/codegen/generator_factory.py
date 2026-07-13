@@ -32,6 +32,7 @@ from .bool import BoolGenerator
 from .object import ObjectGenerator
 from .string import StringGenerator
 from .enum import EnumGenerator
+from .union import UnionGenerator
 from .base import SchemaError, GeneratorInitParameters, Generator
 
 
@@ -48,6 +49,7 @@ class GeneratorFactory:
         BoolGenerator,
         ObjectGenerator,
         ArrayGenerator,
+        UnionGenerator,
     ]
 
     @classmethod
@@ -59,6 +61,8 @@ class GeneratorFactory:
                 .format(schema)
             )
 
+        if 'oneOf' in schema:
+            raise SchemaError(parameters.path_in_schema, "oneOf is not supported, only anyOf")
         if 'type' not in schema and 'anyOf' not in schema and 'const' not in schema:
             raise SchemaError(parameters.path_in_schema, "Missing field: 'type'")
         for generator_class in cls.GENERATORS:

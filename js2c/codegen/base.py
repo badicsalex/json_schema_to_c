@@ -139,11 +139,11 @@ class Generator(ABC):
     @classmethod
     def generate_logged_error(cls, log_message, out_file):
         if isinstance(log_message, str):
-            out_file.print("LOG_ERROR(CURRENT_TOKEN(parse_state).start, \"{}\", parse_state->current_key)".format(log_message))
+            out_file.print("TRY_LOG_ERROR(CURRENT_TOKEN(parse_state).start, \"{}\", parse_state->current_key)".format(log_message))
         else:
             assert len(log_message) > 1, "Use a simple string, not a 1 element array."
             out_file.print(
-                "LOG_ERROR(CURRENT_TOKEN(parse_state).start, \"{}\", {})"
+                "TRY_LOG_ERROR(CURRENT_TOKEN(parse_state).start, \"{}\", {})"
                 .format(
                     log_message[0],
                     ", ".join(log_message[1:]),
