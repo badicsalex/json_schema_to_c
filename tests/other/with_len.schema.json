@@ -1,0 +1,15 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "root",
+    "description": "Parsing a buffer by explicit length instead of NUL termination.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "value"
+    ],
+    "properties": {
+        "value": {
+            "type": "integer"
+        }
+    }
+}
