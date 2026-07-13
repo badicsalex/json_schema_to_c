@@ -62,9 +62,6 @@ class AlternateStorageGenerator(Generator):
         with out_file.if_block("builtin_skip(parse_state)"):
             out_file.print("return true;")
 
-    def has_default_value(self):
-        return False
-
     def max_token_num(self):
         # A skipped value is at least one token; composite values need extra token headroom
         # (--allow-additional-properties), as their structure isn't declared here.
