@@ -48,13 +48,11 @@ class StringGenerator(Generator):
         "minLength",
         "maxLength",
         "default",
-        "js2cParseFunction",
     )
 
     minLength = 0
     maxLength = None
     default = None
-    js2cParseFunction = None
 
     def __init__(self, schema, parameters):
         super().__init__(schema, parameters)
@@ -78,18 +76,6 @@ class StringGenerator(Generator):
     @classmethod
     def can_parse_schema(cls, schema):
         return schema.get('type') == 'string'
-
-    def generate_custom_parser_call(self, src, src_length, out_var_name, out_file):
-        out_file.print("const char *error = NULL;")
-        parser_call = "{}({}, {}, {}, &error)".format(self.js2cParseFunction, src, src_length, out_var_name)
-        with out_file.if_block(parser_call):
-            self.generate_logged_error([
-                "Error parsing '%s', value=\\\"%.*s\\\": %s",
-                "parse_state->current_key",
-                src_length,
-                src,
-                "error ? error : \"error calling {}\"".format(self.js2cParseFunction),
-            ], out_file)
 
     def generate_parser_call(self, out_var_name, out_file):
         if self.js2cParseFunction is not None:

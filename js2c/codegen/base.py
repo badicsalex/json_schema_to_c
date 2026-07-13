@@ -72,12 +72,14 @@ class Generator(ABC):
         "description",
         "js2cDefault",
         "js2cType",
+        "js2cParseFunction",
     )
 
     c_type = None
     description = None
     js2cDefault = None
     js2cType = None
+    js2cParseFunction = None
 
     def __init__(self, schema, parameters):
         for attr in self.JSON_FIELDS:
@@ -121,6 +123,18 @@ class Generator(ABC):
             return False
         out_file.print("{} = {};".format(out_var_name, self.js2cDefault))
         return True
+
+    def generate_custom_parser_call(self, src, src_length, out_var_name, out_file):
+        out_file.print("const char *error = NULL;")
+        parser_call = "{}({}, {}, {}, &error)".format(self.js2cParseFunction, src, src_length, out_var_name)
+        with out_file.if_block(parser_call):
+            self.generate_logged_error([
+                "Error parsing '%s', value=\\\"%.*s\\\": %s",
+                "parse_state->current_key",
+                src_length,
+                src,
+                "error ? error : \"error calling {}\"".format(self.js2cParseFunction),
+            ], out_file)
 
     @classmethod
     def generate_logged_error(cls, log_message, out_file):

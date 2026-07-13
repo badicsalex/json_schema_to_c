@@ -69,7 +69,10 @@ class EnumGenerator(Generator):
 
     def __init__(self, schema, parameters):
         super().__init__(schema, parameters)
-        self.c_type = EnumType(self.type_name, self.description, [self.convert_enum_label(enum_label) for enum_label in self.enum])
+        if self.js2cParseFunction is not None:
+            self.c_type = CType(self.js2cType, self.description)
+        else:
+            self.c_type = EnumType(self.type_name, self.description, [self.convert_enum_label(enum_label) for enum_label in self.enum])
         self.c_type = parameters.type_cache.try_get_cached(self.c_type)
 
     @classmethod
@@ -96,10 +99,18 @@ class EnumGenerator(Generator):
             with out_file.if_block("check_type(parse_state, JSMN_STRING)"):
                 out_file.print("return true;")
 
-            for enum_label in self.enum:
-                with out_file.if_block('current_string_is(parse_state, "{}")'.format(enum_label)):
-                    out_file.print("*out = {};".format(self.convert_enum_label(enum_label)))
+            if self.js2cParseFunction is not None:
+                # A single membership check: the parser treats every label the same, so there is nothing to dispatch on.
+                is_a_label = " || ".join('current_string_is(parse_state, "{}")'.format(enum_label) for enum_label in self.enum)
+                with out_file.if_block(is_a_label):
+                    self.generate_custom_parser_call("CURRENT_STRING(parse_state)", "CURRENT_STRING_LENGTH(parse_state)", "out", out_file)
                 out_file.print("else")
+            else:
+                for enum_label in self.enum:
+                    with out_file.if_block('current_string_is(parse_state, "{}")'.format(enum_label)):
+                        out_file.print("*out = {};".format(self.convert_enum_label(enum_label)))
+                    out_file.print("else")
+
             with out_file.code_block():
                 self.generate_logged_error(["Unknown enum value in '%s': %.*s", "parse_state->current_key", "CURRENT_STRING_FOR_ERROR(parse_state)"], out_file)
 
@@ -115,7 +126,12 @@ class EnumGenerator(Generator):
             return
         if self.default not in self.enum:
             raise SchemaError(self, "The enum default value '{}' is not in the allowed values {}".format(self.default, self.enum))
-        out_file.print("{} = {};".format(out_var_name, self.convert_enum_label(self.default)))
+        if self.js2cParseFunction is not None:
+            # Own scope: the parser call declares a variable, and defaults can be emitted into a shared one.
+            with out_file.code_block(standalone=True):
+                self.generate_custom_parser_call('"{}"'.format(self.default), str(len(self.default)), "&{}".format(out_var_name), out_file)
+        else:
+            out_file.print("{} = {};".format(out_var_name, self.convert_enum_label(self.default)))
 
     def max_token_num(self):
         return 1
