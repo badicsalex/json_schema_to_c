@@ -27,6 +27,16 @@ from collections import namedtuple
 import re
 
 
+# Names that can't be used as C identifiers: keywords, plus the stdbool.h macros.
+C_RESERVED = frozenset((
+    "auto", "break", "case", "char", "const", "continue", "default", "do", "double",
+    "else", "enum", "extern", "float", "for", "goto", "if", "inline", "int", "long",
+    "register", "restrict", "return", "short", "signed", "sizeof", "static", "struct",
+    "switch", "typedef", "union", "unsigned", "void", "volatile", "while",
+    "bool", "true", "false",
+))
+
+
 class SchemaError(ValueError):
     def __init__(self, generator_or_path, message):
         if isinstance(generator_or_path, str):

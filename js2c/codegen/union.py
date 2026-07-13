@@ -25,18 +25,8 @@
 import os.path
 import re
 
-from .base import Generator, CType, SchemaError
+from .base import Generator, CType, SchemaError, C_RESERVED
 from .enum import EnumType
-
-
-# Names that can't be used as struct members. Keywords, plus the stdbool.h macros.
-C_RESERVED = frozenset((
-    "auto", "break", "case", "char", "const", "continue", "default", "do", "double",
-    "else", "enum", "extern", "float", "for", "goto", "if", "inline", "int", "long",
-    "register", "restrict", "return", "short", "signed", "sizeof", "static", "struct",
-    "switch", "typedef", "union", "unsigned", "void", "volatile", "while",
-    "bool", "true", "false",
-))
 
 
 class UnionType(CType):

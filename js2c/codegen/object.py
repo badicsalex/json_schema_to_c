@@ -24,7 +24,7 @@
 #
 import collections
 
-from .base import Generator, CType, SchemaError
+from .base import Generator, CType, SchemaError, C_RESERVED
 
 
 class ObjectType(CType):
@@ -73,6 +73,8 @@ class ObjectGenerator(Generator):
         if 'properties' not in schema:
             raise SchemaError(self, "Missing field for object declaration: 'properties'")
         for field_name, field_schema in schema['properties'].items():
+            if field_name in C_RESERVED:
+                raise SchemaError(self, "Property name '{}' is a reserved C word".format(field_name))
             self.fields[field_name] = parameters.generator_factory.get_generator_for(
                 field_schema,
                 parameters.with_suffix("properties." + field_name, self.type_name, field_name),
