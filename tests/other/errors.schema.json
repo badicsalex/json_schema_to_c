@@ -110,6 +110,16 @@
             ],
             "default": "a"
         },
+        "parsed_enum": {
+            "type": "string",
+            "enum": [
+                "a",
+                "bb"
+            ],
+            "js2cType": "int",
+            "js2cParseFunction": "error_creating_parser",
+            "default": "a"
+        },
         "obj_with_subobj": {
             "type": "object",
             "additionalProperties": false,

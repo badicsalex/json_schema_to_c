@@ -234,6 +234,17 @@ int main(int argc, char** argv){
     );
 
     check_error(
+        "{\"parsed_enum\": \"x\"}",
+        "Unknown enum value in 'parsed_enum': x",
+        17
+    );
+    check_error(
+        "{\"parsed_enum\": \"bb\"}",
+        "Error parsing 'parsed_enum', value=\"bb\": Custom error",
+        17
+    );
+
+    check_error(
         "{\"fnum\": true}",
         "Invalid floating point literal in 'fnum': true",
         9
