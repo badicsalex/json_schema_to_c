@@ -1,0 +1,26 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "root",
+    "description": "js2cType void/raw: drop a value, or keep a reference to its raw JSON text.",
+    "js2cSettings": {
+        "allowAdditionalProperties": 16
+    },
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "kept",
+        "ignored",
+        "blob"
+    ],
+    "properties": {
+        "kept": {
+            "type": "integer"
+        },
+        "ignored": {
+            "js2cType": "void"
+        },
+        "blob": {
+            "js2cType": "raw"
+        }
+    }
+}
