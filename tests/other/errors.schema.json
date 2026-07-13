@@ -120,6 +120,13 @@
             "js2cParseFunction": "error_creating_parser",
             "default": "a"
         },
+        "a_const": {
+            "const": 42
+        },
+        "a_str_const": {
+            "type": "string",
+            "const": "fixed"
+        },
         "obj_with_subobj": {
             "type": "object",
             "additionalProperties": false,

@@ -1,0 +1,1 @@
+Schema error in '.properties.x': Const type mismatch, expected 'string', got 'integer'

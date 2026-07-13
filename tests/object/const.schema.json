@@ -1,0 +1,21 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "root",
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["version"],
+    "properties": {
+        "version": {
+            "const": 1
+        },
+        "kind": {
+            "type": "string",
+            "const": "widget"
+        },
+        "name": {
+            "type": "string",
+            "maxLength": 8,
+            "default": "x"
+        }
+    }
+}
