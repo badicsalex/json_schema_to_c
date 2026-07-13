@@ -10,7 +10,7 @@ The following schema features are supported:
 * Types: `integer`, `number`, `bool`, `string`, `array`, `object`
 * Min and max length for arrays and strings
 * Min and max values for integers
-* In-document path-like `$ref` resolution
+* Path-like `$ref` resolution, in-document or into another local schema file
 * Default values:
   * Full support for simple types (`int`, `bool`, `string`)
   * Implicit default value for object, where all fields have a default value
@@ -27,7 +27,7 @@ Important limitations:
 * All object property names must be valid C tokens
 * `null` is not supported
 * Tuples (a specific form of array declarations) are not supported
-* More advanced `$ref` declarations (especially pointing to another file) are not supported
+* `$ref` must be path-like (not `$id`-based) and local; remote (`http(s)://`) references are not supported
 * `oneOf` is not supported
 * `$id` is required on the root and is used to define the prefix of the generated types name
 * an invalid schema can make json_schema_to_c crash
@@ -120,6 +120,25 @@ It will generate the following types:
 * `example_foo_t_s`
 * `example_foo_bar_t`
 * `baz_t`
+
+References
+----------
+
+A `$ref` may stay within the current file, as a path-like fragment:
+
+```json
+{ "$ref": "#/$defs/Address" }
+```
+
+or point into another schema file, as a relative path or a `file:` URI followed by such a fragment:
+
+```json
+{ "$ref": "common.json#/$defs/Address" }
+```
+
+Cross-file paths are resolved relative to the referring schema. As a safety measure, a file can only
+be referenced if it lives under the schema's own directory, or under a path passed on the command
+line with `--authorized-paths`. Anything else is rejected, and circular references are detected.
 
 Extensions to JSON Schema
 -------------------------
