@@ -80,13 +80,12 @@ class RootGenerator:
             out_file.print("return json_parse_{}_with_len(json_string, strlen(json_string), out);".format(self.name))
         out_file.print("")
 
-    def generate_parser_h(self, h_file):
-        h_file_name = h_file.name
-        h_file = CodeBlockPrinter(h_file)
+    def generate_parser_h(self, h_file_path):
+        h_file = CodeBlockPrinter(h_file_path)
 
         h_file.write(NOTE_FOR_GENERATED_FILES)
 
-        header_guard_name = re.sub("[^A-Z0-9]", "_", os.path.basename(h_file_name).upper())
+        header_guard_name = re.sub("[^A-Z0-9]", "_", os.path.basename(h_file_path).upper())
         h_file.print("#ifndef {}".format(header_guard_name))
         h_file.print("#define {}".format(header_guard_name))
 
@@ -117,6 +116,7 @@ class RootGenerator:
 
         h_file.print("#endif /* {} */".format(header_guard_name))
         h_file.print("")
+        return h_file
 
     @classmethod
     def manually_include_jsmn(cls, c_file):
@@ -143,8 +143,8 @@ class RootGenerator:
             c_file.print_separator("end of js2c_builtins.h")
             c_file.print("")
 
-    def generate_parser_c(self, c_file, h_file_name):
-        c_file = CodeBlockPrinter(c_file)
+    def generate_parser_c(self, c_file_path, h_file_name):
+        c_file = CodeBlockPrinter(c_file_path)
 
         c_file.write(NOTE_FOR_GENERATED_FILES)
         c_file.print('#include "{}"'.format(h_file_name))
@@ -169,3 +169,4 @@ class RootGenerator:
         if self.settings.c_postfix_file:
             c_file.print_separator("User-added postfix")
             c_file.write(self.settings.c_postfix_file.read())
+        return c_file
