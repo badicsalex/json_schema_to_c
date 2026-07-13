@@ -91,15 +91,14 @@ class IntegerGeneratorBase(Generator):
     def number_allowed(self):
         pass
 
-    @classmethod
-    def generate_range_check(cls, check_number, out_var_printf_macro, check_operator, out_file):
+    def generate_range_check(self, check_number, out_var_printf_macro, check_operator, inverted_check_operator, out_file):
         # pylint: disable=too-many-arguments
         if check_number is None:
             return
-        with out_file.if_block("!(int_parse_tmp {} {})".format(check_operator, check_number)):
+        with out_file.if_block("int_parse_tmp {} {}{}".format(inverted_check_operator, check_number, self.default_suffix)):
             # Roll back the token, as the value was not actually correct
             out_file.print("parse_state->current_token -= 1;")
-            cls.generate_logged_error(
+            self.generate_logged_error(
                 [
                     "Integer %\" {} \" in '%s' out of range. It must be {} {}."
                     .format(out_var_printf_macro, check_operator, check_number),
@@ -119,10 +118,10 @@ class IntegerGeneratorBase(Generator):
         )
         with out_file.if_block(parser_call):
             out_file.print("return true;")
-        self.generate_range_check(self.minimum, self.parsed_type_printf_macro, ">=", out_file)
-        self.generate_range_check(self.maximum, self.parsed_type_printf_macro, "<=", out_file)
-        self.generate_range_check(self.exclusiveMinimum, self.parsed_type_printf_macro, ">", out_file)
-        self.generate_range_check(self.exclusiveMaximum, self.parsed_type_printf_macro, "<", out_file)
+        self.generate_range_check(self.minimum, self.parsed_type_printf_macro, ">=", "<", out_file)
+        self.generate_range_check(self.maximum, self.parsed_type_printf_macro, "<=", ">", out_file)
+        self.generate_range_check(self.exclusiveMinimum, self.parsed_type_printf_macro, ">", "<=", out_file)
+        self.generate_range_check(self.exclusiveMaximum, self.parsed_type_printf_macro, "<", ">=", out_file)
         out_file.print("*{} = int_parse_tmp;".format(out_var_name))
 
     def has_default_value(self):
