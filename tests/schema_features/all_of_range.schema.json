@@ -1,0 +1,56 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "root",
+    "description": "allOf merging of numeric range bounds: the stricter bound wins.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "merged_int",
+        "merged_str",
+        "merged_arr"
+    ],
+    "properties": {
+        "merged_int": {
+            "allOf": [
+                {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 100
+                },
+                {
+                    "minimum": 10,
+                    "maximum": 50
+                }
+            ]
+        },
+        "merged_str": {
+            "allOf": [
+                {
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 16
+                },
+                {
+                    "minLength": 4,
+                    "maxLength": 8
+                }
+            ]
+        },
+        "merged_arr": {
+            "allOf": [
+                {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    },
+                    "minItems": 1,
+                    "maxItems": 10
+                },
+                {
+                    "minItems": 2,
+                    "maxItems": 4
+                }
+            ]
+        }
+    }
+}
