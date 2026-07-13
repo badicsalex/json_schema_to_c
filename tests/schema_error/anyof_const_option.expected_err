@@ -1,0 +1,1 @@
+Schema error in '.properties.x': anyOf options must store a value, so a const cannot be one

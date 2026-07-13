@@ -1,0 +1,28 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "root",
+    "js2cSettings": {
+        "hPrefixFile": "schema_features/any_of_h_prefix.inc",
+        "cPrefixFile": "schema_features/any_of_c_prefix.inc"
+    },
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["value"],
+    "properties": {
+        "value": {
+            "anyOf": [
+                { "type": "integer" },
+                {
+                    "$id": "point",
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": ["x", "y"],
+                    "properties": {
+                        "x": { "type": "integer" },
+                        "y": { "type": "integer" }
+                    }
+                }
+            ]
+        }
+    }
+}

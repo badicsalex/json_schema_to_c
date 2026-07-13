@@ -1,0 +1,33 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "root",
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["shape"],
+    "properties": {
+        "shape": {
+            "anyOf": [
+                {
+                    "$id": "circle",
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": ["kind", "radius"],
+                    "properties": {
+                        "kind": { "const": "circle" },
+                        "radius": { "type": "integer" }
+                    }
+                },
+                {
+                    "$id": "square",
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": ["kind", "side"],
+                    "properties": {
+                        "kind": { "const": "square" },
+                        "side": { "type": "integer" }
+                    }
+                }
+            ]
+        }
+    }
+}
