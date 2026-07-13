@@ -130,17 +130,20 @@ class Generator(ABC):
         out_file.print("{} = {};".format(out_var_name, self.js2cDefault))
         return True
 
-    def generate_custom_parser_call(self, src, src_length, out_var_name, out_file):
+    def generate_custom_parser_call(self, call_args, value_format, value_args, out_file):
+        # call_args are the js2cParseFunction arguments before the trailing &error; value_format and
+        # value_args describe how the offending value is printed in the error message.
         out_file.print("const char *error = NULL;")
-        parser_call = "{}({}, {}, {}, &error)".format(self.js2cParseFunction, src, src_length, out_var_name)
-        with out_file.if_block(parser_call):
-            self.generate_logged_error([
-                "Error parsing '%s', value=\\\"%.*s\\\": %s",
-                "parse_state->current_key",
-                src_length,
-                src,
-                "error ? error : \"error calling {}\"".format(self.js2cParseFunction),
-            ], out_file)
+        with out_file.if_block("{}({}, &error)".format(self.js2cParseFunction, call_args)):
+            self.generate_logged_error(
+                [
+                    "Error parsing '%s', value=\\\"" + value_format + "\\\": %s",
+                    "parse_state->current_key",
+                    *value_args,
+                    "error ? error : \"error calling {}\"".format(self.js2cParseFunction),
+                ],
+                out_file,
+            )
 
     @classmethod
     def generate_logged_error(cls, log_message, out_file):

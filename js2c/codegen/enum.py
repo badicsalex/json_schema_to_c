@@ -103,7 +103,11 @@ class EnumGenerator(Generator):
                 # A single membership check: the parser treats every label the same, so there is nothing to dispatch on.
                 is_a_label = " || ".join('current_string_is(parse_state, "{}")'.format(enum_label) for enum_label in self.enum)
                 with out_file.if_block(is_a_label):
-                    self.generate_custom_parser_call("CURRENT_STRING(parse_state)", "CURRENT_STRING_LENGTH(parse_state)", "out", out_file)
+                    self.generate_custom_parser_call(
+                        "CURRENT_STRING(parse_state), CURRENT_STRING_LENGTH(parse_state), out",
+                        "%.*s",
+                        ["CURRENT_STRING_LENGTH(parse_state)", "CURRENT_STRING(parse_state)"],
+                        out_file)
                 out_file.print("else")
             else:
                 for enum_label in self.enum:
@@ -129,7 +133,11 @@ class EnumGenerator(Generator):
         if self.js2cParseFunction is not None:
             # Own scope: the parser call declares a variable, and defaults can be emitted into a shared one.
             with out_file.code_block(standalone=True):
-                self.generate_custom_parser_call('"{}"'.format(self.default), str(len(self.default)), "&{}".format(out_var_name), out_file)
+                self.generate_custom_parser_call(
+                    '"{}", {}, &{}'.format(self.default, len(self.default), out_var_name),
+                    "%.*s",
+                    [str(len(self.default)), '"{}"'.format(self.default)],
+                    out_file)
         else:
             out_file.print("{} = {};".format(out_var_name, self.convert_enum_label(self.default)))
 

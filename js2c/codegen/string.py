@@ -87,9 +87,9 @@ class StringGenerator(Generator):
                 out_file.print("return true;")
 
             self.generate_custom_parser_call(
-                "CURRENT_STRING(parse_state)",
-                "CURRENT_STRING_LENGTH(parse_state)",
-                out_var_name,
+                "CURRENT_STRING(parse_state), CURRENT_STRING_LENGTH(parse_state), {}".format(out_var_name),
+                "%.*s",
+                ["CURRENT_STRING_LENGTH(parse_state)", "CURRENT_STRING(parse_state)"],
                 out_file
             )
             out_file.print("parse_state->current_token += 1;")
@@ -119,9 +119,9 @@ class StringGenerator(Generator):
             # multiple times into the same scope.
             with out_file.code_block(standalone=True):
                 self.generate_custom_parser_call(
-                    '"{}"'.format(self.default),
-                    str(len(self.default)),
-                    "&{}".format(out_var_name),
+                    '"{}", {}, &{}'.format(self.default, len(self.default), out_var_name),
+                    "%.*s",
+                    [str(len(self.default)), '"{}"'.format(self.default)],
                     out_file
                 )
         else:

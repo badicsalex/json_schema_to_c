@@ -58,16 +58,22 @@ class IntegerGeneratorBase(Generator):
 
     def __init__(self, schema, parameters):
         super().__init__(schema, parameters)
+        non_negative = self.minimum is not None and self.minimum >= 0
         if self.js2cType is not None:
             c_type_name = self.js2cType
         else:
-            if self.minimum is not None and self.minimum >= 0:
-                c_type_name = "uint64_t"
-            else:
-                c_type_name = "int64_t"
+            c_type_name = "uint64_t" if non_negative else "int64_t"
 
-        self.c_type = IntegerType(self, c_type_name, self.description)
-        if self.c_type.is_unsigned():
+        if self.js2cParseFunction is not None:
+            # js2cType is whatever the custom parser outputs, so it can't tell us the parse type; the
+            # full parsed integer is handed to it, unsigned when the schema constrains it non-negative.
+            self.c_type = CType(c_type_name, self.description)
+            unsigned = non_negative
+        else:
+            self.c_type = IntegerType(self, c_type_name, self.description)
+            unsigned = self.c_type.is_unsigned()
+
+        if unsigned:
             self.parser_fn = "builtin_parse_unsigned"
             self.parsed_type = "uint64_t"
             self.parsed_type_printf_macro = "PRIu64"
@@ -122,7 +128,19 @@ class IntegerGeneratorBase(Generator):
         self.generate_range_check(self.maximum, self.parsed_type_printf_macro, "<=", ">", out_file)
         self.generate_range_check(self.exclusiveMinimum, self.parsed_type_printf_macro, ">", "<=", out_file)
         self.generate_range_check(self.exclusiveMaximum, self.parsed_type_printf_macro, "<", ">=", out_file)
-        out_file.print("*{} = int_parse_tmp;".format(out_var_name))
+        if self.js2cParseFunction is not None:
+            # The value was already parsed and current_token advanced past it, so point back at it
+            # for a correct error position, then restore.
+            out_file.print("parse_state->current_token -= 1;")
+            self.generate_custom_parser_call(
+                "int_parse_tmp, {}".format(out_var_name),
+                '%" {} "'.format(self.parsed_type_printf_macro),
+                ["int_parse_tmp"],
+                out_file
+            )
+            out_file.print("parse_state->current_token += 1;")
+        else:
+            out_file.print("*{} = int_parse_tmp;".format(out_var_name))
 
     def has_default_value(self):
         return super().has_default_value() or self.default is not None
@@ -130,7 +148,18 @@ class IntegerGeneratorBase(Generator):
     def generate_set_default_value(self, out_var_name, out_file):
         if super().generate_set_default_value(out_var_name, out_file):
             return
-        out_file.print("{} = {}{};".format(out_var_name, self.default, self.default_suffix))
+        if self.js2cParseFunction is not None:
+            # Cast to the parsed type so it matches both the parse function's argument and the
+            # printf macro used if it reports an error.
+            default_value = "({}) {}{}".format(self.parsed_type, self.default, self.default_suffix)
+            self.generate_custom_parser_call(
+                "{}, &{}".format(default_value, out_var_name),
+                '%" {} "'.format(self.parsed_type_printf_macro),
+                [default_value],
+                out_file
+            )
+        else:
+            out_file.print("{} = {}{};".format(out_var_name, self.default, self.default_suffix))
 
     def max_token_num(self):
         return 1
