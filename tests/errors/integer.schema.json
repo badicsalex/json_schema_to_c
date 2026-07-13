@@ -56,6 +56,13 @@
             "default": 0,
             "minimum": 0,
             "maximum": 18000000000000000000
+        },
+        "parsed_int": {
+            "type": "integer",
+            "js2cType": "int",
+            "js2cParseFunction": "int_creating_parser",
+            "maximum": 100,
+            "default": 0
         }
     }
 }

@@ -120,5 +120,16 @@ int main(int argc, char** argv){
         "Integer 18446744073709551615 in 'big' out of range. It must be <= 18000000000000000000.",
         8
     );
+
+    check_error(
+        "{\"parsed_int\": 7}",
+        "Error parsing 'parsed_int', value=\"7\": Custom int error",
+        15
+    );
+    check_error(
+        "{\"parsed_int\": 200}",
+        "Integer 200 in 'parsed_int' out of range. It must be <= 100.",
+        15
+    );
     return 0;
 }

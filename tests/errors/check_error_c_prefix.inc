@@ -39,3 +39,12 @@ bool error_creating_parser(const char* src, int size, int* out, const char** err
     }
     return true;
 }
+
+bool int_creating_parser(int64_t in, int* out, const char** error){
+    if (in == 7) {
+        *error = "Custom int error";
+        return true;
+    }
+    *out = (int) in;
+    return false;
+}

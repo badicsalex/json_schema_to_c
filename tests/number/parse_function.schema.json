@@ -1,0 +1,19 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "root",
+    "description": "js2cParseFunction on an integer: transform the parsed value into a custom type.",
+    "js2cSettings": {
+        "cPrefixFile": "number/parse_function_c_prefix.inc"
+    },
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "doubled": {
+            "type": "integer",
+            "js2cType": "int32_t",
+            "js2cParseFunction": "int_double",
+            "maximum": 1000,
+            "default": 21
+        }
+    }
+}
