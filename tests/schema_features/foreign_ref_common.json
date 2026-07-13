@@ -1,0 +1,13 @@
+{
+    "$defs": {
+        "Name": {
+            "type": "string",
+            "maxLength": 8
+        },
+        "Weight": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1000
+        }
+    }
+}

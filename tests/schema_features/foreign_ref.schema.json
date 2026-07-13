@@ -1,0 +1,19 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "root",
+    "description": "Cross-file $ref: fields resolved from a sibling schema file.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "name",
+        "weight"
+    ],
+    "properties": {
+        "name": {
+            "$ref": "foreign_ref_common.json#/$defs/Name"
+        },
+        "weight": {
+            "$ref": "foreign_ref_common.json#/$defs/Weight"
+        }
+    }
+}

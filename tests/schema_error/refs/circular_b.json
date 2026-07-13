@@ -1,0 +1,7 @@
+{
+    "$defs": {
+        "X": {
+            "$ref": "../circular_ref.json#/properties/x"
+        }
+    }
+}
