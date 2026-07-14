@@ -61,5 +61,5 @@ other/cpp.compiled: other/cpp.o other/cpp.parser.c
 	rm -f $*.parser.c $*.parser.h
 	if ../json_schema_to_c.py $*.json $*.parser.c $*.parser.h 2>$*.err; then echo "Invalid schema was processed. That's a problem."; exit 1; fi
 	if [ -e $*.parser.c ] || [ -e $*.parser.h ]; then echo "Output files were written despite the schema error."; exit 1; fi
-	if [ "`<$*.err`" != "`<$*.expected_err`" ]; then echo -e "Wrong error.\\n  Got error: `<$*.err`\\n   Expected: `<$*.expected_err`"; exit 1; fi
+	if [ "$$(cat $*.err)" != "$$(cat $*.expected_err)" ]; then printf 'Wrong error.\n  Got error: %s\n   Expected: %s\n' "$$(cat $*.err)" "$$(cat $*.expected_err)"; exit 1; fi
 	@echo "$*: OK"
