@@ -72,7 +72,7 @@ class StringGenerator(Generator):
             self.c_type = CType(self.js2cType, self.description)
         else:
             self.c_type = StringType(self.type_name, self.description, self.maxLength)
-        self.c_type = parameters.type_cache.try_get_cached(self.c_type)
+        self.c_type = parameters.type_cache.try_get_cached(self.c_type, self.path_in_schema)
 
     @classmethod
     def can_parse_schema(cls, schema):

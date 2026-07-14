@@ -73,7 +73,7 @@ class EnumGenerator(Generator):
             self.c_type = CType(self.js2cType, self.description)
         else:
             self.c_type = EnumType(self.type_name, self.description, [self.convert_enum_label(enum_label) for enum_label in self.enum])
-        self.c_type = parameters.type_cache.try_get_cached(self.c_type)
+        self.c_type = parameters.type_cache.try_get_cached(self.c_type, self.path_in_schema)
 
     @classmethod
     def can_parse_schema(cls, schema):

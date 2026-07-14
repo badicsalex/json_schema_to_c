@@ -97,7 +97,7 @@ def resolve_ref(full_schema, part_to_resolve, schema_filepath, authorized_paths)
 
 def all_of_merge_single_pair(element1, element2, key):
     if type(element1) is not type(element2):
-        raise TypeError(
+        raise ValueError(
             f"Field types are different in allOf declaration: '{element1}' vs. '{element2}'"
         )
     if isinstance(element1, dict):

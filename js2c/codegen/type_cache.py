@@ -22,6 +22,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
+from .base import SchemaError
 
 
 class TypeCache:
@@ -29,11 +30,11 @@ class TypeCache:
     def __init__(self):
         self.types = {}
 
-    def try_get_cached(self, c_type):
+    def try_get_cached(self, c_type, path_in_schema):
         if c_type.type_name in self.types:
             cached_type = self.types[c_type.type_name]
             if cached_type != c_type:
-                raise ValueError(f"Two different types with the same name {c_type}: {c_type!r} {cached_type!r}")
+                raise SchemaError(path_in_schema, f"Two different types with the same name: {c_type.type_name}")
             return cached_type
         self.types[c_type.type_name] = c_type
         return c_type

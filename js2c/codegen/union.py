@@ -29,7 +29,8 @@ from .enum import EnumType
 
 
 class UnionType(CType):
-    def __init__(self, type_name, description, option_types, type_cache):
+    def __init__(self, type_name, description, option_types, type_cache, path_in_schema):
+        # pylint: disable=too-many-arguments
         super().__init__(type_name, description)
         self.option_types = option_types
 
@@ -45,7 +46,7 @@ class UnionType(CType):
             "Tag telling which union member is set",
             [f"{type_name_base}_{name}".upper() for name in self.option_names],
         )
-        self.tag_type = type_cache.try_get_cached(self.tag_type)
+        self.tag_type = type_cache.try_get_cached(self.tag_type, path_in_schema)
 
     def generate_type_declaration_impl(self, out_file):
         for option_type in self.option_types:
@@ -85,8 +86,9 @@ class UnionGenerator(Generator):
             self.description,
             [option.c_type for option in self.option_generators],
             parameters.type_cache,
+            self.path_in_schema,
         )
-        self.c_type = parameters.type_cache.try_get_cached(self.c_type)
+        self.c_type = parameters.type_cache.try_get_cached(self.c_type, self.path_in_schema)
 
     @classmethod
     def can_parse_schema(cls, schema):

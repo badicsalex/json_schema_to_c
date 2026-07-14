@@ -78,7 +78,7 @@ class ArrayGenerator(Generator):
             self.item_generator.c_type,
             self.maxItems
         )
-        self.c_type = parameters.type_cache.try_get_cached(self.c_type)
+        self.c_type = parameters.type_cache.try_get_cached(self.c_type, self.path_in_schema)
 
     @classmethod
     def can_parse_schema(cls, schema):

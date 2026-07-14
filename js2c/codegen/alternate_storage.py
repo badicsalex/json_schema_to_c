@@ -43,7 +43,7 @@ class AlternateStorageGenerator(Generator):
         super().__init__(schema, parameters)
         if self.js2cType == "raw":
             self.type_name = parameters.base_name + "_json_ref_t"
-            self.c_type = parameters.type_cache.try_get_cached(RawJsonType(self.type_name, self.description))
+            self.c_type = parameters.type_cache.try_get_cached(RawJsonType(self.type_name, self.description), self.path_in_schema)
         else:
             self.c_type = None
 

@@ -84,7 +84,7 @@ class ObjectGenerator(Generator):
             self.description,
             collections.OrderedDict((k, v.c_type) for k, v in self.fields.items())
         )
-        self.c_type = parameters.type_cache.try_get_cached(self.c_type)
+        self.c_type = parameters.type_cache.try_get_cached(self.c_type, self.path_in_schema)
 
         if self.additionalProperties and not self.settings.allow_additional_properties:
             raise SchemaError(
