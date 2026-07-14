@@ -52,20 +52,20 @@ class FloatGenerator(Generator):
     def generate_range_check(cls, check_number, out_var_name, check_operator, inverted_check_operator, out_file):
         if check_number is None:
             return
-        with out_file.if_block("(*{}) {} {}".format(out_var_name, inverted_check_operator, check_number)):
+        with out_file.if_block(f"(*{out_var_name}) {inverted_check_operator} {check_number}"):
             # Roll back the token, as the value was not actually correct
             out_file.print("parse_state->current_token -= 1;")
             cls.generate_logged_error(
                 [
-                    "Floating point value %.15g in '%s' out of range. It must be {} {}.".format(check_operator, check_number),
-                    "(*{})".format(out_var_name),
+                    f"Floating point value %.15g in '%s' out of range. It must be {check_operator} {check_number}.",
+                    f"(*{out_var_name})",
                     "parse_state->current_key",
                 ],
                 out_file
             )
 
     def generate_parser_call(self, out_var_name, out_file):
-        with out_file.if_block("builtin_parse_double(parse_state, {})".format(out_var_name)):
+        with out_file.if_block(f"builtin_parse_double(parse_state, {out_var_name})"):
             out_file.print("return true;")
         self.generate_range_check(self.minimum, out_var_name, ">=", "<", out_file)
         self.generate_range_check(self.maximum, out_var_name, "<=", ">", out_file)
@@ -78,7 +78,7 @@ class FloatGenerator(Generator):
     def generate_set_default_value(self, out_var_name, out_file):
         if super().generate_set_default_value(out_var_name, out_file):
             return
-        out_file.print("{} = {};".format(out_var_name, self.default))
+        out_file.print(f"{out_var_name} = {self.default};")
 
     def max_token_num(self):
         return 1

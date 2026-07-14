@@ -32,7 +32,7 @@ class StringType(CType):
 
     def generate_type_declaration_impl(self, out_file):
         out_file.print_with_docstring(
-            "typedef char {}[{}];".format(self.type_name, self.max_length + 1), self.description
+            f"typedef char {self.type_name}[{self.max_length + 1}];", self.description
         )
         out_file.print("")
 
@@ -81,13 +81,12 @@ class StringGenerator(Generator):
     def generate_parser_call(self, out_var_name, out_file):
         if self.js2cParseFunction is not None:
             length_check = \
-                "builtin_check_current_string(parse_state, {}, {})" \
-                .format(self.minLength, self.maxLength)
+                f"builtin_check_current_string(parse_state, {self.minLength}, {self.maxLength})"
             with out_file.if_block(length_check):
                 out_file.print("return true;")
 
             self.generate_custom_parser_call(
-                "CURRENT_STRING(parse_state), CURRENT_STRING_LENGTH(parse_state), {}".format(out_var_name),
+                f"CURRENT_STRING(parse_state), CURRENT_STRING_LENGTH(parse_state), {out_var_name}",
                 "%.*s",
                 ["CURRENT_STRING_LENGTH(parse_state)", "CURRENT_STRING(parse_state)"],
                 out_file
@@ -95,8 +94,7 @@ class StringGenerator(Generator):
             out_file.print("parse_state->current_token += 1;")
         else:
             length_check = \
-                "builtin_parse_string(parse_state, {}[0], {}, {})" \
-                .format(out_var_name, self.minLength, self.maxLength)
+                f"builtin_parse_string(parse_state, {out_var_name}[0], {self.minLength}, {self.maxLength})"
             with out_file.if_block(length_check):
                 out_file.print("return true;")
 
@@ -107,11 +105,7 @@ class StringGenerator(Generator):
         assert self.has_default_value(), "Caller is responsible for checking this."
         if self.js2cDefault is not None:
             out_file.print(
-                'strncpy({dst}, {src}, {size});'.format(
-                    dst=out_var_name,
-                    src=self.js2cDefault,
-                    size=self.maxLength + 1,
-                )
+                f'strncpy({out_var_name}, {self.js2cDefault}, {self.maxLength + 1});'
             )
         elif self.js2cParseFunction is not None:
             # The custom parser call has to be in its own code block, because
@@ -119,18 +113,14 @@ class StringGenerator(Generator):
             # multiple times into the same scope.
             with out_file.code_block(standalone=True):
                 self.generate_custom_parser_call(
-                    '"{}", {}, &{}'.format(self.default, len(self.default), out_var_name),
+                    f'"{self.default}", {len(self.default)}, &{out_var_name}',
                     "%.*s",
-                    [str(len(self.default)), '"{}"'.format(self.default)],
+                    [str(len(self.default)), f'"{self.default}"'],
                     out_file
                 )
         else:
             out_file.print(
-                'memcpy({dst}, "{src}", {size});'.format(
-                    dst=out_var_name,
-                    src=self.default,
-                    size=len(self.default) + 1
-                )
+                f'memcpy({out_var_name}, "{self.default}", {len(self.default) + 1});'
             )
 
     def max_token_num(self):

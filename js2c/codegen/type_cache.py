@@ -33,7 +33,7 @@ class TypeCache:
         if c_type.type_name in self.types:
             cached_type = self.types[c_type.type_name]
             if cached_type != c_type:
-                raise ValueError("Two different types with the same name {}: {} {}".format(c_type, repr(c_type), repr(cached_type)))
+                raise ValueError(f"Two different types with the same name {c_type}: {c_type!r} {cached_type!r}")
             return cached_type
         self.types[c_type.type_name] = c_type
         return c_type

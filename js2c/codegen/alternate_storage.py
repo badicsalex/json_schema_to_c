@@ -27,11 +27,11 @@ from .base import Generator, CType
 
 class RawJsonType(CType):
     def generate_type_declaration_impl(self, out_file):
-        out_file.print("typedef struct {}_s ".format(self.type_name) + "{")
+        out_file.print(f"typedef struct {self.type_name}_s {{")
         with out_file.indent():
             out_file.print_with_docstring("size_t index;", "Byte offset of the value in the input JSON")
             out_file.print_with_docstring("size_t length;", "Length of the value in the input JSON")
-        out_file.print("}} {};".format(self.type_name))
+        out_file.print(f"}} {self.type_name};")
         out_file.print("")
 
 
@@ -54,10 +54,9 @@ class AlternateStorageGenerator(Generator):
     def generate_parser_call(self, out_var_name, out_file):
         if self.js2cType == "raw":
             out_var = out_var_name.removeprefix("&")
-            out_file.print("{}.index = (size_t) CURRENT_TOKEN(parse_state).start;".format(out_var))
+            out_file.print(f"{out_var}.index = (size_t) CURRENT_TOKEN(parse_state).start;")
             out_file.print(
-                "{}.length = (size_t) (CURRENT_TOKEN(parse_state).end - CURRENT_TOKEN(parse_state).start);"
-                .format(out_var)
+                f"{out_var}.length = (size_t) (CURRENT_TOKEN(parse_state).end - CURRENT_TOKEN(parse_state).start);"
             )
         with out_file.if_block("builtin_skip(parse_state)"):
             out_file.print("return true;")

@@ -59,8 +59,7 @@ class GeneratorFactory:
         if not isinstance(schema, dict):
             raise SchemaError(
                 parameters.path_in_schema,
-                "'{}' is not a type descriptor (dict including the field 'type')"
-                .format(schema)
+                f"'{schema}' is not a type descriptor (dict including the field 'type')"
             )
 
         if 'oneOf' in schema:
@@ -71,4 +70,4 @@ class GeneratorFactory:
         for generator_class in cls.GENERATORS:
             if generator_class.can_parse_schema(schema):
                 return generator_class(schema, parameters)
-        raise SchemaError(parameters.path_in_schema, "Unsupported type '{}'".format(schema['type']))
+        raise SchemaError(parameters.path_in_schema, f"Unsupported type '{schema['type']}'")

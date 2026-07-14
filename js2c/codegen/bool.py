@@ -42,7 +42,7 @@ class BoolGenerator(Generator):
         return schema.get('type') == 'boolean'
 
     def generate_parser_call(self, out_var_name, out_file):
-        parser_call = "builtin_parse_bool(parse_state, {})".format(out_var_name)
+        parser_call = f"builtin_parse_bool(parse_state, {out_var_name})"
         with out_file.if_block(parser_call):
             out_file.print("return true;")
 
@@ -52,12 +52,8 @@ class BoolGenerator(Generator):
     def generate_set_default_value(self, out_var_name, out_file):
         if super().generate_set_default_value(out_var_name, out_file):
             return
-        out_file.print(
-            "{} = {};".format(
-                out_var_name,
-                'true' if self.default else 'false'
-            )
-        )
+        default_value = 'true' if self.default else 'false'
+        out_file.print(f"{out_var_name} = {default_value};")
 
     def max_token_num(self):
         return 1

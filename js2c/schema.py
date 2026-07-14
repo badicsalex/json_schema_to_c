@@ -37,7 +37,7 @@ def get_schema_from_path(path, relative_to, authorized_paths):
     roots = [os.path.abspath(a) for a in authorized_paths]
     if not any(path == root or path.startswith(root + os.sep) for root in roots):
         raise ValueError(
-            "Cannot resolve reference to unauthorized path (use --authorized-paths to allow it): " + path
+            f"Cannot resolve reference to unauthorized path (use --authorized-paths to allow it): {path}"
         )
     if path in SCHEMA_CACHE:
         if SCHEMA_CACHE[path] is None:
@@ -65,7 +65,7 @@ def resolve_children(full_schema, part_to_resolve, schema_filepath, authorized_p
             part_to_resolve[k] = resolve_ref(full_schema, v, schema_filepath, authorized_paths)
             resolve_children(full_schema, v, schema_filepath, authorized_paths)
         return
-    raise ValueError("Value {} is not supported by the schema loader".format(part_to_resolve))
+    raise ValueError(f"Value {part_to_resolve} is not supported by the schema loader")
 
 
 def resolve_ref(full_schema, part_to_resolve, schema_filepath, authorized_paths):
@@ -76,9 +76,9 @@ def resolve_ref(full_schema, part_to_resolve, schema_filepath, authorized_paths)
 
     ref_uri = urlparse(part_to_resolve["$ref"])
     if ref_uri.scheme not in ("", "file"):
-        raise ValueError("Unsupported reference scheme: " + ref_uri.scheme)
+        raise ValueError(f"Unsupported reference scheme: {ref_uri.scheme}")
     if ref_uri.netloc != "" or ref_uri.params != "" or ref_uri.query != "":
-        raise ValueError("Unsupported reference: " + part_to_resolve["$ref"])
+        raise ValueError(f'Unsupported reference: {part_to_resolve["$ref"]}')
     if not ref_uri.fragment.startswith("/"):
         raise ValueError("Only path-like references are supported. (Id-based references are not)")
 
@@ -98,8 +98,7 @@ def resolve_ref(full_schema, part_to_resolve, schema_filepath, authorized_paths)
 def all_of_merge_single_pair(element1, element2, key):
     if type(element1) is not type(element2):
         raise TypeError(
-            "Field types are different in allOf declaration: '{}' vs. '{}'"
-            .format(element1, element2)
+            f"Field types are different in allOf declaration: '{element1}' vs. '{element2}'"
         )
     if isinstance(element1, dict):
         return all_of_merge_dict(element1, element2)
@@ -113,8 +112,7 @@ def all_of_merge_single_pair(element1, element2, key):
     if key in ("maximum", "exclusiveMaximum", "maxLength", "maxItems"):
         return min(element1, element2)
     raise ValueError(
-        "Could not merge fields for allOf declaration: '{}' and '{}'"
-        .format(element1, element2)
+        f"Could not merge fields for allOf declaration: '{element1}' and '{element2}'"
     )
 
 

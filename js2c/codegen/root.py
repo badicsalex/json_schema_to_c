@@ -60,13 +60,13 @@ class RootGenerator:
         self.name = schema['$id']
 
     def generate_root_parser(self, out_file, max_token_num):
-        out_file.print("bool json_parse_{}_with_len(const char *json_string, size_t json_string_len, {} *out)".format(self.name, self.root_generator.c_type))
+        out_file.print(f"bool json_parse_{self.name}_with_len(const char *json_string, size_t json_string_len, {self.root_generator.c_type} *out)")
         with out_file.code_block():
             out_file.print("parse_state_t parse_state_var;")
             out_file.print("parse_state_t *parse_state = &parse_state_var;")
-            out_file.print("jsmntok_t token_buffer[{}];".format(max_token_num))
-            parser_call = "builtin_parse_json_string(parse_state, token_buffer, {}, json_string, json_string_len)" \
-                .format(max_token_num)
+            out_file.print(f"jsmntok_t token_buffer[{max_token_num}];")
+            parser_call = \
+                f"builtin_parse_json_string(parse_state, token_buffer, {max_token_num}, json_string, json_string_len)"
             with out_file.if_block(parser_call):
                 out_file.print("return true;")
             self.root_generator.generate_parser_call(
@@ -76,9 +76,9 @@ class RootGenerator:
             out_file.print("return false;")
         out_file.print("")
 
-        out_file.print("bool json_parse_{}(const char *json_string, {} *out)".format(self.name, self.root_generator.c_type))
+        out_file.print(f"bool json_parse_{self.name}(const char *json_string, {self.root_generator.c_type} *out)")
         with out_file.code_block():
-            out_file.print("return json_parse_{}_with_len(json_string, strlen(json_string), out);".format(self.name))
+            out_file.print(f"return json_parse_{self.name}_with_len(json_string, strlen(json_string), out);")
         out_file.print("")
 
     def generate_parser_h(self, h_file_path):
@@ -87,8 +87,8 @@ class RootGenerator:
         h_file.write(NOTE_FOR_GENERATED_FILES)
 
         header_guard_name = "H_" + re.sub("[^A-Z0-9]", "_", os.path.basename(h_file_path).upper())
-        h_file.print("#ifndef {}".format(header_guard_name))
-        h_file.print("#define {}".format(header_guard_name))
+        h_file.print(f"#ifndef {header_guard_name}")
+        h_file.print(f"#define {header_guard_name}")
 
         h_file.print("#include <stdbool.h>")
         h_file.print("#include <stddef.h>")
@@ -104,8 +104,8 @@ class RootGenerator:
 
         h_file.print_separator("Generated type declarations")
         self.root_generator.c_type.generate_type_declaration(h_file)
-        h_file.print("bool json_parse_{}(const char *json_string, {} *out);".format(self.name, self.root_generator.c_type))
-        h_file.print("bool json_parse_{}_with_len(const char *json_string, size_t json_string_len, {} *out);".format(self.name, self.root_generator.c_type))
+        h_file.print(f"bool json_parse_{self.name}(const char *json_string, {self.root_generator.c_type} *out);")
+        h_file.print(f"bool json_parse_{self.name}_with_len(const char *json_string, size_t json_string_len, {self.root_generator.c_type} *out);")
 
         h_file.print("#ifdef __cplusplus")
         h_file.print("}")
@@ -115,7 +115,7 @@ class RootGenerator:
             h_file.print_separator("User-added postfix")
             h_file.write(self.settings.h_postfix_file.read())
 
-        h_file.print("#endif /* {} */".format(header_guard_name))
+        h_file.print(f"#endif /* {header_guard_name} */")
         h_file.print("")
         return h_file
 
@@ -136,7 +136,7 @@ class RootGenerator:
             jsmn_include_string = '#include "jsmn.h"\n'
             split_pos = builtins_file_contents.index(jsmn_include_string)
             if split_pos < 0:
-                raise ValueError("{} not found in builtins file".format(jsmn_include_string))
+                raise ValueError(f"{jsmn_include_string} not found in builtins file")
             c_file.write(builtins_file_contents[:split_pos])
             cls.manually_include_jsmn(c_file)
             c_file.write(builtins_file_contents[split_pos + len(jsmn_include_string):])
@@ -148,14 +148,14 @@ class RootGenerator:
         c_file = CodeBlockPrinter(c_file_path)
 
         c_file.write(NOTE_FOR_GENERATED_FILES)
-        c_file.print('#include "{}"'.format(h_file_name))
+        c_file.print(f'#include "{h_file_name}"')
 
         if self.settings.c_prefix_file is not None:
             c_file.print_separator("User-added prefix")
             c_file.write(self.settings.c_prefix_file.read())
 
         if self.settings.include_external_builtins_file:
-            c_file.print('#include "{}"'.format(self.settings.include_external_builtins_file))
+            c_file.print(f'#include "{self.settings.include_external_builtins_file}"')
         else:
             self.manually_include_builtins(c_file)
         c_file.print_separator("Generated parsers")

@@ -43,7 +43,7 @@ class UnionType(CType):
         self.tag_type = EnumType(
             type_name_base + "_type_t",
             "Tag telling which union member is set",
-            ["{}_{}".format(type_name_base, name).upper() for name in self.option_names],
+            [f"{type_name_base}_{name}".upper() for name in self.option_names],
         )
         self.tag_type = type_cache.try_get_cached(self.tag_type)
 
@@ -52,7 +52,7 @@ class UnionType(CType):
             option_type.generate_type_declaration(out_file)
         self.tag_type.generate_type_declaration(out_file)
 
-        out_file.print("typedef struct {}_s ".format(self.type_name) + "{")
+        out_file.print(f"typedef struct {self.type_name}_s {{")
         with out_file.indent():
             self.tag_type.generate_field_declaration("type", out_file)
             out_file.print("union {")
@@ -60,7 +60,7 @@ class UnionType(CType):
                 for option_type, option_name in zip(self.option_types, self.option_names):
                     option_type.generate_field_declaration(option_name, out_file)
             out_file.print("};")
-        out_file.print("}} {};".format(self.type_name))
+        out_file.print(f"}} {self.type_name};")
         out_file.print("")
 
     def __eq__(self, other):
@@ -73,7 +73,7 @@ class UnionGenerator(Generator):
         self.option_generators = [
             parameters.generator_factory.get_generator_for(
                 option,
-                parameters.with_suffix("anyOf_{}".format(i), self.type_name, "option_{}".format(i)),
+                parameters.with_suffix(f"anyOf_{i}", self.type_name, f"option_{i}"),
             )
             for i, option in enumerate(schema["anyOf"])
         ]
@@ -93,7 +93,7 @@ class UnionGenerator(Generator):
         return "anyOf" in schema
 
     def generate_parser_call(self, out_var_name, out_file):
-        with out_file.if_block("parse_{}(parse_state, {})".format(self.parser_name, out_var_name)):
+        with out_file.if_block(f"parse_{self.parser_name}(parse_state, {out_var_name})"):
             out_file.print("return true;")
 
     def generate_parser_bodies(self, out_file):
@@ -102,15 +102,15 @@ class UnionGenerator(Generator):
             option_generator.generate_parser_bodies(out_file)
             # Give each option a bool-returning parser, so a failed attempt can be caught at the call
             # site (rewind and try the next) without threading a failure action through every generator.
-            option_parser = "parse_{}_try_{}".format(self.parser_name, i)
-            out_file.print("static bool {}(parse_state_t *parse_state, {} *out)".format(option_parser, option_generator.c_type))
+            option_parser = f"parse_{self.parser_name}_try_{i}"
+            out_file.print(f"static bool {option_parser}(parse_state_t *parse_state, {option_generator.c_type} *out)")
             with out_file.code_block():
                 option_generator.generate_parser_call("out", out_file)
                 out_file.print("return false;")
             out_file.print("")
             option_parsers.append(option_parser)
 
-        out_file.print("static bool parse_{}(parse_state_t *parse_state, {} *out)".format(self.parser_name, self.c_type))
+        out_file.print(f"static bool parse_{self.parser_name}(parse_state_t *parse_state, {self.c_type} *out)")
         with out_file.code_block():
             # Each option runs on a copy, so a failed attempt leaves parse_state untouched, and its
             # errors (an expected failure) are muted just on that copy.
@@ -120,8 +120,8 @@ class UnionGenerator(Generator):
                 if i != 0:
                     out_file.print("else")
                 retry = "" if i == 0 else "attempt = *parse_state, attempt.inhibit_errors = true, "
-                with out_file.if_block("{}!{}(&attempt, &out->{})".format(retry, option_parser, option_name)):
-                    out_file.print("out->type = {};".format(enum_label))
+                with out_file.if_block(f"{retry}!{option_parser}(&attempt, &out->{option_name})"):
+                    out_file.print(f"out->type = {enum_label};")
             out_file.print("else")
             with out_file.code_block():
                 self.generate_logged_error(

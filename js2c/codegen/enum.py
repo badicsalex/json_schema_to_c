@@ -33,12 +33,12 @@ class EnumType(CType):
         self.enum_labels = enum_labels
 
     def generate_type_declaration_impl(self, out_file):
-        out_file.print("typedef enum {}_e".format(self.type_name) + "{")
+        out_file.print(f"typedef enum {self.type_name}_e{{")
         with out_file.indent():
             for enum_label in self.enum_labels[:-1]:
-                out_file.print("{},".format(enum_label))
-            out_file.print("{}".format(self.enum_labels[-1]))
-        out_file.print("}} {};".format(self.type_name))
+                out_file.print(f"{enum_label},")
+            out_file.print(self.enum_labels[-1])
+        out_file.print(f"}} {self.type_name};")
         out_file.print("")
 
     def __eq__(self, other):
@@ -84,24 +84,24 @@ class EnumGenerator(Generator):
             enum_label = self.CAMEL_CASE_RE.sub(r"_", enum_label)
             enum_label = enum_label.upper()
         prefix = self.type_name.removesuffix("_t").upper()
-        prefixed = "{}_{}".format(prefix, enum_label)
+        prefixed = f"{prefix}_{enum_label}"
         sanitized = self.SANITIZE_RE.sub("_", prefixed)
         return sanitized
 
     def generate_parser_call(self, out_var_name, out_file):
-        parser_call = "parse_{}(parse_state, {})".format(self.parser_name, out_var_name)
+        parser_call = f"parse_{self.parser_name}(parse_state, {out_var_name})"
         with out_file.if_block(parser_call):
             out_file.print("return true;")
 
     def generate_parser_bodies(self, out_file):
-        out_file.print("static bool parse_{}(parse_state_t *parse_state, {} *out)".format(self.parser_name, self.c_type))
+        out_file.print(f"static bool parse_{self.parser_name}(parse_state_t *parse_state, {self.c_type} *out)")
         with out_file.code_block():
             with out_file.if_block("check_type(parse_state, JSMN_STRING)"):
                 out_file.print("return true;")
 
             if self.js2cParseFunction is not None:
                 # A single membership check: the parser treats every label the same, so there is nothing to dispatch on.
-                is_a_label = " || ".join('current_string_is(parse_state, "{}")'.format(enum_label) for enum_label in self.enum)
+                is_a_label = " || ".join(f'current_string_is(parse_state, "{enum_label}")' for enum_label in self.enum)
                 with out_file.if_block(is_a_label):
                     self.generate_custom_parser_call(
                         "CURRENT_STRING(parse_state), CURRENT_STRING_LENGTH(parse_state), out",
@@ -111,8 +111,8 @@ class EnumGenerator(Generator):
                 out_file.print("else")
             else:
                 for enum_label in self.enum:
-                    with out_file.if_block('current_string_is(parse_state, "{}")'.format(enum_label)):
-                        out_file.print("*out = {};".format(self.convert_enum_label(enum_label)))
+                    with out_file.if_block(f'current_string_is(parse_state, "{enum_label}")'):
+                        out_file.print(f"*out = {self.convert_enum_label(enum_label)};")
                     out_file.print("else")
 
             with out_file.code_block():
@@ -129,17 +129,17 @@ class EnumGenerator(Generator):
         if super().generate_set_default_value(out_var_name, out_file):
             return
         if self.default not in self.enum:
-            raise SchemaError(self, "The enum default value '{}' is not in the allowed values {}".format(self.default, self.enum))
+            raise SchemaError(self, f"The enum default value '{self.default}' is not in the allowed values {self.enum}")
         if self.js2cParseFunction is not None:
             # Own scope: the parser call declares a variable, and defaults can be emitted into a shared one.
             with out_file.code_block(standalone=True):
                 self.generate_custom_parser_call(
-                    '"{}", {}, &{}'.format(self.default, len(self.default), out_var_name),
+                    f'"{self.default}", {len(self.default)}, &{out_var_name}',
                     "%.*s",
-                    [str(len(self.default)), '"{}"'.format(self.default)],
+                    [str(len(self.default)), f'"{self.default}"'],
                     out_file)
         else:
-            out_file.print("{} = {};".format(out_var_name, self.convert_enum_label(self.default)))
+            out_file.print(f"{out_var_name} = {self.convert_enum_label(self.default)};")
 
     def max_token_num(self):
         return 1

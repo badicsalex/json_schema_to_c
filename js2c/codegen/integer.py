@@ -34,7 +34,7 @@ class IntegerType(CType):
 
     def __init__(self, generator, type_name, description):
         if type_name not in self.SIGNED_TYPES + self.UNSIGNED_TYPES:
-            raise SchemaError(generator, "Unsupported integer type: {}".format(type_name))
+            raise SchemaError(generator, f"Unsupported integer type: {type_name}")
         super().__init__(type_name, description)
 
     def is_unsigned(self):
@@ -101,13 +101,12 @@ class IntegerGeneratorBase(Generator):
         # pylint: disable=too-many-arguments
         if check_number is None:
             return
-        with out_file.if_block("int_parse_tmp {} {}{}".format(inverted_check_operator, check_number, self.default_suffix)):
+        with out_file.if_block(f"int_parse_tmp {inverted_check_operator} {check_number}{self.default_suffix}"):
             # Roll back the token, as the value was not actually correct
             out_file.print("parse_state->current_token -= 1;")
             self.generate_logged_error(
                 [
-                    "Integer %\" {} \" in '%s' out of range. It must be {} {}."
-                    .format(out_var_printf_macro, check_operator, check_number),
+                    f"Integer %\" {out_var_printf_macro} \" in '%s' out of range. It must be {check_operator} {check_number}.",
                     "int_parse_tmp",
                     "parse_state->current_key",
                 ],
@@ -115,12 +114,11 @@ class IntegerGeneratorBase(Generator):
             )
 
     def generate_parser_call(self, out_var_name, out_file):
-        out_file.print("{} int_parse_tmp;".format(self.parsed_type))
-        parser_call = "{}(parse_state, {}, {}, {}, &int_parse_tmp)".format(
-            self.parser_fn,
-            'true' if self.number_allowed else 'false',
-            'true' if self.string_allowed else 'false',
-            self.radix
+        out_file.print(f"{self.parsed_type} int_parse_tmp;")
+        number_allowed = 'true' if self.number_allowed else 'false'
+        string_allowed = 'true' if self.string_allowed else 'false'
+        parser_call = (
+            f"{self.parser_fn}(parse_state, {number_allowed}, {string_allowed}, {self.radix}, &int_parse_tmp)"
         )
         with out_file.if_block(parser_call):
             out_file.print("return true;")
@@ -133,14 +131,14 @@ class IntegerGeneratorBase(Generator):
             # for a correct error position, then restore.
             out_file.print("parse_state->current_token -= 1;")
             self.generate_custom_parser_call(
-                "int_parse_tmp, {}".format(out_var_name),
-                '%" {} "'.format(self.parsed_type_printf_macro),
+                f"int_parse_tmp, {out_var_name}",
+                f'%" {self.parsed_type_printf_macro} "',
                 ["int_parse_tmp"],
                 out_file
             )
             out_file.print("parse_state->current_token += 1;")
         else:
-            out_file.print("*{} = int_parse_tmp;".format(out_var_name))
+            out_file.print(f"*{out_var_name} = int_parse_tmp;")
 
     def has_default_value(self):
         return super().has_default_value() or self.default is not None
@@ -151,15 +149,15 @@ class IntegerGeneratorBase(Generator):
         if self.js2cParseFunction is not None:
             # Cast to the parsed type so it matches both the parse function's argument and the
             # printf macro used if it reports an error.
-            default_value = "({}) {}{}".format(self.parsed_type, self.default, self.default_suffix)
+            default_value = f"({self.parsed_type}) {self.default}{self.default_suffix}"
             self.generate_custom_parser_call(
-                "{}, &{}".format(default_value, out_var_name),
-                '%" {} "'.format(self.parsed_type_printf_macro),
+                f"{default_value}, &{out_var_name}",
+                f'%" {self.parsed_type_printf_macro} "',
                 [default_value],
                 out_file
             )
         else:
-            out_file.print("{} = {}{};".format(out_var_name, self.default, self.default_suffix))
+            out_file.print(f"{out_var_name} = {self.default}{self.default_suffix};")
 
     def max_token_num(self):
         return 1
@@ -208,11 +206,10 @@ class NumericStringGenerator(IntegerGenerator):
             pattern_set = self.SIGNED_PATTERNS
 
         if self.pattern not in pattern_set:
-            valid_patterns = ", ".join('"{}"'.format(p) for p in pattern_set)
+            valid_patterns = ", ".join(f'"{p}"' for p in pattern_set)
             raise SchemaError(
                 self,
-                'Pattern "{}" is not a valid pattern for this value range. Valid patterns are: {}'
-                .format(self.pattern, valid_patterns)
+                f'Pattern "{self.pattern}" is not a valid pattern for this value range. Valid patterns are: {valid_patterns}'
             )
         self.radix = pattern_set[self.pattern]
         if isinstance(self.default, str):

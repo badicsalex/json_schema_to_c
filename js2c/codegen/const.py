@@ -39,28 +39,29 @@ class ConstGenerator(Generator):
             raise SchemaError(self, "JS2C supports only strings and integers for const")
 
         if "type" in schema:
-            if isinstance(self.const, str) and schema["type"] != "string":
-                raise SchemaError(self, "Const type mismatch, expected 'string', got '{}'".format(schema["type"]))
-            if isinstance(self.const, int) and schema["type"] != "number":
-                raise SchemaError(self, "Const type mismatch, expected 'number', got '{}'".format(schema["type"]))
+            schema_type = schema["type"]
+            if isinstance(self.const, str) and schema_type != "string":
+                raise SchemaError(self, f"Const type mismatch, expected 'string', got '{schema_type}'")
+            if isinstance(self.const, int) and schema_type != "number":
+                raise SchemaError(self, f"Const type mismatch, expected 'number', got '{schema_type}'")
 
     @classmethod
     def can_parse_schema(cls, schema):
         return "const" in schema
 
     def generate_parser_call(self, out_var_name, out_file):
-        parser_call = "parse_{}(parse_state)".format(self.parser_name)
+        parser_call = f"parse_{self.parser_name}(parse_state)"
         with out_file.if_block(parser_call):
             out_file.print("return true;")
 
     def generate_parser_bodies(self, out_file):
-        out_file.print("static bool parse_{}(parse_state_t *parse_state)".format(self.parser_name))
-        error = ["Invalid const value in '%s', expected: " + str(self.const), "parse_state->current_key"]
+        out_file.print(f"static bool parse_{self.parser_name}(parse_state_t *parse_state)")
+        error = [f"Invalid const value in '%s', expected: {self.const}", "parse_state->current_key"]
         with out_file.code_block():
             if isinstance(self.const, str):
                 with out_file.if_block("check_type(parse_state, JSMN_STRING)"):
                     out_file.print("return true;")
-                with out_file.if_block('!current_string_is(parse_state, "{}")'.format(self.const)):
+                with out_file.if_block(f'!current_string_is(parse_state, "{self.const}")'):
                     self.generate_logged_error(error, out_file)
                 out_file.print("parse_state->current_token += 1;")
             else:
@@ -69,7 +70,7 @@ class ConstGenerator(Generator):
                 out_file.print("int64_t val;")
                 with out_file.if_block("builtin_parse_signed(parse_state, true, false, 10, &val)"):
                     out_file.print("return true;")
-                with out_file.if_block("val != {}".format(self.const)):
+                with out_file.if_block(f"val != {self.const}"):
                     # builtin_parse_signed already consumed the token; step back so the error points at it.
                     out_file.print("parse_state->current_token -= 1;")
                     self.generate_logged_error(error, out_file)

@@ -40,7 +40,7 @@ class ObjectType(CType):
                 continue
             field_generator.generate_type_declaration(out_file)
 
-        out_file.print("typedef struct {}_s ".format(self.type_name) + "{")
+        out_file.print(f"typedef struct {self.type_name}_s {{")
         with out_file.indent():
             for field_name, field_generator in self.fields.items():
                 if field_generator is None:
@@ -49,7 +49,7 @@ class ObjectType(CType):
                     field_name,
                     out_file
                 )
-        out_file.print("}} {};".format(self.type_name))
+        out_file.print(f"}} {self.type_name};")
         out_file.print("")
 
     def __eq__(self, other):
@@ -74,7 +74,7 @@ class ObjectGenerator(Generator):
             raise SchemaError(self, "Missing field for object declaration: 'properties'")
         for field_name, field_schema in schema['properties'].items():
             if field_name in C_RESERVED:
-                raise SchemaError(self, "Property name '{}' is a reserved C word".format(field_name))
+                raise SchemaError(self, f"Property name '{field_name}' is a reserved C word")
             self.fields[field_name] = parameters.generator_factory.get_generator_for(
                 field_schema,
                 parameters.with_suffix("properties." + field_name, self.type_name, field_name),
@@ -98,21 +98,21 @@ class ObjectGenerator(Generator):
         return schema.get('type') == 'object'
 
     def generate_parser_call(self, out_var_name, out_file):
-        parser_call = "parse_{}(parse_state, {})".format(self.parser_name, out_var_name)
+        parser_call = f"parse_{self.parser_name}(parse_state, {out_var_name})"
         with out_file.if_block(parser_call):
             out_file.print("return true;")
 
     def generate_seen_flags(self, out_file):
         for field_name in self.fields:
-            out_file.print("bool seen_{} = false;".format(field_name))
+            out_file.print(f"bool seen_{field_name} = false;")
 
     def generate_default_field_setting(self, out_file):
         for field_name, field_generator in self.fields.items():
             if not field_generator.has_default_value():
                 continue
-            with out_file.if_block("!seen_{}".format(field_name)):
+            with out_file.if_block(f"!seen_{field_name}"):
                 field_generator.generate_set_default_value(
-                    "out->{}".format(field_name),
+                    f"out->{field_name}",
                     out_file
                 )
 
@@ -126,11 +126,10 @@ class ObjectGenerator(Generator):
                     continue
                 raise SchemaError(
                     self,
-                    "Field '{}' must be required or have a default value"
-                    .format(field_name)
+                    f"Field '{field_name}' must be required or have a default value"
                 )
-            with out_file.if_block("!seen_{}".format(field_name)):
-                self.generate_logged_error("Missing required field in '%s': {}".format(field_name), out_file)
+            with out_file.if_block(f"!seen_{field_name}"):
+                self.generate_logged_error(f"Missing required field in '%s': {field_name}", out_file)
 
     def generate_key_children_check(self, out_file):
         with out_file.if_block("CURRENT_TOKEN(parse_state).size > 1"):
@@ -156,15 +155,15 @@ class ObjectGenerator(Generator):
     def generate_field_parsers(self, out_file):
         self.generate_key_children_check(out_file)
         for field_name, field_generator in self.fields.items():
-            with out_file.if_block('current_string_is(parse_state, "{}")'.format(field_name)):
-                with out_file.if_block("seen_{}".format(field_name)):
-                    self.generate_logged_error("Duplicate field definition in '%s': {}".format(field_name), out_file)
-                out_file.print("seen_{} = true;".format(field_name))
+            with out_file.if_block(f'current_string_is(parse_state, "{field_name}")'):
+                with out_file.if_block(f"seen_{field_name}"):
+                    self.generate_logged_error(f"Duplicate field definition in '%s': {field_name}", out_file)
+                out_file.print(f"seen_{field_name} = true;")
                 out_file.print("parse_state->current_token += 1;")
                 out_file.print("const char* saved_key = parse_state->current_key;")
-                out_file.print("parse_state->current_key = \"{}\";".format(field_name))
+                out_file.print(f'parse_state->current_key = "{field_name}";')
                 field_generator.generate_parser_call(
-                    "&out->{}".format(field_name),
+                    f"&out->{field_name}",
                     out_file
                 )
                 out_file.print("parse_state->current_key = saved_key;")
@@ -180,7 +179,7 @@ class ObjectGenerator(Generator):
         for field_generator in self.fields.values():
             field_generator.generate_parser_bodies(out_file)
 
-        out_file.print("static bool parse_{}(parse_state_t *parse_state, {} *out)".format(self.parser_name, self.c_type))
+        out_file.print(f"static bool parse_{self.parser_name}(parse_state_t *parse_state, {self.c_type} *out)")
         with out_file.code_block():
             with out_file.if_block("check_type(parse_state, JSMN_OBJECT)"):
                 out_file.print("return true;")
@@ -217,7 +216,7 @@ class ObjectGenerator(Generator):
             return
         for field_name, field_generator in self.fields.items():
             field_generator.generate_set_default_value(
-                "{}.{}".format(out_var_name, field_name),
+                f"{out_var_name}.{field_name}",
                 out_file
             )
 

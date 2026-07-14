@@ -67,18 +67,19 @@ class CodeBlockPrinter:
         elif self.last_was_else:
             self.text += line
         else:
-            self.text += "\n{}{}".format(" "*self.indent_level, line)
+            self.text += f"\n{' ' * self.indent_level}{line}"
         self.last_was_else = line == "else"
 
     def print_with_docstring(self, line, docstring):
         if not docstring:
             self.print(line)
         else:
-            self.print(line.ljust(40) + "/**< {} */".format(docstring))
+            self.print(line.ljust(40) + f"/**< {docstring} */")
 
     def print_separator(self, separator_str):
         pad_length = (70 - len(separator_str))//2
-        self.print("/* {p} {s} {p} */".format(p="=" * pad_length, s=separator_str))
+        padding = "=" * pad_length
+        self.print(f"/* {padding} {separator_str} {padding} */")
 
     def write(self, data):
         """ Write raw data to the file """
@@ -87,17 +88,17 @@ class CodeBlockPrinter:
 
     def code_block(self, indent_level=4, standalone=False):
         if standalone:
-            self.text += "\n{}".format(" "*self.indent_level)
+            self.text += f"\n{' ' * self.indent_level}"
             # XXX: this is to prevent padding the opening brace that comes next
             self.last_was_else = True
         return CodeBlockContextManager(self, indent_level)
 
     def if_block(self, condition, indent_level=4, standalone=False):
-        self.print("if ({})".format(condition))
+        self.print(f"if ({condition})")
         return self.code_block(indent_level, standalone)
 
     def for_block(self, for_stuff, indent_level=4, standalone=False):
-        self.print("for ({})".format(for_stuff))
+        self.print(f"for ({for_stuff})")
         return self.code_block(indent_level, standalone)
 
     def indent(self, indent_level=4):

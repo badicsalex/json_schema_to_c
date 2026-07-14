@@ -42,7 +42,7 @@ class SchemaError(ValueError):
             path = generator_or_path.path_in_schema
         if not path:
             path = '<root>'
-        super().__init__("Schema error in '{}': {}".format(path, message))
+        super().__init__(f"Schema error in '{path}': {message}")
 
 
 GeneratorInitParametersBase = namedtuple(
@@ -66,8 +66,8 @@ class GeneratorInitParameters(GeneratorInitParametersBase):
         return GeneratorInitParameters(
             self.path_in_schema + "." + path_in_schema,
             self.base_name,
-            "{}_{}".format(self.parser_name, suffix),
-            "{}_{}_t".format(type_name.removesuffix("_t"), suffix),
+            f"{self.parser_name}_{suffix}",
+            f'{type_name.removesuffix("_t")}_{suffix}_t',
             self.settings,
             self.generator_factory,
             self.type_cache,
@@ -127,20 +127,20 @@ class Generator(ABC):
         assert self.has_default_value(), "Caller is responsible for checking this."
         if self.js2cDefault is None:
             return False
-        out_file.print("{} = {};".format(out_var_name, self.js2cDefault))
+        out_file.print(f"{out_var_name} = {self.js2cDefault};")
         return True
 
     def generate_custom_parser_call(self, call_args, value_format, value_args, out_file):
         # call_args are the js2cParseFunction arguments before the trailing &error; value_format and
         # value_args describe how the offending value is printed in the error message.
         out_file.print("const char *error = NULL;")
-        with out_file.if_block("{}({}, &error)".format(self.js2cParseFunction, call_args)):
+        with out_file.if_block(f"{self.js2cParseFunction}({call_args}, &error)"):
             self.generate_logged_error(
                 [
-                    "Error parsing '%s', value=\\\"" + value_format + "\\\": %s",
+                    f"Error parsing '%s', value=\\\"{value_format}\\\": %s",
                     "parse_state->current_key",
                     *value_args,
-                    "error ? error : \"error calling {}\"".format(self.js2cParseFunction),
+                    f'error ? error : "error calling {self.js2cParseFunction}"',
                 ],
                 out_file,
             )
@@ -148,15 +148,12 @@ class Generator(ABC):
     @classmethod
     def generate_logged_error(cls, log_message, out_file):
         if isinstance(log_message, str):
-            out_file.print("TRY_LOG_ERROR(CURRENT_TOKEN(parse_state).start, \"{}\", parse_state->current_key)".format(log_message))
+            out_file.print(f'TRY_LOG_ERROR(CURRENT_TOKEN(parse_state).start, "{log_message}", parse_state->current_key)')
         else:
             assert len(log_message) > 1, "Use a simple string, not a 1 element array."
+            log_args = ", ".join(log_message[1:])
             out_file.print(
-                "TRY_LOG_ERROR(CURRENT_TOKEN(parse_state).start, \"{}\", {})"
-                .format(
-                    log_message[0],
-                    ", ".join(log_message[1:]),
-                )
+                f'TRY_LOG_ERROR(CURRENT_TOKEN(parse_state).start, "{log_message[0]}", {log_args})'
             )
         out_file.print("return true;")
 
@@ -171,11 +168,11 @@ class CType():
         return self.type_name
 
     def __repr__(self):
-        return "{}({})".format(self.__class__.__name__, self.__dict__)
+        return f"{self.__class__.__name__}({self.__dict__})"
 
     def generate_field_declaration(self, field_name, out_file):
         out_file.print_with_docstring(
-            "{} {};".format(self.type_name, field_name), self.description
+            f"{self.type_name} {field_name};", self.description
         )
 
     def generate_type_declaration(self, out_file):

@@ -34,13 +34,13 @@ class ArrayType(CType):
     def generate_type_declaration_impl(self, out_file):
         self.item_type.generate_type_declaration(out_file)
 
-        out_file.print("typedef struct {}_s ".format(self.type_name) + "{")
+        out_file.print(f"typedef struct {self.type_name}_s {{")
         with out_file.indent():
             out_file.print_with_docstring("uint64_t n;", "The number of elements in the array")
             self.item_type.generate_field_declaration(
-                "items[{}]".format(self.max_items), out_file
+                f"items[{self.max_items}]", out_file
             )
-        out_file.print("}} {};".format(self.type_name))
+        out_file.print(f"}} {self.type_name};")
         out_file.print("")
 
     def __eq__(self, other):
@@ -85,27 +85,27 @@ class ArrayGenerator(Generator):
         return schema.get('type') == 'array'
 
     def generate_parser_call(self, out_var_name, out_file):
-        parser_call = "parse_{}(parse_state, {})".format(self.parser_name, out_var_name)
+        parser_call = f"parse_{self.parser_name}(parse_state, {out_var_name})"
         with out_file.if_block(parser_call):
             out_file.print("return true;")
 
     def generate_range_checks(self, out_file):
-        with out_file.if_block("n > {}".format(self.maxItems)):
+        with out_file.if_block(f"n > {self.maxItems}"):
             self.generate_logged_error(
-                ["Array '%s' too large. Length: %i. Maximum length: {}.".format(self.maxItems), "parse_state->current_key", "n"],
+                [f"Array '%s' too large. Length: %i. Maximum length: {self.maxItems}.", "parse_state->current_key", "n"],
                 out_file
             )
         if self.minItems:
-            with out_file.if_block("n < {}".format(self.minItems)):
+            with out_file.if_block(f"n < {self.minItems}"):
                 self.generate_logged_error(
-                    ["Array '%s' too small. Length: %i. Minimum length: {}.".format(self.minItems), "parse_state->current_key", "n"],
+                    [f"Array '%s' too small. Length: %i. Minimum length: {self.minItems}.", "parse_state->current_key", "n"],
                     out_file
                 )
 
     def generate_parser_bodies(self, out_file):
         self.item_generator.generate_parser_bodies(out_file)
 
-        out_file.print("static bool parse_{}(parse_state_t *parse_state, {} *out)".format(self.parser_name, self.c_type))
+        out_file.print(f"static bool parse_{self.parser_name}(parse_state_t *parse_state, {self.c_type} *out)")
         with out_file.code_block():
             with out_file.if_block("check_type(parse_state, JSMN_ARRAY)"):
                 out_file.print("return true;")
@@ -127,7 +127,7 @@ class ArrayGenerator(Generator):
     def generate_set_default_value(self, out_var_name, out_file):
         if super().generate_set_default_value(out_var_name, out_file):
             return
-        out_file.print("{}.n = 0;".format(out_var_name))
+        out_file.print(f"{out_var_name}.n = 0;")
 
     def max_token_num(self):
         return self.maxItems * self.item_generator.max_token_num() + 1
