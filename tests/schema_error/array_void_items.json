@@ -1,0 +1,15 @@
+{
+    "$id": "root",
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["x"],
+    "properties": {
+        "x": {
+            "type": "array",
+            "maxItems": 3,
+            "items": {
+                "js2cType": "void"
+            }
+        }
+    }
+}

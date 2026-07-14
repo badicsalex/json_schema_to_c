@@ -72,6 +72,8 @@ class ArrayGenerator(Generator):
             schema["items"],
             parameters.with_suffix("items", self.type_name, "item"),
         )
+        if self.item_generator.c_type is None:
+            raise SchemaError(self, "Array items must store a value")
         self.c_type = ArrayType(
             self.type_name,
             self.description,
