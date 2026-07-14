@@ -135,8 +135,6 @@ class RootGenerator:
             builtins_file_contents = builtins_file.read()
             jsmn_include_string = '#include "jsmn.h"\n'
             split_pos = builtins_file_contents.index(jsmn_include_string)
-            if split_pos < 0:
-                raise ValueError(f"{jsmn_include_string} not found in builtins file")
             c_file.write(builtins_file_contents[:split_pos])
             cls.manually_include_jsmn(c_file)
             c_file.write(builtins_file_contents[split_pos + len(jsmn_include_string):])

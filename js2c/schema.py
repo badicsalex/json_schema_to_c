@@ -60,12 +60,10 @@ def resolve_children(full_schema, part_to_resolve, schema_filepath, authorized_p
             part_to_resolve[i] = resolve_ref(full_schema, v, schema_filepath, authorized_paths)
             resolve_children(full_schema, v, schema_filepath, authorized_paths)
         return
-    if isinstance(part_to_resolve, dict):
-        for k, v in part_to_resolve.items():
-            part_to_resolve[k] = resolve_ref(full_schema, v, schema_filepath, authorized_paths)
-            resolve_children(full_schema, v, schema_filepath, authorized_paths)
-        return
-    raise ValueError(f"Value {part_to_resolve} is not supported by the schema loader")
+    assert isinstance(part_to_resolve, dict), f"Value {part_to_resolve} is not supported by the schema loader"
+    for k, v in part_to_resolve.items():
+        part_to_resolve[k] = resolve_ref(full_schema, v, schema_filepath, authorized_paths)
+        resolve_children(full_schema, v, schema_filepath, authorized_paths)
 
 
 def resolve_ref(full_schema, part_to_resolve, schema_filepath, authorized_paths):
