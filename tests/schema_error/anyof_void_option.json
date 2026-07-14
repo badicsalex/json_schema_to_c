@@ -1,0 +1,14 @@
+{
+    "$id": "root",
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["x"],
+    "properties": {
+        "x": {
+            "anyOf": [
+                { "js2cType": "void" },
+                { "type": "integer" }
+            ]
+        }
+    }
+}

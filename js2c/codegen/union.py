@@ -94,7 +94,7 @@ class UnionGenerator(Generator):
         option_types = []
         for option in self.option_generators:
             if option.c_type is None:
-                raise SchemaError(self, "anyOf options must store a value, so a const cannot be one")
+                raise SchemaError(self, "anyOf options must store a value")
             option_types.append(option.c_type)
         self.c_type = UnionType(
             self.type_name,
