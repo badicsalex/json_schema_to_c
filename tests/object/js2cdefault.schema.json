@@ -21,6 +21,11 @@
             "description": "How many?",
             "js2cDefault": 1337
         },
+        "ratio": {
+            "type": "number",
+            "description": "How much of it?",
+            "js2cDefault": "0.5 + 0.25"
+        },
         "id": {
             "type": "string",
             "maxLength": 4,

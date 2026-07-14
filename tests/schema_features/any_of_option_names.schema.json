@@ -1,0 +1,31 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "root",
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["keyword", "digit"],
+    "properties": {
+        "keyword": {
+            "anyOf": [
+                { "type": "integer" },
+                { "type": "boolean" }
+            ]
+        },
+        "digit": {
+            "anyOf": [
+                {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": ["a"],
+                    "properties": { "a": { "type": "integer" } }
+                },
+                {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": ["b"],
+                    "properties": { "b": { "type": "integer" } }
+                }
+            ]
+        }
+    }
+}

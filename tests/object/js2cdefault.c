@@ -18,6 +18,7 @@ int main(int argc, char** argv){
     assert(strcmp(got.name, "cauliflower") == 0);
     assert(got.is_good == true);
     assert(got.number == 1337);
+    assert(got.ratio == 0.75);
     assert(strcmp(got.id, "xxxx") == 0);
     assert(got.mass == 1338);
     assert(got.sub_obj.number == 1339);

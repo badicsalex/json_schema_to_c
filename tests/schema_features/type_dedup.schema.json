@@ -1,0 +1,22 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "root",
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["name_a", "name_b", "list_a", "list_b", "either_a", "either_b"],
+    "properties": {
+        "name_a": { "$id": "#name", "type": "string", "maxLength": 8 },
+        "name_b": { "$id": "#name", "type": "string", "maxLength": 8 },
+        "list_a": { "$id": "#list", "type": "array", "maxItems": 3, "items": { "type": "integer" } },
+        "list_b": { "$id": "#list", "type": "array", "maxItems": 3, "items": { "type": "integer" } },
+        "either_a": {
+            "$id": "#either",
+            "description": null,
+            "anyOf": [ { "type": "integer" }, { "type": "boolean" } ]
+        },
+        "either_b": {
+            "$id": "#either",
+            "anyOf": [ { "type": "integer" }, { "type": "boolean" } ]
+        }
+    }
+}
