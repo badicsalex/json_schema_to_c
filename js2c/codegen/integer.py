@@ -257,7 +257,11 @@ class IntegerStringAnyOfGenerator(NumericStringGenerator):
     def can_parse_schema(cls, schema: dict[str, Any]) -> bool:
         if "anyOf" not in schema or len(schema['anyOf']) != 2:
             return False
-        return set((schema['anyOf'][0].get('type'), schema['anyOf'][1].get('type'))) == set(('integer', 'string'))
+        if set((schema['anyOf'][0].get('type'), schema['anyOf'][1].get('type'))) != set(('integer', 'string')):
+            return False
+        # The pattern is what makes this a number spelled as a string. Without one the options are
+        # unrelated, so it is an ordinary union.
+        return any('pattern' in option for option in schema['anyOf'])
 
     @property
     def string_allowed(self) -> bool:
