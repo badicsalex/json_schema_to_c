@@ -144,9 +144,9 @@ class Generator(ABC):
         out_file.print(f"{out_var_name} = {self.js2cDefault};")
         return True
 
+    @abstractmethod
     def generate_set_default_value(self, out_var_name: str, out_file: CodeBlockPrinter) -> None:
-        emitted = self.generate_js2c_default_value(out_var_name, out_file)
-        assert emitted, "A generator with any other source of defaults must override this."
+        """Emit the value of an absent field. Only called when has_default_value() is true."""
 
     def generate_custom_parser_call(
         self,

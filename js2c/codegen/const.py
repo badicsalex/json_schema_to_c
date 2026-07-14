@@ -84,5 +84,8 @@ class ConstGenerator(Generator):
             out_file.print("return false;")
         out_file.print("")
 
+    def generate_set_default_value(self, out_var_name: str, out_file: CodeBlockPrinter) -> None:
+        raise AssertionError("has_default_value() is always false: a const cannot have a js2cDefault.")
+
     def max_token_num(self) -> int:
         return 1

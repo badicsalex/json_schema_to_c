@@ -44,13 +44,15 @@ class AlternateStorageGenerator(Generator):
 
     def __init__(self, schema: dict[str, Any], parameters: GeneratorInitParameters) -> None:
         super().__init__(schema, parameters)
+        # A void stores nothing, and a raw is a reference into the input text, so neither has
+        # anything a default could name.
+        if self.js2cDefault is not None:
+            raise SchemaError(self, "A void or raw js2cType cannot have a js2cDefault")
         if self.js2cType == "raw":
             self.type_name = parameters.base_name + "_json_ref_t"
             self.c_type = parameters.type_cache.try_get_cached(RawJsonType(self.type_name, self.description), self.path_in_schema)
         else:
             self.c_type = None
-            if self.js2cDefault is not None:
-                raise SchemaError(self, "A void js2cType stores nothing, so it cannot have a js2cDefault")
 
     @classmethod
     def can_parse_schema(cls, schema: dict[str, Any]) -> bool:
@@ -65,6 +67,9 @@ class AlternateStorageGenerator(Generator):
             )
         with out_file.if_block("builtin_skip(parse_state)"):
             out_file.print("return true;")
+
+    def generate_set_default_value(self, out_var_name: str, out_file: CodeBlockPrinter) -> None:
+        raise AssertionError("has_default_value() is always false: a void or raw cannot have a js2cDefault.")
 
     def max_token_num(self) -> int:
         # A skipped value is at least one token; composite values need extra token headroom

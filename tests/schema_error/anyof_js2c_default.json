@@ -1,0 +1,14 @@
+{
+    "$id": "root",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "x": {
+            "anyOf": [
+                { "type": "integer" },
+                { "type": "boolean" }
+            ],
+            "js2cDefault": "(root_x_t){0}"
+        }
+    }
+}

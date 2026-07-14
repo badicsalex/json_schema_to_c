@@ -1,0 +1,11 @@
+{
+    "$id": "root",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "x": {
+            "js2cType": "raw",
+            "js2cDefault": "(root_json_ref_t){0}"
+        }
+    }
+}

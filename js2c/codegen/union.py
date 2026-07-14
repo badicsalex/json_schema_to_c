@@ -84,6 +84,8 @@ class UnionGenerator(Generator):
 
     def __init__(self, schema: dict[str, Any], parameters: GeneratorInitParameters) -> None:
         super().__init__(schema, parameters)
+        if self.js2cDefault is not None:
+            raise SchemaError(self, "An anyOf cannot have a js2cDefault")
         self.option_generators = [
             parameters.generator_factory.get_generator_for(
                 option,
@@ -147,6 +149,9 @@ class UnionGenerator(Generator):
             out_file.print("parse_state->current_token = attempt.current_token;")
             out_file.print("return false;")
         out_file.print("")
+
+    def generate_set_default_value(self, out_var_name: str, out_file: CodeBlockPrinter) -> None:
+        raise AssertionError("has_default_value() is always false: an anyOf cannot have a js2cDefault.")
 
     def max_token_num(self) -> int:
         # Only one option's value ends up in the document, so the worst case is the largest option.
