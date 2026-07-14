@@ -1,0 +1,10 @@
+{
+    "$id": "root",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "x": {
+            "$ref": "#foo"
+        }
+    }
+}

@@ -1,0 +1,20 @@
+{
+    "$id": "root",
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["x"],
+    "properties": {
+        "x": {
+            "allOf": [
+                {
+                    "type": "integer",
+                    "description": "One description"
+                },
+                {
+                    "type": "integer",
+                    "description": "A conflicting one"
+                }
+            ]
+        }
+    }
+}

@@ -1,0 +1,30 @@
+{
+    "$id": "root",
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["a", "b"],
+    "properties": {
+        "a": {
+            "$id": "#shared",
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["p"],
+            "properties": {
+                "p": {
+                    "type": "integer"
+                }
+            }
+        },
+        "b": {
+            "$id": "#shared",
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["q"],
+            "properties": {
+                "q": {
+                    "type": "integer"
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,16 @@
+{
+    "$id": "root",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "x": {
+            "$ref": "#/definitions/y",
+            "description": "Not allowed next to a $ref"
+        }
+    },
+    "definitions": {
+        "y": {
+            "type": "integer"
+        }
+    }
+}

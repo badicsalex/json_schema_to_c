@@ -1,0 +1,20 @@
+{
+    "$id": "root",
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["x"],
+    "properties": {
+        "x": {
+            "allOf": [
+                {
+                    "type": "string",
+                    "maxLength": 8
+                },
+                {
+                    "type": "string",
+                    "maxLength": "eight"
+                }
+            ]
+        }
+    }
+}
