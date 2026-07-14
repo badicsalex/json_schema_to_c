@@ -25,11 +25,12 @@
 import json
 import os
 from collections import OrderedDict
+from typing import Any
 from urllib.parse import urlparse
 
 
 # Foreign schema files, keyed by canonical path; a None slot marks a load in progress.
-SCHEMA_CACHE = {}
+SCHEMA_CACHE: dict[str, Any] = {}
 
 
 def get_schema_from_path(path, relative_to, authorized_paths):

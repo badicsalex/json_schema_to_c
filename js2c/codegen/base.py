@@ -23,7 +23,15 @@
 # SOFTWARE.
 #
 from abc import ABC, abstractmethod
-from collections import namedtuple
+from typing import TYPE_CHECKING, NamedTuple
+
+from ..settings import Settings
+
+if TYPE_CHECKING:
+    # Both import this module, so they can only be named in annotations.
+    from .generator_factory import GeneratorFactory
+    from .type_cache import TypeCache
+
 # Names that can't be used as C identifiers: keywords, plus the stdbool.h macros.
 C_RESERVED = frozenset((
     "auto", "break", "case", "char", "const", "continue", "default", "do", "double",
@@ -45,24 +53,16 @@ class SchemaError(ValueError):
         super().__init__(f"Schema error in '{path}': {message}")
 
 
-GeneratorInitParametersBase = namedtuple(
-    "GeneratorInitParameters",
-    (
-        'path_in_schema',
-        'base_name',
-        'parser_name',
-        'type_name',
-        'settings',
-        'generator_factory',
-        'type_cache'
-    )
-)
+class GeneratorInitParameters(NamedTuple):
+    path_in_schema: str
+    base_name: str
+    parser_name: str
+    type_name: str
+    settings: Settings
+    generator_factory: type["GeneratorFactory"]
+    type_cache: "TypeCache"
 
-
-class GeneratorInitParameters(GeneratorInitParametersBase):
-    __slots__ = ()
-
-    def with_suffix(self, path_in_schema, type_name, suffix):
+    def with_suffix(self, path_in_schema: str, type_name: str, suffix: str) -> "GeneratorInitParameters":
         return GeneratorInitParameters(
             self.path_in_schema + "." + path_in_schema,
             self.base_name,
@@ -75,7 +75,7 @@ class GeneratorInitParameters(GeneratorInitParametersBase):
 
 
 class Generator(ABC):
-    JSON_FIELDS = (
+    JSON_FIELDS: tuple[str, ...] = (
         "description",
         "js2cDefault",
         "js2cType",
