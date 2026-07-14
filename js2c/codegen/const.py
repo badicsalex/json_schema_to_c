@@ -22,7 +22,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from .base import Generator, SchemaError
+from typing import Any
+
+from .base import Generator, SchemaError, GeneratorInitParameters
+from .code_block_printer import CodeBlockPrinter
 
 
 class ConstGenerator(Generator):
@@ -32,7 +35,7 @@ class ConstGenerator(Generator):
     # can_parse_schema() requires it, so the JSON_FIELDS loop always sets it.
     const: str | int
 
-    def __init__(self, schema, parameters):
+    def __init__(self, schema: dict[str, Any], parameters: GeneratorInitParameters) -> None:
         super().__init__(schema, parameters)
         self.c_type = None  # no type to store, "const" is just for validation
 
@@ -47,15 +50,15 @@ class ConstGenerator(Generator):
                 raise SchemaError(self, f"Const type mismatch, expected 'number', got '{schema_type}'")
 
     @classmethod
-    def can_parse_schema(cls, schema):
+    def can_parse_schema(cls, schema: dict[str, Any]) -> bool:
         return "const" in schema
 
-    def generate_parser_call(self, out_var_name, out_file):
+    def generate_parser_call(self, out_var_name: str, out_file: CodeBlockPrinter) -> None:
         parser_call = f"parse_{self.parser_name}(parse_state)"
         with out_file.if_block(parser_call):
             out_file.print("return true;")
 
-    def generate_parser_bodies(self, out_file):
+    def generate_parser_bodies(self, out_file: CodeBlockPrinter) -> None:
         out_file.print(f"static bool parse_{self.parser_name}(parse_state_t *parse_state)")
         error = [f"Invalid const value in '%s', expected: {self.const}", "parse_state->current_key"]
         with out_file.code_block():
@@ -78,5 +81,5 @@ class ConstGenerator(Generator):
             out_file.print("return false;")
         out_file.print("")
 
-    def max_token_num(self):
+    def max_token_num(self) -> int:
         return 1

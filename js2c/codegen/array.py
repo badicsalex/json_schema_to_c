@@ -22,16 +22,19 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from .base import Generator, CType, SchemaError
+from typing import Any
+
+from .base import Generator, CType, SchemaError, GeneratorInitParameters
+from .code_block_printer import CodeBlockPrinter
 
 
 class ArrayType(CType):
-    def __init__(self, type_name, description, item_type, max_items):
+    def __init__(self, type_name: str, description: str | None, item_type: CType, max_items: int) -> None:
         super().__init__(type_name, description)
         self.item_type = item_type
         self.max_items = max_items
 
-    def generate_type_declaration_impl(self, out_file):
+    def generate_type_declaration_impl(self, out_file: CodeBlockPrinter) -> None:
         self.item_type.generate_type_declaration(out_file)
 
         out_file.print(f"typedef struct {self.type_name}_s {{")
@@ -43,9 +46,10 @@ class ArrayType(CType):
         out_file.print(f"}} {self.type_name};")
         out_file.print("")
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         return (
             super().__eq__(other) and
+            isinstance(other, ArrayType) and
             self.max_items == other.max_items and
             self.item_type == other.item_type
         )
@@ -59,7 +63,7 @@ class ArrayGenerator(Generator):
     minItems: int = 0
     maxItems: int | None = None
 
-    def __init__(self, schema, parameters):
+    def __init__(self, schema: dict[str, Any], parameters: GeneratorInitParameters) -> None:
         super().__init__(schema, parameters)
         if self.maxItems is None:
             raise SchemaError(self, "Arrays must have 'maxItems'")
@@ -83,15 +87,15 @@ class ArrayGenerator(Generator):
         self.c_type = parameters.type_cache.try_get_cached(self.c_type, self.path_in_schema)
 
     @classmethod
-    def can_parse_schema(cls, schema):
+    def can_parse_schema(cls, schema: dict[str, Any]) -> bool:
         return schema.get('type') == 'array'
 
-    def generate_parser_call(self, out_var_name, out_file):
+    def generate_parser_call(self, out_var_name: str, out_file: CodeBlockPrinter) -> None:
         parser_call = f"parse_{self.parser_name}(parse_state, {out_var_name})"
         with out_file.if_block(parser_call):
             out_file.print("return true;")
 
-    def generate_range_checks(self, out_file):
+    def generate_range_checks(self, out_file: CodeBlockPrinter) -> None:
         with out_file.if_block(f"n > {self.maxItems}"):
             self.generate_logged_error(
                 [f"Array '%s' too large. Length: %i. Maximum length: {self.maxItems}.", "parse_state->current_key", "n"],
@@ -104,7 +108,7 @@ class ArrayGenerator(Generator):
                     out_file
                 )
 
-    def generate_parser_bodies(self, out_file):
+    def generate_parser_bodies(self, out_file: CodeBlockPrinter) -> None:
         self.item_generator.generate_parser_bodies(out_file)
 
         out_file.print(f"static bool parse_{self.parser_name}(parse_state_t *parse_state, {self.c_type} *out)")
@@ -123,13 +127,14 @@ class ArrayGenerator(Generator):
             out_file.print("return false;")
         out_file.print("")
 
-    def has_default_value(self):
+    def has_default_value(self) -> bool:
         return super().has_default_value() or self.minItems == 0
 
-    def generate_set_default_value(self, out_var_name, out_file):
+    def generate_set_default_value(self, out_var_name: str, out_file: CodeBlockPrinter) -> None:
         if self.generate_js2c_default_value(out_var_name, out_file):
             return
         out_file.print(f"{out_var_name}.n = 0;")
 
-    def max_token_num(self):
+    def max_token_num(self) -> int:
+        assert self.maxItems is not None, "__init__ rejects an array without maxItems."
         return self.maxItems * self.item_generator.max_token_num() + 1

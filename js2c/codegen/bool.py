@@ -22,7 +22,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from .base import Generator, CType, SchemaError
+from typing import Any
+
+from .base import Generator, CType, SchemaError, GeneratorInitParameters
+from .code_block_printer import CodeBlockPrinter
 
 
 class BoolGenerator(Generator):
@@ -31,29 +34,29 @@ class BoolGenerator(Generator):
     )
     default: bool | None = None
 
-    def __init__(self, schema, parameters):
+    def __init__(self, schema: dict[str, Any], parameters: GeneratorInitParameters) -> None:
         super().__init__(schema, parameters)
         if self.default is not None and not isinstance(self.default, bool):
             raise SchemaError(self, "Boolean types should have a boolean as a default")
         self.c_type = CType("bool", self.description)
 
     @classmethod
-    def can_parse_schema(cls, schema):
+    def can_parse_schema(cls, schema: dict[str, Any]) -> bool:
         return schema.get('type') == 'boolean'
 
-    def generate_parser_call(self, out_var_name, out_file):
+    def generate_parser_call(self, out_var_name: str, out_file: CodeBlockPrinter) -> None:
         parser_call = f"builtin_parse_bool(parse_state, {out_var_name})"
         with out_file.if_block(parser_call):
             out_file.print("return true;")
 
-    def has_default_value(self):
+    def has_default_value(self) -> bool:
         return super().has_default_value() or self.default is not None
 
-    def generate_set_default_value(self, out_var_name, out_file):
+    def generate_set_default_value(self, out_var_name: str, out_file: CodeBlockPrinter) -> None:
         if self.generate_js2c_default_value(out_var_name, out_file):
             return
         default_value = 'true' if self.default else 'false'
         out_file.print(f"{out_var_name} = {default_value};")
 
-    def max_token_num(self):
+    def max_token_num(self) -> int:
         return 1

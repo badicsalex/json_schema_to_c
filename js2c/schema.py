@@ -25,6 +25,7 @@
 import json
 import os
 from collections import OrderedDict
+from collections.abc import Sequence
 from typing import Any
 from urllib.parse import urlparse
 
@@ -33,7 +34,7 @@ from urllib.parse import urlparse
 SCHEMA_CACHE: dict[str, Any] = {}
 
 
-def get_schema_from_path(path, relative_to, authorized_paths):
+def get_schema_from_path(path: str, relative_to: str, authorized_paths: Sequence[str]) -> Any:
     path = os.path.abspath(os.path.join(os.path.dirname(relative_to), path))
     roots = [os.path.abspath(a) for a in authorized_paths]
     if not any(path == root or path.startswith(root + os.sep) for root in roots):
@@ -51,7 +52,7 @@ def get_schema_from_path(path, relative_to, authorized_paths):
 
 # WARNING: reviewing the following algorithm might cause brain damage
 # Sorry for that.
-def resolve_children(full_schema, part_to_resolve, schema_filepath, authorized_paths):
+def resolve_children(full_schema: Any, part_to_resolve: Any, schema_filepath: str, authorized_paths: Sequence[str]) -> None:
     if part_to_resolve is None:
         return
     if isinstance(part_to_resolve, (str, int, bool, float)):
@@ -67,7 +68,7 @@ def resolve_children(full_schema, part_to_resolve, schema_filepath, authorized_p
         resolve_children(full_schema, v, schema_filepath, authorized_paths)
 
 
-def resolve_ref(full_schema, part_to_resolve, schema_filepath, authorized_paths):
+def resolve_ref(full_schema: Any, part_to_resolve: Any, schema_filepath: str, authorized_paths: Sequence[str]) -> Any:
     if not isinstance(part_to_resolve, dict) or "$ref" not in part_to_resolve:
         return part_to_resolve
     if len(part_to_resolve) > 1:
@@ -94,7 +95,7 @@ def resolve_ref(full_schema, part_to_resolve, schema_filepath, authorized_paths)
 # WARNING OVER
 
 
-def all_of_merge_single_pair(element1, element2, key):
+def all_of_merge_single_pair(element1: Any, element2: Any, key: str) -> Any:
     if type(element1) is not type(element2):
         raise ValueError(
             f"Field types are different in allOf declaration: '{element1}' vs. '{element2}'"
@@ -115,7 +116,7 @@ def all_of_merge_single_pair(element1, element2, key):
     )
 
 
-def all_of_merge_dict(schema1, schema2):
+def all_of_merge_dict(schema1: dict[str, Any], schema2: dict[str, Any]) -> dict[str, Any]:
     result = schema1.copy()
     for key, value in schema2.items():
         if key in result:
@@ -125,13 +126,13 @@ def all_of_merge_dict(schema1, schema2):
     return result
 
 
-def resolve_all_of(schema):
+def resolve_all_of(schema: Any) -> Any:
     if not isinstance(schema, dict):
         # TODO: Also process arrays in the schema. I'm not sure it's needed though, there are not many arrays
         #       in schema definitions, and I think none of them need allOf expansion.
         return schema
 
-    result = OrderedDict((k, resolve_all_of(v)) for k, v in schema.items() if k != "allOf")
+    result: dict[str, Any] = OrderedDict((k, resolve_all_of(v)) for k, v in schema.items() if k != "allOf")
     if "allOf" in schema:
         for schema_to_process in schema["allOf"]:
             schema_to_process = resolve_all_of(schema_to_process)
@@ -139,7 +140,7 @@ def resolve_all_of(schema):
     return result
 
 
-def load_schema(schema_filepath, authorized_paths):
+def load_schema(schema_filepath: str, authorized_paths: Sequence[str]) -> Any:
     with open(schema_filepath, encoding="utf-8") as schema_file:
         schema = json.load(schema_file, object_pairs_hook=OrderedDict)
     resolve_children(schema, schema, schema_filepath, authorized_paths)

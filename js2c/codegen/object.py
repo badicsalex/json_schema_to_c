@@ -25,17 +25,20 @@
 import collections
 from collections.abc import Sequence
 
-from .base import Generator, CType, SchemaError, C_RESERVED
+from typing import Any
+
+from .base import Generator, CType, SchemaError, C_RESERVED, GeneratorInitParameters
+from .code_block_printer import CodeBlockPrinter
 
 
 class ObjectType(CType):
-    def __init__(self, type_name, description, fields):
+    def __init__(self, type_name: str, description: str | None, fields: collections.OrderedDict[str, CType | None]) -> None:
         super().__init__(type_name, description)
         assert isinstance(fields, collections.OrderedDict), \
             "fields must be an OrderedDict, as we depend on the field order check of == in __eq__"
         self.fields = fields
 
-    def generate_type_declaration_impl(self, out_file):
+    def generate_type_declaration_impl(self, out_file: CodeBlockPrinter) -> None:
         for field_name, field_generator in self.fields.items():
             if field_generator is None:
                 continue
@@ -53,9 +56,10 @@ class ObjectType(CType):
         out_file.print(f"}} {self.type_name};")
         out_file.print("")
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         return (
             super().__eq__(other) and
+            isinstance(other, ObjectType) and
             self.fields == other.fields
         )
 
@@ -68,7 +72,7 @@ class ObjectGenerator(Generator):
     required: Sequence[str] = ()
     additionalProperties: bool = True
 
-    def __init__(self, schema, parameters):
+    def __init__(self, schema: dict[str, Any], parameters: GeneratorInitParameters) -> None:
         super().__init__(schema, parameters)
         self.fields = collections.OrderedDict()
         if 'properties' not in schema:
@@ -95,19 +99,19 @@ class ObjectGenerator(Generator):
             )
 
     @classmethod
-    def can_parse_schema(cls, schema):
+    def can_parse_schema(cls, schema: dict[str, Any]) -> bool:
         return schema.get('type') == 'object'
 
-    def generate_parser_call(self, out_var_name, out_file):
+    def generate_parser_call(self, out_var_name: str, out_file: CodeBlockPrinter) -> None:
         parser_call = f"parse_{self.parser_name}(parse_state, {out_var_name})"
         with out_file.if_block(parser_call):
             out_file.print("return true;")
 
-    def generate_seen_flags(self, out_file):
+    def generate_seen_flags(self, out_file: CodeBlockPrinter) -> None:
         for field_name in self.fields:
             out_file.print(f"bool seen_{field_name} = false;")
 
-    def generate_default_field_setting(self, out_file):
+    def generate_default_field_setting(self, out_file: CodeBlockPrinter) -> None:
         for field_name, field_generator in self.fields.items():
             if not field_generator.has_default_value():
                 continue
@@ -117,7 +121,7 @@ class ObjectGenerator(Generator):
                     out_file
                 )
 
-    def generate_required_checks(self, out_file):
+    def generate_required_checks(self, out_file: CodeBlockPrinter) -> None:
         for field_name, field_generator in self.fields.items():
             if field_generator.has_default_value():
                 continue
@@ -132,7 +136,7 @@ class ObjectGenerator(Generator):
             with out_file.if_block(f"!seen_{field_name}"):
                 self.generate_logged_error(f"Missing required field in '%s': {field_name}", out_file)
 
-    def generate_key_children_check(self, out_file):
+    def generate_key_children_check(self, out_file: CodeBlockPrinter) -> None:
         with out_file.if_block("CURRENT_TOKEN(parse_state).size > 1"):
             self.generate_logged_error(
                 [
@@ -153,7 +157,7 @@ class ObjectGenerator(Generator):
                 out_file
             )
 
-    def generate_field_parsers(self, out_file):
+    def generate_field_parsers(self, out_file: CodeBlockPrinter) -> None:
         self.generate_key_children_check(out_file)
         for field_name, field_generator in self.fields.items():
             with out_file.if_block(f'current_string_is(parse_state, "{field_name}")'):
@@ -176,7 +180,7 @@ class ObjectGenerator(Generator):
             else:
                 self.generate_logged_error(["Unknown field in '%s': %.*s", "parse_state->current_key", "CURRENT_STRING_FOR_ERROR(parse_state)"], out_file)
 
-    def generate_parser_bodies(self, out_file):
+    def generate_parser_bodies(self, out_file: CodeBlockPrinter) -> None:
         for field_generator in self.fields.values():
             field_generator.generate_parser_bodies(out_file)
 
@@ -207,12 +211,12 @@ class ObjectGenerator(Generator):
             out_file.print("return false;")
         out_file.print("")
 
-    def has_default_value(self):
+    def has_default_value(self) -> bool:
         if super().has_default_value():
             return True
         return len(self.required) == 0 and all(field_generator.has_default_value() for field_generator in self.fields.values())
 
-    def generate_set_default_value(self, out_var_name, out_file):
+    def generate_set_default_value(self, out_var_name: str, out_file: CodeBlockPrinter) -> None:
         if self.generate_js2c_default_value(out_var_name, out_file):
             return
         for field_name, field_generator in self.fields.items():
@@ -221,5 +225,5 @@ class ObjectGenerator(Generator):
                 out_file
             )
 
-    def max_token_num(self):
+    def max_token_num(self) -> int:
         return sum(1 + field_generator.max_token_num() for field_generator in self.fields.values()) + 1

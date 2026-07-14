@@ -24,7 +24,10 @@
 #
 from abc import abstractmethod
 
-from .base import Generator, CType, SchemaError
+from typing import Any
+
+from .base import Generator, CType, SchemaError, GeneratorInitParameters
+from .code_block_printer import CodeBlockPrinter
 
 
 class IntegerType(CType):
@@ -32,12 +35,12 @@ class IntegerType(CType):
     SIGNED_TYPES = ["int64_t", "int32_t", "int16_t", "int8_t"]
     UNSIGNED_TYPES = ["uint64_t", "uint32_t", "uint16_t", "uint8_t"]
 
-    def __init__(self, generator, type_name, description):
+    def __init__(self, generator: Generator, type_name: str, description: str | None) -> None:
         if type_name not in self.SIGNED_TYPES + self.UNSIGNED_TYPES:
             raise SchemaError(generator, f"Unsupported integer type: {type_name}")
         super().__init__(type_name, description)
 
-    def is_unsigned(self):
+    def is_unsigned(self) -> bool:
         return self.type_name in self.UNSIGNED_TYPES
 
 
@@ -57,7 +60,7 @@ class IntegerGeneratorBase(Generator):
     # NumericStringGenerator reparses a string default into an int.
     default: int | str | None = None
 
-    def __init__(self, schema, parameters):
+    def __init__(self, schema: dict[str, Any], parameters: GeneratorInitParameters) -> None:
         super().__init__(schema, parameters)
         non_negative = self.minimum is not None and self.minimum >= 0
         if self.js2cType is not None:
@@ -86,19 +89,27 @@ class IntegerGeneratorBase(Generator):
             self.parsed_type = "int64_t"
             self.parsed_type_printf_macro = "PRIi64"
             self.default_suffix = "LL"
-        self.radix = None
+        # Set by the subclass: a plain integer has no radix of its own.
+        self.radix: int | None = None
 
     @property
     @abstractmethod
-    def string_allowed(self):
+    def string_allowed(self) -> bool:
         pass
 
     @property
     @abstractmethod
-    def number_allowed(self):
+    def number_allowed(self) -> bool:
         pass
 
-    def generate_range_check(self, check_number, out_var_printf_macro, check_operator, inverted_check_operator, out_file):
+    def generate_range_check(
+        self,
+        check_number: int | None,
+        out_var_printf_macro: str,
+        check_operator: str,
+        inverted_check_operator: str,
+        out_file: CodeBlockPrinter,
+    ) -> None:
         # pylint: disable=too-many-arguments
         if check_number is None:
             return
@@ -114,7 +125,7 @@ class IntegerGeneratorBase(Generator):
                 out_file
             )
 
-    def generate_parser_call(self, out_var_name, out_file):
+    def generate_parser_call(self, out_var_name: str, out_file: CodeBlockPrinter) -> None:
         out_file.print(f"{self.parsed_type} int_parse_tmp;")
         number_allowed = 'true' if self.number_allowed else 'false'
         string_allowed = 'true' if self.string_allowed else 'false'
@@ -141,10 +152,10 @@ class IntegerGeneratorBase(Generator):
         else:
             out_file.print(f"*{out_var_name} = int_parse_tmp;")
 
-    def has_default_value(self):
+    def has_default_value(self) -> bool:
         return super().has_default_value() or self.default is not None
 
-    def generate_set_default_value(self, out_var_name, out_file):
+    def generate_set_default_value(self, out_var_name: str, out_file: CodeBlockPrinter) -> None:
         if self.generate_js2c_default_value(out_var_name, out_file):
             return
         if self.js2cParseFunction is not None:
@@ -160,25 +171,25 @@ class IntegerGeneratorBase(Generator):
         else:
             out_file.print(f"{out_var_name} = {self.default}{self.default_suffix};")
 
-    def max_token_num(self):
+    def max_token_num(self) -> int:
         return 1
 
 
 class IntegerGenerator(IntegerGeneratorBase):
-    def __init__(self, schema, parameters):
+    def __init__(self, schema: dict[str, Any], parameters: GeneratorInitParameters) -> None:
         super().__init__(schema, parameters)
         self.radix = 10
 
     @property
-    def string_allowed(self):
+    def string_allowed(self) -> bool:
         return False
 
     @property
-    def number_allowed(self):
+    def number_allowed(self) -> bool:
         return True
 
     @classmethod
-    def can_parse_schema(cls, schema):
+    def can_parse_schema(cls, schema: dict[str, Any]) -> bool:
         return schema.get('type') == 'integer'
 
 
@@ -196,7 +207,7 @@ class NumericStringGenerator(IntegerGenerator):
     }
     SIGNED_PATTERNS = {'[+-]?' + k: v for k, v in UNSIGNED_PATTERNS.items()}
 
-    def __init__(self, schema, parameters):
+    def __init__(self, schema: dict[str, Any], parameters: GeneratorInitParameters) -> None:
         # minimum might be in the schema if this constructor is called by IntegerStringAnyOfGenerator
         if 'minimum' not in schema and schema['pattern'] in self.UNSIGNED_PATTERNS:
             schema['minimum'] = 0
@@ -219,15 +230,15 @@ class NumericStringGenerator(IntegerGenerator):
             self.default = int(self.default, self.radix)
 
     @property
-    def string_allowed(self):
+    def string_allowed(self) -> bool:
         return True
 
     @property
-    def number_allowed(self):
+    def number_allowed(self) -> bool:
         return False
 
     @classmethod
-    def can_parse_schema(cls, schema):
+    def can_parse_schema(cls, schema: dict[str, Any]) -> bool:
         if schema.get('type') != 'string':
             return False
         if schema.get('js2cParseFunction') is not None:
@@ -236,22 +247,22 @@ class NumericStringGenerator(IntegerGenerator):
 
 
 class IntegerStringAnyOfGenerator(NumericStringGenerator):
-    def __init__(self, schema, parameters):
+    def __init__(self, schema: dict[str, Any], parameters: GeneratorInitParameters) -> None:
         combined_schema = schema['anyOf'][0]
         combined_schema.update(schema['anyOf'][1])
         combined_schema['type'] = 'string'
         super().__init__(combined_schema, parameters)
 
     @classmethod
-    def can_parse_schema(cls, schema):
+    def can_parse_schema(cls, schema: dict[str, Any]) -> bool:
         if "anyOf" not in schema or len(schema['anyOf']) != 2:
             return False
         return set((schema['anyOf'][0].get('type'), schema['anyOf'][1].get('type'))) == set(('integer', 'string'))
 
     @property
-    def string_allowed(self):
+    def string_allowed(self) -> bool:
         return True
 
     @property
-    def number_allowed(self):
+    def number_allowed(self) -> bool:
         return True

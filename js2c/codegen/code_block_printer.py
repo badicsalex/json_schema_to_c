@@ -22,38 +22,46 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
+from __future__ import annotations
+
+from types import TracebackType
 
 
 class CodeBlockContextManager:
-    def __init__(self, printer, indent_level, indent_only=False):
+    def __init__(self, printer: CodeBlockPrinter, indent_level: int, indent_only: bool = False) -> None:
         self.printer = printer
         self.indent_level = indent_level
         self.indent_only = indent_only
 
-    def __enter__(self):
+    def __enter__(self) -> CodeBlockContextManager:
         if not self.indent_only:
             self.printer.print("{")
         self.printer.indent_level += self.indent_level
         return self
 
-    def __exit__(self, exc_type, exc_value, exc_traceback):
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        exc_traceback: TracebackType | None,
+    ) -> None:
         self.printer.indent_level -= self.indent_level
         if not self.indent_only:
             self.printer.print("}")
 
 
 class CodeBlockPrinter:
-    def __init__(self, filepath):
+    def __init__(self, filepath: str) -> None:
         self.filepath = filepath
         self.indent_level = 0
         self.last_was_else = False
         self.text = ""
 
-    def save_to_file(self):
+    def save_to_file(self) -> None:
         with open(self.filepath, "w", encoding="utf-8") as file:
             file.write(self.text)
 
-    def print(self, line):
+    def print(self, line: str) -> None:
         """ Print an indented line """
         if line == "else":
             self.text += " else "
@@ -70,36 +78,36 @@ class CodeBlockPrinter:
             self.text += f"\n{' ' * self.indent_level}{line}"
         self.last_was_else = line == "else"
 
-    def print_with_docstring(self, line, docstring):
+    def print_with_docstring(self, line: str, docstring: str | None) -> None:
         if not docstring:
             self.print(line)
         else:
             self.print(line.ljust(40) + f"/**< {docstring} */")
 
-    def print_separator(self, separator_str):
+    def print_separator(self, separator_str: str) -> None:
         pad_length = (70 - len(separator_str))//2
         padding = "=" * pad_length
         self.print(f"/* {padding} {separator_str} {padding} */")
 
-    def write(self, data):
+    def write(self, data: str) -> None:
         """ Write raw data to the file """
         self.text += "\n"
         self.text += data
 
-    def code_block(self, indent_level=4, standalone=False):
+    def code_block(self, indent_level: int = 4, standalone: bool = False) -> CodeBlockContextManager:
         if standalone:
             self.text += f"\n{' ' * self.indent_level}"
             # XXX: this is to prevent padding the opening brace that comes next
             self.last_was_else = True
         return CodeBlockContextManager(self, indent_level)
 
-    def if_block(self, condition, indent_level=4, standalone=False):
+    def if_block(self, condition: str, indent_level: int = 4, standalone: bool = False) -> CodeBlockContextManager:
         self.print(f"if ({condition})")
         return self.code_block(indent_level, standalone)
 
-    def for_block(self, for_stuff, indent_level=4, standalone=False):
+    def for_block(self, for_stuff: str, indent_level: int = 4, standalone: bool = False) -> CodeBlockContextManager:
         self.print(f"for ({for_stuff})")
         return self.code_block(indent_level, standalone)
 
-    def indent(self, indent_level=4):
+    def indent(self, indent_level: int = 4) -> CodeBlockContextManager:
         return CodeBlockContextManager(self, indent_level, indent_only=True)

@@ -22,11 +22,14 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from .base import Generator, CType
+from typing import Any
+
+from .base import Generator, CType, GeneratorInitParameters
+from .code_block_printer import CodeBlockPrinter
 
 
 class RawJsonType(CType):
-    def generate_type_declaration_impl(self, out_file):
+    def generate_type_declaration_impl(self, out_file: CodeBlockPrinter) -> None:
         out_file.print(f"typedef struct {self.type_name}_s {{")
         with out_file.indent():
             out_file.print_with_docstring("size_t index;", "Byte offset of the value in the input JSON")
@@ -39,7 +42,7 @@ class AlternateStorageGenerator(Generator):
     # Reserved js2cType values that store a value differently instead of naming a C type.
     STORAGE_FORMATS = ("void", "raw")
 
-    def __init__(self, schema, parameters):
+    def __init__(self, schema: dict[str, Any], parameters: GeneratorInitParameters) -> None:
         super().__init__(schema, parameters)
         if self.js2cType == "raw":
             self.type_name = parameters.base_name + "_json_ref_t"
@@ -48,10 +51,10 @@ class AlternateStorageGenerator(Generator):
             self.c_type = None
 
     @classmethod
-    def can_parse_schema(cls, schema):
+    def can_parse_schema(cls, schema: dict[str, Any]) -> bool:
         return schema.get("js2cType") in cls.STORAGE_FORMATS
 
-    def generate_parser_call(self, out_var_name, out_file):
+    def generate_parser_call(self, out_var_name: str, out_file: CodeBlockPrinter) -> None:
         if self.js2cType == "raw":
             out_var = out_var_name.removeprefix("&")
             out_file.print(f"{out_var}.index = (size_t) CURRENT_TOKEN(parse_state).start;")
@@ -61,7 +64,7 @@ class AlternateStorageGenerator(Generator):
         with out_file.if_block("builtin_skip(parse_state)"):
             out_file.print("return true;")
 
-    def max_token_num(self):
+    def max_token_num(self) -> int:
         # A skipped value is at least one token; composite values need extra token headroom
         # (--allow-additional-properties), as their structure isn't declared here.
         return 1

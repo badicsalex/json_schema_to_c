@@ -45,7 +45,7 @@ The settings in the schema take precedence.
 """.strip()
 
 
-def parse_args():
+def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=HELP,
         epilog=HELP_EPILOG,
@@ -79,7 +79,7 @@ def parse_args():
     return parser.parse_args()
 
 
-def main(args):
+def main(args: argparse.Namespace) -> None:
     # Kept out of js2cSettings on purpose: an untrusted schema must not be able to widen its own allowlist.
     authorized_paths = list(args.authorized_paths or [])
     authorized_paths.append(os.path.dirname(os.path.abspath(args.schema_file)))

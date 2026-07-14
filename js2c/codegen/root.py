@@ -24,12 +24,14 @@
 #
 import os
 import re
+from typing import Any
 
 from .code_block_printer import CodeBlockPrinter
 
 from .generator_factory import GeneratorFactory
 from .type_cache import TypeCache
 from .base import GeneratorInitParameters, SchemaError
+from ..settings import Settings
 
 
 DIR_OF_THIS_FILE = os.path.dirname(__file__)
@@ -41,7 +43,7 @@ NOTE_FOR_GENERATED_FILES = """
 
 
 class RootGenerator:
-    def __init__(self, schema, settings):
+    def __init__(self, schema: dict[str, Any], settings: Settings) -> None:
         self.settings = settings
         if '$id' not in schema:
             raise SchemaError("", "All schemas must have an ID (a field named '$id')")
@@ -61,7 +63,7 @@ class RootGenerator:
             raise SchemaError("", "The root schema must store a value")
         self.name = schema['$id']
 
-    def generate_root_parser(self, out_file, max_token_num):
+    def generate_root_parser(self, out_file: CodeBlockPrinter, max_token_num: int) -> None:
         out_file.print(f"bool json_parse_{self.name}_with_len(const char *json_string, size_t json_string_len, {self.root_generator.c_type} *out)")
         with out_file.code_block():
             out_file.print("parse_state_t parse_state_var;")
@@ -83,7 +85,7 @@ class RootGenerator:
             out_file.print(f"return json_parse_{self.name}_with_len(json_string, strlen(json_string), out);")
         out_file.print("")
 
-    def generate_parser_h(self, h_file_path):
+    def generate_parser_h(self, h_file_path: str) -> CodeBlockPrinter:
         h_file = CodeBlockPrinter(h_file_path)
 
         h_file.write(NOTE_FOR_GENERATED_FILES)
@@ -123,7 +125,7 @@ class RootGenerator:
         return h_file
 
     @classmethod
-    def manually_include_jsmn(cls, c_file):
+    def manually_include_jsmn(cls, c_file: CodeBlockPrinter) -> None:
         with open(os.path.join(DIR_OF_THIS_FILE, '..', '..', 'jsmn', 'jsmn.h'), encoding='utf-8') as jsmn_h:
             c_file.print("")
             c_file.print_separator("jsmn.h (From https://github.com/zserge/jsmn)")
@@ -132,7 +134,7 @@ class RootGenerator:
             c_file.print("")
 
     @classmethod
-    def manually_include_builtins(cls, c_file):
+    def manually_include_builtins(cls, c_file: CodeBlockPrinter) -> None:
         with open(os.path.join(DIR_OF_THIS_FILE, 'js2c_builtins.h'), encoding='utf-8') as builtins_file:
             c_file.print_separator("js2c_builtins.h")
             builtins_file_contents = builtins_file.read()
@@ -145,7 +147,7 @@ class RootGenerator:
             c_file.print_separator("end of js2c_builtins.h")
             c_file.print("")
 
-    def generate_parser_c(self, c_file_path, h_file_name):
+    def generate_parser_c(self, c_file_path: str, h_file_name: str) -> CodeBlockPrinter:
         c_file = CodeBlockPrinter(c_file_path)
 
         c_file.write(NOTE_FOR_GENERATED_FILES)

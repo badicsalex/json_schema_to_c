@@ -24,12 +24,23 @@
 #
 import os.path
 
-from .base import Generator, CType, SchemaError, C_RESERVED
+from typing import Any
+
+from .base import Generator, CType, SchemaError, C_RESERVED, GeneratorInitParameters
+from .code_block_printer import CodeBlockPrinter
+from .type_cache import TypeCache
 from .enum import EnumType
 
 
 class UnionType(CType):
-    def __init__(self, type_name, description, option_types, type_cache, path_in_schema):
+    def __init__(
+        self,
+        type_name: str,
+        description: str | None,
+        option_types: list[CType],
+        type_cache: TypeCache,
+        path_in_schema: str,
+    ) -> None:
         # pylint: disable=too-many-arguments
         super().__init__(type_name, description)
         self.option_types = option_types
@@ -48,7 +59,7 @@ class UnionType(CType):
         )
         self.tag_type = type_cache.try_get_cached(self.tag_type, path_in_schema)
 
-    def generate_type_declaration_impl(self, out_file):
+    def generate_type_declaration_impl(self, out_file: CodeBlockPrinter) -> None:
         for option_type in self.option_types:
             option_type.generate_type_declaration(out_file)
         self.tag_type.generate_type_declaration(out_file)
@@ -64,14 +75,14 @@ class UnionType(CType):
         out_file.print(f"}} {self.type_name};")
         out_file.print("")
 
-    def __eq__(self, other):
-        return super().__eq__(other) and self.option_types == other.option_types
+    def __eq__(self, other: object) -> bool:
+        return super().__eq__(other) and isinstance(other, UnionType) and self.option_types == other.option_types
 
 
 class UnionGenerator(Generator):
     c_type: UnionType
 
-    def __init__(self, schema, parameters):
+    def __init__(self, schema: dict[str, Any], parameters: GeneratorInitParameters) -> None:
         super().__init__(schema, parameters)
         self.option_generators = [
             parameters.generator_factory.get_generator_for(
@@ -80,27 +91,29 @@ class UnionGenerator(Generator):
             )
             for i, option in enumerate(schema["anyOf"])
         ]
+        option_types = []
         for option in self.option_generators:
             if option.c_type is None:
                 raise SchemaError(self, "anyOf options must store a value, so a const cannot be one")
+            option_types.append(option.c_type)
         self.c_type = UnionType(
             self.type_name,
             self.description,
-            [option.c_type for option in self.option_generators],
+            option_types,
             parameters.type_cache,
             self.path_in_schema,
         )
         self.c_type = parameters.type_cache.try_get_cached(self.c_type, self.path_in_schema)
 
     @classmethod
-    def can_parse_schema(cls, schema):
+    def can_parse_schema(cls, schema: dict[str, Any]) -> bool:
         return "anyOf" in schema
 
-    def generate_parser_call(self, out_var_name, out_file):
+    def generate_parser_call(self, out_var_name: str, out_file: CodeBlockPrinter) -> None:
         with out_file.if_block(f"parse_{self.parser_name}(parse_state, {out_var_name})"):
             out_file.print("return true;")
 
-    def generate_parser_bodies(self, out_file):
+    def generate_parser_bodies(self, out_file: CodeBlockPrinter) -> None:
         option_parsers = []
         for i, option_generator in enumerate(self.option_generators):
             option_generator.generate_parser_bodies(out_file)
@@ -135,6 +148,6 @@ class UnionGenerator(Generator):
             out_file.print("return false;")
         out_file.print("")
 
-    def max_token_num(self):
+    def max_token_num(self) -> int:
         # Only one option's value ends up in the document, so the worst case is the largest option.
         return max(option.max_token_num() for option in self.option_generators)

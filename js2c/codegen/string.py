@@ -22,24 +22,27 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from .base import Generator, CType, SchemaError
+from typing import Any
+
+from .base import Generator, CType, SchemaError, GeneratorInitParameters
 from .code_block_printer import CodeBlockPrinter
 
 
 class StringType(CType):
-    def __init__(self, type_name, description, max_length):
+    def __init__(self, type_name: str, description: str | None, max_length: int) -> None:
         super().__init__(type_name, description)
         self.max_length = max_length
 
-    def generate_type_declaration_impl(self, out_file):
+    def generate_type_declaration_impl(self, out_file: CodeBlockPrinter) -> None:
         out_file.print_with_docstring(
             f"typedef char {self.type_name}[{self.max_length + 1}];", self.description
         )
         out_file.print("")
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         return (
             super().__eq__(other) and
+            isinstance(other, StringType) and
             self.max_length == other.max_length
         )
 
@@ -55,7 +58,7 @@ class StringGenerator(Generator):
     maxLength: int | None = None
     default: str | None = None
 
-    def __init__(self, schema, parameters):
+    def __init__(self, schema: dict[str, Any], parameters: GeneratorInitParameters) -> None:
         super().__init__(schema, parameters)
         assert 'enum' not in schema, "Enums should be generated with EnumGenerator"
         assert 'const' not in schema, "Consts should be generated with ConstGenerator"
@@ -78,10 +81,10 @@ class StringGenerator(Generator):
         self.c_type = parameters.type_cache.try_get_cached(self.c_type, self.path_in_schema)
 
     @classmethod
-    def can_parse_schema(cls, schema):
+    def can_parse_schema(cls, schema: dict[str, Any]) -> bool:
         return schema.get('type') == 'string'
 
-    def generate_parser_call(self, out_var_name, out_file):
+    def generate_parser_call(self, out_var_name: str, out_file: CodeBlockPrinter) -> None:
         if self.js2cParseFunction is not None:
             length_check = \
                 f"builtin_check_current_string(parse_state, {self.minLength}, {self.maxLength})"
@@ -101,7 +104,7 @@ class StringGenerator(Generator):
             with out_file.if_block(length_check):
                 out_file.print("return true;")
 
-    def has_default_value(self):
+    def has_default_value(self) -> bool:
         return super().has_default_value() or self.default is not None
 
     def generate_set_default_value(self, out_var_name: str, out_file: CodeBlockPrinter) -> None:
@@ -130,5 +133,5 @@ class StringGenerator(Generator):
                 f'memcpy({out_var_name}, "{self.default}", {len(self.default) + 1});'
             )
 
-    def max_token_num(self):
+    def max_token_num(self) -> int:
         return 1

@@ -22,7 +22,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from .base import Generator, CType
+from typing import Any
+
+from .base import Generator, CType, GeneratorInitParameters
+from .code_block_printer import CodeBlockPrinter
 
 
 class FloatGenerator(Generator):
@@ -40,16 +43,23 @@ class FloatGenerator(Generator):
     exclusiveMaximum: float | None = None
     default: float | None = None
 
-    def __init__(self, schema, parameters):
+    def __init__(self, schema: dict[str, Any], parameters: GeneratorInitParameters) -> None:
         super().__init__(schema, parameters)
         self.c_type = CType("double", self.description)
 
     @classmethod
-    def can_parse_schema(cls, schema):
+    def can_parse_schema(cls, schema: dict[str, Any]) -> bool:
         return schema.get('type') == 'number'
 
     @classmethod
-    def generate_range_check(cls, check_number, out_var_name, check_operator, inverted_check_operator, out_file):
+    def generate_range_check(
+        cls,
+        check_number: float | None,
+        out_var_name: str,
+        check_operator: str,
+        inverted_check_operator: str,
+        out_file: CodeBlockPrinter,
+    ) -> None:
         if check_number is None:
             return
         with out_file.if_block(f"(*{out_var_name}) {inverted_check_operator} {check_number}"):
@@ -64,7 +74,7 @@ class FloatGenerator(Generator):
                 out_file
             )
 
-    def generate_parser_call(self, out_var_name, out_file):
+    def generate_parser_call(self, out_var_name: str, out_file: CodeBlockPrinter) -> None:
         with out_file.if_block(f"builtin_parse_double(parse_state, {out_var_name})"):
             out_file.print("return true;")
         self.generate_range_check(self.minimum, out_var_name, ">=", "<", out_file)
@@ -72,13 +82,13 @@ class FloatGenerator(Generator):
         self.generate_range_check(self.exclusiveMinimum, out_var_name, ">", "<=", out_file)
         self.generate_range_check(self.exclusiveMaximum, out_var_name, "<", ">=", out_file)
 
-    def has_default_value(self):
+    def has_default_value(self) -> bool:
         return super().has_default_value() or self.default is not None
 
-    def generate_set_default_value(self, out_var_name, out_file):
+    def generate_set_default_value(self, out_var_name: str, out_file: CodeBlockPrinter) -> None:
         if self.generate_js2c_default_value(out_var_name, out_file):
             return
         out_file.print(f"{out_var_name} = {self.default};")
 
-    def max_token_num(self):
+    def max_token_num(self) -> int:
         return 1
