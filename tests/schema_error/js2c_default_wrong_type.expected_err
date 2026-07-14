@@ -1,0 +1,1 @@
+Schema error in '.properties.x': js2cDefault must be a string, an integer or a float, as it is pasted into the C code as-is

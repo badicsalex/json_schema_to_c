@@ -103,6 +103,12 @@ class Generator(ABC):
         self.settings = parameters.settings
         self.parser_name = parameters.parser_name
 
+        # js2cDefault is pasted into the C code as-is, so anything whose str() is not a C
+        # expression ends up in the output verbatim. bool is checked first, being an int.
+        if self.js2cDefault is not None and (
+                isinstance(self.js2cDefault, bool) or not isinstance(self.js2cDefault, (str, int, float))):
+            raise SchemaError(self, "js2cDefault must be a string, an integer or a float, as it is pasted into the C code as-is")
+
         self.type_name: str
         if self.js2cType is not None:
             self.type_name = self.js2cType

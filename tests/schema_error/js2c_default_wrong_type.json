@@ -1,0 +1,11 @@
+{
+    "$id": "root",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "x": {
+            "type": "integer",
+            "js2cDefault": true
+        }
+    }
+}
