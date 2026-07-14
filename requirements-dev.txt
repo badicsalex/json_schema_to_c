@@ -1,0 +1,4 @@
+# Tools run by `make check`. Pinned exactly, or else a new pylint release fails
+# the build on checks that did not exist when the code was written.
+autopep8==2.3.2
+pylint==4.0.6

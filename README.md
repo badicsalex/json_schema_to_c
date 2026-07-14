@@ -192,6 +192,12 @@ Contribution
 
 I love to receive pull requests, especially if it's a bugifx or a nice feature, and `make check` was successful on it.
 
+`make check` needs the linters, which are not dependencies of the generator itself:
+
+```bash
+pip install -r requirements-dev.txt
+```
+
 Thanks
 ------
 
