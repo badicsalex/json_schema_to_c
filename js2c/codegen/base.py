@@ -191,9 +191,6 @@ class CType():
     def __str__(self) -> str:
         return self.type_name
 
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}({self.__dict__})"
-
     def generate_field_declaration(self, field_name: str, out_file: CodeBlockPrinter) -> None:
         out_file.print_with_docstring(
             f"{self.type_name} {field_name};", self.description
