@@ -1,0 +1,1 @@
+Schema error in '.properties.x': A void js2cType stores nothing, so it cannot have a js2cDefault

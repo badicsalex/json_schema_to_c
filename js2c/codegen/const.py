@@ -39,6 +39,9 @@ class ConstGenerator(Generator):
         super().__init__(schema, parameters)
         self.c_type = None  # no type to store, "const" is just for validation
 
+        if self.js2cDefault is not None:
+            raise SchemaError(self, "A const stores nothing, so it cannot have a js2cDefault")
+
         if not isinstance(self.const, str) and not isinstance(self.const, int):
             raise SchemaError(self, "JS2C supports only strings and integers for const")
 

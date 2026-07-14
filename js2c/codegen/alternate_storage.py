@@ -24,7 +24,7 @@
 #
 from typing import Any
 
-from .base import Generator, CType, GeneratorInitParameters
+from .base import Generator, CType, SchemaError, GeneratorInitParameters
 from .code_block_printer import CodeBlockPrinter
 
 
@@ -49,6 +49,8 @@ class AlternateStorageGenerator(Generator):
             self.c_type = parameters.type_cache.try_get_cached(RawJsonType(self.type_name, self.description), self.path_in_schema)
         else:
             self.c_type = None
+            if self.js2cDefault is not None:
+                raise SchemaError(self, "A void js2cType stores nothing, so it cannot have a js2cDefault")
 
     @classmethod
     def can_parse_schema(cls, schema: dict[str, Any]) -> bool:

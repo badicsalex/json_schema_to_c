@@ -1,0 +1,11 @@
+{
+    "$id": "root",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "x": {
+            "const": "hi",
+            "js2cDefault": "WHATEVER"
+        }
+    }
+}
