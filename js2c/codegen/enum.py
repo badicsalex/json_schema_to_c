@@ -70,6 +70,8 @@ class EnumGenerator(Generator):
     def __init__(self, schema, parameters):
         super().__init__(schema, parameters)
         if self.js2cParseFunction is not None:
+            if self.js2cType is None:
+                raise SchemaError(self, "js2cParseFunction needs js2cType, as its output type cannot be guessed")
             self.c_type = CType(self.js2cType, self.description)
         else:
             self.c_type = EnumType(self.type_name, self.description, [self.convert_enum_label(enum_label) for enum_label in self.enum])

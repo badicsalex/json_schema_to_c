@@ -1,0 +1,13 @@
+{
+    "$id": "root",
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["x"],
+    "properties": {
+        "x": {
+            "type": "string",
+            "enum": ["a", "b"],
+            "js2cParseFunction": "my_parser"
+        }
+    }
+}

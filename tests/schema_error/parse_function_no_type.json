@@ -1,0 +1,13 @@
+{
+    "$id": "root",
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["x"],
+    "properties": {
+        "x": {
+            "type": "string",
+            "maxLength": 8,
+            "js2cParseFunction": "my_parser"
+        }
+    }
+}

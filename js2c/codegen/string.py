@@ -69,6 +69,8 @@ class StringGenerator(Generator):
             raise SchemaError(self, "String default value shorter than minLength")
 
         if self.js2cParseFunction is not None:
+            if self.js2cType is None:
+                raise SchemaError(self, "js2cParseFunction needs js2cType, as its output type cannot be guessed")
             self.c_type = CType(self.js2cType, self.description)
         else:
             self.c_type = StringType(self.type_name, self.description, self.maxLength)

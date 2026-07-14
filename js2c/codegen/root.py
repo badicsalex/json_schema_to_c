@@ -57,6 +57,8 @@ class RootGenerator:
                 TypeCache(),
             )
         )
+        if self.root_generator.c_type is None:
+            raise SchemaError("", "The root schema must store a value")
         self.name = schema['$id']
 
     def generate_root_parser(self, out_file, max_token_num):
