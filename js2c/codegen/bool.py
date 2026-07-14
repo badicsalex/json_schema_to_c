@@ -29,7 +29,7 @@ class BoolGenerator(Generator):
     JSON_FIELDS = Generator.JSON_FIELDS + (
         "default",
     )
-    default = None
+    default: bool | None = None
 
     def __init__(self, schema, parameters):
         super().__init__(schema, parameters)
@@ -50,7 +50,7 @@ class BoolGenerator(Generator):
         return super().has_default_value() or self.default is not None
 
     def generate_set_default_value(self, out_var_name, out_file):
-        if super().generate_set_default_value(out_var_name, out_file):
+        if self.generate_js2c_default_value(out_var_name, out_file):
             return
         default_value = 'true' if self.default else 'false'
         out_file.print(f"{out_var_name} = {default_value};")

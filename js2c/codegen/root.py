@@ -105,6 +105,7 @@ class RootGenerator:
         h_file.print("#endif")
 
         h_file.print_separator("Generated type declarations")
+        assert self.root_generator.c_type is not None, "__init__ rejects a root that stores nothing."
         self.root_generator.c_type.generate_type_declaration(h_file)
         h_file.print(f"bool json_parse_{self.name}(const char *json_string, {self.root_generator.c_type} *out);")
         h_file.print(f"bool json_parse_{self.name}_with_len(const char *json_string, size_t json_string_len, {self.root_generator.c_type} *out);")

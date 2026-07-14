@@ -22,19 +22,25 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from .base import SchemaError
+from typing import TypeVar
+
+from .base import CType, SchemaError
+
+CTypeT = TypeVar("CTypeT", bound=CType)
 
 
 class TypeCache:
     #pylint: disable=too-few-public-methods
-    def __init__(self):
-        self.types = {}
+    def __init__(self) -> None:
+        self.types: dict[str, CType] = {}
 
-    def try_get_cached(self, c_type, path_in_schema):
+    def try_get_cached(self, c_type: CTypeT, path_in_schema: str) -> CTypeT:
         if c_type.type_name in self.types:
             cached_type = self.types[c_type.type_name]
             if cached_type != c_type:
                 raise SchemaError(path_in_schema, f"Two different types with the same name: {c_type.type_name}")
+            # __eq__ compares classes too, so an equal type is the same class.
+            assert isinstance(cached_type, type(c_type))
             return cached_type
         self.types[c_type.type_name] = c_type
         return c_type

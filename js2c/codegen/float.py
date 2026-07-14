@@ -34,11 +34,11 @@ class FloatGenerator(Generator):
         "default",
     )
 
-    minimum = None
-    maximum = None
-    exclusiveMinimum = None
-    exclusiveMaximum = None
-    default = None
+    minimum: float | None = None
+    maximum: float | None = None
+    exclusiveMinimum: float | None = None
+    exclusiveMaximum: float | None = None
+    default: float | None = None
 
     def __init__(self, schema, parameters):
         super().__init__(schema, parameters)
@@ -76,7 +76,7 @@ class FloatGenerator(Generator):
         return super().has_default_value() or self.default is not None
 
     def generate_set_default_value(self, out_var_name, out_file):
-        if super().generate_set_default_value(out_var_name, out_file):
+        if self.generate_js2c_default_value(out_var_name, out_file):
             return
         out_file.print(f"{out_var_name} = {self.default};")
 

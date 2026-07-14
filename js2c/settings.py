@@ -23,18 +23,27 @@
 # SOFTWARE.
 #
 from collections import namedtuple
+from typing import IO, Any
 import argparse
 
 SettingsField = namedtuple("SettingsField", ["name", "type", "help", "metavar"])
 
 
-def snake_to_camel_case(text: str):
+def snake_to_camel_case(text: str) -> str:
     text = text.replace("_", " ").title().replace(" ", "")
     return text[0].lower() + text[1:]
 
 
 class Settings:
     # pylint: disable=too-few-public-methods
+    # Set by __init__ through setattr, so they are declared for the type checker only.
+    h_prefix_file: IO[str] | None = None
+    h_postfix_file: IO[str] | None = None
+    c_prefix_file: IO[str] | None = None
+    c_postfix_file: IO[str] | None = None
+    allow_additional_properties: int | None = None
+    include_external_builtins_file: str | None = None
+
     FIELDS = [
         SettingsField(
             "h_prefix_file",
@@ -76,7 +85,7 @@ class Settings:
         ),
     ]
 
-    def __init__(self, args, settings_json):
+    def __init__(self, args: dict[str, Any], settings_json: dict[str, Any]) -> None:
         for field in self.FIELDS:
             field_name_in_camel = snake_to_camel_case(field.name)
             if field.name in settings_json:
@@ -88,11 +97,11 @@ class Settings:
             else:
                 setattr(self, field.name, None)
 
-    def parse_field(self, field_desc, field_data):
+    def parse_field(self, field_desc: SettingsField, field_data: Any) -> None:
         setattr(self, field_desc.name, field_desc.type(field_data))
 
     @classmethod
-    def fill_argparse(cls, parser):
+    def fill_argparse(cls, parser: argparse.ArgumentParser) -> None:
         for field in cls.FIELDS:
             parser.add_argument(
                 "--" + field.name.replace('_', '-'),

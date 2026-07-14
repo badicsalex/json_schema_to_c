@@ -50,11 +50,12 @@ class IntegerGeneratorBase(Generator):
         "default",
     )
 
-    minimum = None
-    maximum = None
-    exclusiveMinimum = None
-    exclusiveMaximum = None
-    default = None
+    minimum: int | None = None
+    maximum: int | None = None
+    exclusiveMinimum: int | None = None
+    exclusiveMaximum: int | None = None
+    # NumericStringGenerator reparses a string default into an int.
+    default: int | str | None = None
 
     def __init__(self, schema, parameters):
         super().__init__(schema, parameters)
@@ -144,7 +145,7 @@ class IntegerGeneratorBase(Generator):
         return super().has_default_value() or self.default is not None
 
     def generate_set_default_value(self, out_var_name, out_file):
-        if super().generate_set_default_value(out_var_name, out_file):
+        if self.generate_js2c_default_value(out_var_name, out_file):
             return
         if self.js2cParseFunction is not None:
             # Cast to the parsed type so it matches both the parse function's argument and the
@@ -185,7 +186,7 @@ class NumericStringGenerator(IntegerGenerator):
     JSON_FIELDS = IntegerGenerator.JSON_FIELDS + (
         "pattern",
     )
-    pattern = None
+    pattern: str | None = None
 
     UNSIGNED_PATTERNS = {
         '[0-9]+': 10,
@@ -200,6 +201,8 @@ class NumericStringGenerator(IntegerGenerator):
         if 'minimum' not in schema and schema['pattern'] in self.UNSIGNED_PATTERNS:
             schema['minimum'] = 0
         super().__init__(schema, parameters)
+        # can_parse_schema() rejects js2cParseFunction, so the base built an IntegerType.
+        assert isinstance(self.c_type, IntegerType)
         if self.c_type.is_unsigned():
             pattern_set = self.UNSIGNED_PATTERNS
         else:

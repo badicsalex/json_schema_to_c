@@ -22,10 +22,14 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, NamedTuple
+from collections.abc import Sequence
+from typing import TYPE_CHECKING, Any, NamedTuple
 
 from ..settings import Settings
+from .code_block_printer import CodeBlockPrinter
 
 if TYPE_CHECKING:
     # Both import this module, so they can only be named in annotations.
@@ -43,7 +47,7 @@ C_RESERVED = frozenset((
 
 
 class SchemaError(ValueError):
-    def __init__(self, generator_or_path, message):
+    def __init__(self, generator_or_path: Generator | str, message: str) -> None:
         if isinstance(generator_or_path, str):
             path = generator_or_path
         else:
@@ -59,10 +63,10 @@ class GeneratorInitParameters(NamedTuple):
     parser_name: str
     type_name: str
     settings: Settings
-    generator_factory: type["GeneratorFactory"]
-    type_cache: "TypeCache"
+    generator_factory: type[GeneratorFactory]
+    type_cache: TypeCache
 
-    def with_suffix(self, path_in_schema: str, type_name: str, suffix: str) -> "GeneratorInitParameters":
+    def with_suffix(self, path_in_schema: str, type_name: str, suffix: str) -> GeneratorInitParameters:
         return GeneratorInitParameters(
             self.path_in_schema + "." + path_in_schema,
             self.base_name,
@@ -82,13 +86,15 @@ class Generator(ABC):
         "js2cParseFunction",
     )
 
-    c_type = None
-    description = None
-    js2cDefault = None
-    js2cType = None
-    js2cParseFunction = None
+    # A const stores nothing, so it stays None.
+    c_type: CType | None = None
+    description: str | None = None
+    # Pasted into the C code as-is, so any scalar whose str() is a C expression.
+    js2cDefault: str | int | float | None = None
+    js2cType: str | None = None
+    js2cParseFunction: str | None = None
 
-    def __init__(self, schema, parameters):
+    def __init__(self, schema: dict[str, Any], parameters: GeneratorInitParameters) -> None:
         for attr in self.JSON_FIELDS:
             if attr in schema:
                 setattr(self, attr, schema[attr])
@@ -97,6 +103,7 @@ class Generator(ABC):
         self.settings = parameters.settings
         self.parser_name = parameters.parser_name
 
+        self.type_name: str
         if self.js2cType is not None:
             self.type_name = self.js2cType
         elif "$id" in schema:
@@ -105,32 +112,43 @@ class Generator(ABC):
             self.type_name = parameters.type_name
 
     @abstractmethod
-    def generate_parser_call(self, out_var_name, out_file):
+    def generate_parser_call(self, out_var_name: str, out_file: CodeBlockPrinter) -> None:
         pass
 
     @abstractmethod
-    def max_token_num(self):
+    def max_token_num(self) -> int:
         pass
 
     @classmethod
     @abstractmethod
-    def can_parse_schema(cls, schema):
+    def can_parse_schema(cls, schema: dict[str, Any]) -> bool:
         pass
 
-    def generate_parser_bodies(self, out_file):
+    def generate_parser_bodies(self, out_file: CodeBlockPrinter) -> None:
         pass
 
-    def has_default_value(self):
+    def has_default_value(self) -> bool:
         return self.js2cDefault is not None
 
-    def generate_set_default_value(self, out_var_name, out_file):
+    def generate_js2c_default_value(self, out_var_name: str, out_file: CodeBlockPrinter) -> bool:
+        """Emit js2cDefault, if the schema set one. Returns whether it did."""
         assert self.has_default_value(), "Caller is responsible for checking this."
         if self.js2cDefault is None:
             return False
         out_file.print(f"{out_var_name} = {self.js2cDefault};")
         return True
 
-    def generate_custom_parser_call(self, call_args, value_format, value_args, out_file):
+    def generate_set_default_value(self, out_var_name: str, out_file: CodeBlockPrinter) -> None:
+        emitted = self.generate_js2c_default_value(out_var_name, out_file)
+        assert emitted, "A generator with any other source of defaults must override this."
+
+    def generate_custom_parser_call(
+        self,
+        call_args: str,
+        value_format: str,
+        value_args: Sequence[str],
+        out_file: CodeBlockPrinter,
+    ) -> None:
         # call_args are the js2cParseFunction arguments before the trailing &error; value_format and
         # value_args describe how the offending value is printed in the error message.
         out_file.print("const char *error = NULL;")
@@ -146,7 +164,7 @@ class Generator(ABC):
             )
 
     @classmethod
-    def generate_logged_error(cls, log_message, out_file):
+    def generate_logged_error(cls, log_message: str | Sequence[str], out_file: CodeBlockPrinter) -> None:
         if isinstance(log_message, str):
             out_file.print(f'TRY_LOG_ERROR(CURRENT_TOKEN(parse_state).start, "{log_message}", parse_state->current_key)')
         else:
@@ -159,33 +177,33 @@ class Generator(ABC):
 
 
 class CType():
-    def __init__(self, type_name, description):
+    def __init__(self, type_name: str, description: str | None) -> None:
         self.type_name = type_name
         self.description = description
         self.declaration_generated = False
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.type_name
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.__dict__})"
 
-    def generate_field_declaration(self, field_name, out_file):
+    def generate_field_declaration(self, field_name: str, out_file: CodeBlockPrinter) -> None:
         out_file.print_with_docstring(
             f"{self.type_name} {field_name};", self.description
         )
 
-    def generate_type_declaration(self, out_file):
+    def generate_type_declaration(self, out_file: CodeBlockPrinter) -> None:
         if self.declaration_generated:
             return
         self.generate_type_declaration_impl(out_file)
         self.declaration_generated = True
 
-    def generate_type_declaration_impl(self, out_file):
+    def generate_type_declaration_impl(self, out_file: CodeBlockPrinter) -> None:
         # Simple types (e.g. uint64_t) should already be declared
         pass
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         # Description deliberately left out. It will be the same type
         # The main use-case is documenting a description differently on different
         # parts of the JSON. The main result here will be a wrong docstring on the type,

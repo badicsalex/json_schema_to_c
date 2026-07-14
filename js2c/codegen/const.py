@@ -29,7 +29,8 @@ class ConstGenerator(Generator):
     JSON_FIELDS = Generator.JSON_FIELDS + (
         "const",
     )
-    const = None
+    # can_parse_schema() requires it, so the JSON_FIELDS loop always sets it.
+    const: str | int
 
     def __init__(self, schema, parameters):
         super().__init__(schema, parameters)

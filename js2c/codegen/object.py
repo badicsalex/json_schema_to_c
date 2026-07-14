@@ -23,6 +23,7 @@
 # SOFTWARE.
 #
 import collections
+from collections.abc import Sequence
 
 from .base import Generator, CType, SchemaError, C_RESERVED
 
@@ -64,8 +65,8 @@ class ObjectGenerator(Generator):
         "required",
         "additionalProperties",
     )
-    required = ()
-    additionalProperties = True
+    required: Sequence[str] = ()
+    additionalProperties: bool = True
 
     def __init__(self, schema, parameters):
         super().__init__(schema, parameters)
@@ -212,7 +213,7 @@ class ObjectGenerator(Generator):
         return len(self.required) == 0 and all(field_generator.has_default_value() for field_generator in self.fields.values())
 
     def generate_set_default_value(self, out_var_name, out_file):
-        if super().generate_set_default_value(out_var_name, out_file):
+        if self.generate_js2c_default_value(out_var_name, out_file):
             return
         for field_name, field_generator in self.fields.items():
             field_generator.generate_set_default_value(

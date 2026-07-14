@@ -56,8 +56,8 @@ class ArrayGenerator(Generator):
         "minItems",
         "maxItems",
     )
-    minItems = 0
-    maxItems = None
+    minItems: int = 0
+    maxItems: int | None = None
 
     def __init__(self, schema, parameters):
         super().__init__(schema, parameters)
@@ -125,7 +125,7 @@ class ArrayGenerator(Generator):
         return super().has_default_value() or self.minItems == 0
 
     def generate_set_default_value(self, out_var_name, out_file):
-        if super().generate_set_default_value(out_var_name, out_file):
+        if self.generate_js2c_default_value(out_var_name, out_file):
             return
         out_file.print(f"{out_var_name}.n = 0;")
 

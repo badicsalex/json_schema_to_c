@@ -54,9 +54,10 @@ class EnumGenerator(Generator):
         "default",
         "convertLabelsToSnakeCase",
     )
-    enum = None
-    default = None
-    convertLabelsToSnakeCase = True
+    # can_parse_schema() requires it, so the JSON_FIELDS loop always sets it.
+    enum: list[str]
+    default: str | None = None
+    convertLabelsToSnakeCase: bool = True
 
     SANITIZE_RE = re.compile("[^A-Za-z0-9_]")
     CAMEL_CASE_RE = re.compile(
@@ -128,7 +129,7 @@ class EnumGenerator(Generator):
         return super().has_default_value() or self.default is not None
 
     def generate_set_default_value(self, out_var_name, out_file):
-        if super().generate_set_default_value(out_var_name, out_file):
+        if self.generate_js2c_default_value(out_var_name, out_file):
             return
         if self.default not in self.enum:
             raise SchemaError(self, f"The enum default value '{self.default}' is not in the allowed values {self.enum}")

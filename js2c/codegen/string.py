@@ -23,6 +23,7 @@
 # SOFTWARE.
 #
 from .base import Generator, CType, SchemaError
+from .code_block_printer import CodeBlockPrinter
 
 
 class StringType(CType):
@@ -50,9 +51,9 @@ class StringGenerator(Generator):
         "default",
     )
 
-    minLength = 0
-    maxLength = None
-    default = None
+    minLength: int = 0
+    maxLength: int | None = None
+    default: str | None = None
 
     def __init__(self, schema, parameters):
         super().__init__(schema, parameters)
@@ -103,13 +104,17 @@ class StringGenerator(Generator):
     def has_default_value(self):
         return super().has_default_value() or self.default is not None
 
-    def generate_set_default_value(self, out_var_name, out_file):
+    def generate_set_default_value(self, out_var_name: str, out_file: CodeBlockPrinter) -> None:
         assert self.has_default_value(), "Caller is responsible for checking this."
+        assert self.maxLength is not None, "__init__ rejects a string without maxLength."
         if self.js2cDefault is not None:
             out_file.print(
                 f'strncpy({out_var_name}, {self.js2cDefault}, {self.maxLength + 1});'
             )
-        elif self.js2cParseFunction is not None:
+            return
+        # has_default_value() holds without js2cDefault, so default is set.
+        assert self.default is not None
+        if self.js2cParseFunction is not None:
             # The custom parser call has to be in its own code block, because
             # it declares a variable, and there are places where this is generated
             # multiple times into the same scope.

@@ -69,6 +69,8 @@ class UnionType(CType):
 
 
 class UnionGenerator(Generator):
+    c_type: UnionType
+
     def __init__(self, schema, parameters):
         super().__init__(schema, parameters)
         self.option_generators = [
